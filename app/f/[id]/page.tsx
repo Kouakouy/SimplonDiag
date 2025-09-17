@@ -275,14 +275,17 @@ export default function PublicFormPage() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-center gap-6 text-sm text-gray-500">
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                <span>~3 minutes</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                <span>{form.questions.length} questions</span>
-              </div>
+                <div className="flex items-center gap-2">
+                    <svg 
+                      className="w-4 h-4 text-gray-400" 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      viewBox="0 0 24 24" 
+                      fill="currentColor"
+                    >
+                      <path d="M12 2C6.48 2 2 6 2 11c0 2.39 1.04 4.55 2.77 6.13-.27.94-1 2.84-1.06 3.02a.75.75 0 0 0 1.03.91c.29-.1 2.4-.84 3.52-1.33A10.1 10.1 0 0 0 12 20c5.52 0 10-4 10-9s-4.48-9-10-9Zm.25 5.25c1.52 0 2.75 1.04 2.75 2.33 0 .88-.53 1.55-1.52 2.06-.78.4-1.23.88-1.23 1.61v.25a.75.75 0 0 1-1.5 0v-.25c0-1.36.8-2.2 1.73-2.67.58-.3.77-.6.77-1 0-.44-.55-.83-1.25-.83s-1.25.39-1.25.83a.75.75 0 0 1-1.5 0c0-1.29 1.23-2.33 2.75-2.33Zm0 7.75a.9.9 0 1 1 0 1.8.9.9 0 0 1 0-1.8Z"/>
+                    </svg>
+                    <span>{form.questions.length} questions</span>
+                  </div>
             </div>
           </CardContent>
         </Card>
@@ -298,7 +301,6 @@ export default function PublicFormPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">Vos informations</h3>
-                  <p className="text-xs text-gray-500">Utilisées pour identifier votre réponse</p>
                 </div>
               </div>
               <div className="hidden md:flex items-center gap-2 text-xs text-gray-500">
@@ -323,7 +325,7 @@ export default function PublicFormPage() {
 
               {/* Nom */}
               <div className="md:col-span-1">
-                <Label htmlFor="respondent_name" className="text-sm font-medium text-gray-800">Nom</Label>
+                <Label htmlFor="respondent_name" className="text-sm font-medium text-gray-800">Nom et Prénom</Label>
                 <div className="relative mt-1">
                   <svg className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.761 0 5-2.239 5-5S14.761 2 12 2 7 4.239 7 7s2.239 5 5 5Zm0 2c-3.866 0-7 2.134-7 4.762V21h14v-2.238C19 16.134 15.866 14 12 14Z"/></svg>
                   <Input
@@ -360,8 +362,16 @@ export default function PublicFormPage() {
             </div>
 
             <div className="mt-4 flex items-center gap-2 text-xs text-gray-500">
-              <svg className="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1.75a6.25 6.25 0 0 0-6.25 6.25c0 4.982 5.654 9.642 5.896 9.844a.75.75 0 0 0 .708.106.75.75 0 0 0 .29-.106c.242-.202 5.856-4.862 5.856-9.844A6.25 6.25 0 0 0 12 1.75Zm0 8.5a2.25 2.25 0 1 1 0-4.5 2.25 2.25 0 0 1 0 4.5Z"/></svg>
-              Vos informations ne seront jamais partagées sans votre consentement.
+            <svg 
+  className="w-4 h-4 text-gray-400" 
+  xmlns="http://www.w3.org/2000/svg" 
+  viewBox="0 0 24 24" 
+  fill="currentColor"
+>
+  <path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5Zm-3 8V7a3 3 0 0 1 6 0v3H9Zm3 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z"/>
+</svg>
+                
+                 Vos informations ne seront jamais partagées sans votre consentement.
             </div>
           </CardContent>
         </Card>
@@ -501,7 +511,7 @@ export default function PublicFormPage() {
             <div className="max-w-3xl md:max-w-4xl mx-auto px-4">
               <div className="flex items-center justify-between gap-4">
                 <p className="text-xs md:text-sm text-gray-600 hidden md:block">
-                  Vos réponses sont sécurisées et utilisées uniquement pour cette enquête.
+                  Vos réponses sont sécurisées et utilisées.
                 </p>
                 <div className="flex items-center gap-2">
                   <Button type="button" variant="outline" onClick={handlePrev} disabled={currentPage === 0 || submitting}>
@@ -535,7 +545,7 @@ export default function PublicFormPage() {
 
         {/* Pied de page */}
         <div className="text-center mt-8 text-sm text-gray-500">
-          <p>Propulsé par Simplon Form</p>
+          <p>Propulsé par Simplon Africa</p>
         </div>
       </div>
     </div>
