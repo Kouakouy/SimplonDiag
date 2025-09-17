@@ -14,6 +14,7 @@ Plateforme de création et gestion de formulaires en ligne.
 
 **Structure:**
 ```
+backend/
 app/
 ├── layout.tsx (Layout principal)
 ├── page.tsx (Dashboard)
