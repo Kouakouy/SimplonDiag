@@ -17,6 +17,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { apiRequest } from "@/lib/api"
 import { FileText, CheckCircle, AlertCircle, Clock, Users } from "lucide-react"
+import { Inter } from "next/font/google"
+
+const inter = Inter({ subsets: ["latin"] })
 
 export default function PublicFormPage() {
   const params = useParams()
@@ -234,7 +237,7 @@ export default function PublicFormPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className={`${inter.className} min-h-screen bg-gradient-to-b from-gray-50 to-white`}>
       {/* Barre d'accent en haut (style Google Forms) */}
       <div className="h-2 w-full bg-gradient-to-r from-[#E40046] via-[#E40046]/80 to-rose-500"></div>
 
