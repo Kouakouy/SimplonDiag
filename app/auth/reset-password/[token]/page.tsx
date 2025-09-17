@@ -17,6 +17,7 @@ export default function ResetPasswordPage() {
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [show, setShow] = useState<{ p: boolean; c: boolean }>({ p: false, c: false })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -53,34 +54,41 @@ export default function ResetPasswordPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <Label htmlFor="password" className="text-base">Nouveau mot de passe</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="mt-2"
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={show.p ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="mt-2 pr-20"
+                  required
+                />
+                <button type="button" onClick={() => setShow(s => ({ ...s, p: !s.p }))} className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-600 hover:text-gray-800 px-2 py-1">{show.p ? "Masquer" : "Afficher"}</button>
+              </div>
             </div>
             <div>
               <Label htmlFor="confirm" className="text-base">Confirmer le mot de passe</Label>
-              <Input
-                id="confirm"
-                type="password"
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                placeholder="••••••••"
-                className="mt-2"
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="confirm"
+                  type={show.c ? "text" : "password"}
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  placeholder="••••••••"
+                  className="mt-2 pr-20"
+                  required
+                />
+                <button type="button" onClick={() => setShow(s => ({ ...s, c: !s.c }))} className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-600 hover:text-gray-800 px-2 py-1">{show.c ? "Masquer" : "Afficher"}</button>
+              </div>
             </div>
 
             {success && <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded p-2">{success}</p>}
             {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded p-2">{error}</p>}
 
-            <Button type="submit" disabled={submitting} className="w-full bg-[#E40046] hover:bg-[#E40046]/80 h-11 text-base">
-              {submitting ? "Réinitialisation..." : "Réinitialiser"}
+            <Button type="submit" disabled={submitting} className="w-full bg-[#E40046] hover:bg-[#E40046]/80 h-11 text-base flex items-center justify-center gap-2">
+              {submitting && <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>}
+              <span>{submitting ? "Réinitialisation..." : "Réinitialiser"}</span>
             </Button>
           </form>
         </CardContent>

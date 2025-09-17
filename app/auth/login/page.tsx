@@ -11,9 +11,28 @@ export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [submitting, setSubmitting] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
+
+  const validate = () => {
+    const next: { email?: string; password?: string } = {}
+    if (!email.trim()) {
+      next.email = "L'email est obligatoire"
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      next.email = "Adresse email invalide"
+    }
+    if (!password) {
+      next.password = "Le mot de passe est obligatoire"
+    } else if (password.length < 6) {
+      next.password = "Au moins 6 caractères"
+    }
+    setErrors(next)
+    return Object.keys(next).length === 0
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!validate()) return
     setSubmitting(true)
     // Intégration backend volontairement non branchée pour validation ultérieure
     // Placeholder: garder la page statique pour l'instant
@@ -47,22 +66,34 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="email@exemple.com"
-                className="mt-2"
+                className={`mt-2 ${errors.email ? "border-red-500" : ""}`}
               />
+              {errors.email && <p className="text-sm text-red-600 mt-1">{errors.email}</p>}
             </div>
             <div>
               <Label htmlFor="password" className="text-base">Mot de passe</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="mt-2"
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className={`mt-2 pr-20 ${errors.password ? "border-red-500" : ""}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-600 hover:text-gray-800 px-2 py-1"
+                >
+                  {showPassword ? "Masquer" : "Afficher"}
+                </button>
+              </div>
+              {errors.password && <p className="text-sm text-red-600 mt-1">{errors.password}</p>}
             </div>
-            <Button type="submit" disabled={submitting} className="w-full bg-[#E40046] hover:bg-[#E40046]/80 h-11 text-base">
-              {submitting ? "Connexion..." : "Se Connecter"}
+            <Button type="submit" disabled={submitting} className="w-full bg-[#E40046] hover:bg-[#E40046]/80 h-11 text-base flex items-center justify-center gap-2">
+              {submitting && <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>}
+              <span>{submitting ? "Connexion..." : "Se Connecter"}</span>
             </Button>
             <div className="text-center">
               <Link href="/auth/forgot-password" className="text-blue-600 hover:underline text-sm">Mot de passe oublié ?</Link>

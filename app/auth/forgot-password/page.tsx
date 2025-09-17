@@ -13,12 +13,19 @@ export default function ForgotPasswordPage() {
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [errors, setErrors] = useState<{ email?: string }>({})
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
     setSuccess(null)
     setError(null)
+    // validation simple
+    const next: { email?: string } = {}
+    if (!email.trim()) next.email = "L'email est obligatoire"
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) next.email = "Adresse email invalide"
+    setErrors(next)
+    if (Object.keys(next).length > 0) { setSubmitting(false); return }
     try {
       await apiRequest({ url: "/auth/forgot-password", method: "POST", body: { email } })
       setSuccess("Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.")
@@ -46,16 +53,18 @@ export default function ForgotPasswordPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="email@exemple.com"
-                className="mt-2"
+                className={`mt-2 ${errors.email ? "border-red-500" : ""}`}
                 required
               />
+              {errors.email && <p className="text-sm text-red-600 mt-1">{errors.email}</p>}
             </div>
 
             {success && <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded p-2">{success}</p>}
             {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded p-2">{error}</p>}
 
-            <Button type="submit" disabled={submitting} className="w-full bg-[#E40046] hover:bg-[#E40046]/80 h-11 text-base">
-              {submitting ? "Envoi..." : "Envoyer le lien"}
+            <Button type="submit" disabled={submitting} className="w-full bg-[#E40046] hover:bg-[#E40046]/80 h-11 text-base flex items-center justify-center gap-2">
+              {submitting && <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>}
+              <span>{submitting ? "Envoi..." : "Envoyer le lien"}</span>
             </Button>
             <div className="text-center">
               <Link href="/auth/login" className="text-blue-600 hover:underline text-sm">Retour à la connexion</Link>
