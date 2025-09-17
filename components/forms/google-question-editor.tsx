@@ -218,7 +218,7 @@ export function GoogleQuestionEditor({
                   <Button
                     variant="ghost"
                     onClick={addOtherOption}
-                    className="text-[#E40046] hover:text-pink-700 px-2"
+                    className="text-[#E40046] hover:text-[#E40046]/80 px-2"
                   >
                     ajouter "Autre"
                   </Button>

@@ -117,7 +117,7 @@ export function CategorySelector({ onSelectCategory, onClose }: CategorySelector
                   {categories.map((category) => (
                     <Card
                       key={category.id}
-                      className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-pink-400 bg-white hover:bg-pink-50"
+                      className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-[#E40046] bg-white hover:bg-[#E40046]/5"
                       onClick={() => handleCategoryClick(category)}
                     >
                       <CardContent className="p-4">
@@ -148,7 +148,7 @@ export function CategorySelector({ onSelectCategory, onClose }: CategorySelector
                               )}
                             </div>
                           </div>
-                          <Button size="sm" className="bg-pink-600 hover:bg-pink-700">
+                          <Button size="sm" className="bg-[#E40046] hover:bg-[#E40046]/80 text-white">
                             <Plus className="w-4 h-4" />
                           </Button>
                         </div>

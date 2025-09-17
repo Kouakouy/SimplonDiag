@@ -139,7 +139,7 @@ export function FormPreview({ form, onClose }: FormPreviewProps) {
       <Card className="w-full max-w-3xl max-h-[90vh] overflow-hidden bg-white shadow-2xl">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
           <div className="flex items-center gap-3">
-            <FileText className="w-6 h-6 text-pink-600" />
+            <FileText className="w-6 h-6 text-[#E40046]" />
             <div>
               <CardTitle className="text-xl">Aperçu du formulaire</CardTitle>
               <p className="text-sm text-gray-600">Prévisualisation de votre formulaire</p>
@@ -158,7 +158,7 @@ export function FormPreview({ form, onClose }: FormPreviewProps) {
                 className={`h-40 md:h-48 flex items-center justify-center relative ${
                   form.bannerImageUrl 
                     ? 'bg-cover bg-center' 
-                    : 'bg-gradient-to-r from-pink-500 via-rose-500 to-red-500'
+                    : 'bg-gradient-to-r from-[#E40046] via-[#E40046]/80 to-[#E40046]/60'
                 }`}
                 style={form.bannerImageUrl ? { backgroundImage: `url(${form.bannerImageUrl})` } : {}}
               >
@@ -231,7 +231,7 @@ export function FormPreview({ form, onClose }: FormPreviewProps) {
               {form.questions && form.questions.length > 0 && (
                 <div className="border-t pt-6 text-center">
                   <Button 
-                    className="bg-[#E40046] hover:bg-pink-700 px-8 py-2"
+                    className="bg-[#E40046] hover:bg-[#E40046]/80 text-white px-8 py-2"
                     disabled
                   >
                     Soumettre le formulaire

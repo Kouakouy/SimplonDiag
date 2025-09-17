@@ -21,7 +21,7 @@ export default function Dashboard() {
               <p className="text-gray-600 mt-1">Vue d'ensemble de vos formulaires</p>
             </div>
               <Link href="/forms/create">
-              <Button className="bg-[#E40046] hover:bg-[#E40040]" size="lg">
+              <Button className="bg-[#E40046] hover:bg-[#E40040] text-white" size="lg">
                 <Plus className="w-5 h-5 mr-2" />
                 Créer un formulaire
                 </Button>
@@ -37,8 +37,8 @@ export default function Dashboard() {
                     <p className="text-sm font-medium text-gray-600">Total formulaires</p>
                     <p className="text-2xl font-bold text-gray-900">{mockStats.totalForms}</p>
                   </div>
-                  <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
-                    <FileText className="w-6 h-6 text-pink-600" />
+                  <div className="w-12 h-12 bg-[#E40046]/10 rounded-lg flex items-center justify-center">
+                    <FileText className="w-6 h-6 text-[#E40046]" />
                   </div>
                 </div>
               </CardContent>

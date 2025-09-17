@@ -94,7 +94,7 @@ export function FormHeaderSection({
           className={`h-48 flex items-center justify-center relative ${
             bannerImageUrl 
               ? 'bg-cover bg-center' 
-              : 'bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500'
+              : 'bg-gradient-to-r from-[#E40046] via-[#E40046]/80 to-yellow-500'
           }`}
           style={bannerImageUrl ? { backgroundImage: `url(${bannerImageUrl})` } : {}}
         >
@@ -232,7 +232,7 @@ export function FormHeaderSection({
               <Button
                 variant={imageSource === 'url' ? 'default' : 'outline'}
                 onClick={() => setImageSource('url')}
-                className={imageSource === 'url' ? 'bg-[#E40046] hover:bg-pink-700' : ''}
+                className={imageSource === 'url' ? 'bg-[#E40046] hover:bg-[#E40046]/80 text-white' : ''}
               >
                 <Link className="w-4 h-4 mr-2" />
                 URL
@@ -240,7 +240,7 @@ export function FormHeaderSection({
               <Button
                 variant={imageSource === 'gallery' ? 'default' : 'outline'}
                 onClick={() => setImageSource('gallery')}
-                className={imageSource === 'gallery' ? 'bg-[#E40046] hover:bg-pink-700' : ''}
+                className={imageSource === 'gallery' ? 'bg-[#E40046] hover:bg-[#E40046]/80 text-white' : ''}
               >
                 <FolderOpen className="w-4 h-4 mr-2" />
                 Galerie
@@ -270,7 +270,7 @@ export function FormHeaderSection({
                   <Button
                     onClick={handleImageUpload}
                     disabled={!tempImageUrl}
-                    className="bg-[#E40046] hover:bg-pink-700"
+                    className="bg-[#E40046] hover:bg-[#E40046]/80 text-white"
                   >
                     Ajouter
                   </Button>
@@ -334,7 +334,7 @@ export function FormHeaderSection({
                   {selectedFile && previewUrl && (
                     <Button
                       onClick={handleImageUpload}
-                      className="bg-[#E40046] hover:bg-pink-700"
+                      className="bg-[#E40046] hover:bg-[#E40046]/80 text-white"
                     >
                       Utiliser cette image
                     </Button>

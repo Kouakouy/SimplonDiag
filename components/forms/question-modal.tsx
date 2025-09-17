@@ -175,9 +175,9 @@ export function QuestionModal({ categoryId, onSave, onClose, existingQuestion }:
                   <button
                     type="button"
                     onClick={() => setQuestion(prev => ({ ...prev, required: !prev.required }))}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 ${
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#E40046] focus:ring-offset-2 ${
                       question.required 
-                        ? 'bg-pink-600' 
+                        ? 'bg-[#E40046]' 
                         : 'bg-gray-300 border-2 border-gray-400'
                     }`}
                   >
@@ -300,7 +300,7 @@ export function QuestionModal({ categoryId, onSave, onClose, existingQuestion }:
           <Button variant="outline" onClick={onClose}>
             Annuler
           </Button>
-          <Button onClick={handleSave} className="bg-pink-600 hover:bg-pink-700">
+          <Button onClick={handleSave} className="bg-[#E40046] hover:bg-[#E40046]/80">
             {existingQuestion ? "Mettre à jour" : "Ajouter la question"}
           </Button>
         </div>

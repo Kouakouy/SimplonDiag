@@ -98,7 +98,7 @@ export default function CreateFormPage() {
 
             {/* Bouton d'enregistrement en bas */}
             <div className="text-center">
-              <Button onClick={saveFormConfiguration} size="lg" className="bg-[#E40046] hover:bg-pink-700">
+              <Button onClick={saveFormConfiguration} size="lg" className="bg-[#E40046] hover:bg-[#E40046]/80 text-white">
                 <Save className="w-4 h-4 mr-2" />
                 Enregistrer et continuer
               </Button>

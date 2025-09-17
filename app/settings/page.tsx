@@ -68,7 +68,7 @@ export default function SettingsPage() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                       activeTab === tab.id
-                        ? "bg-white text-pink-600 shadow-sm"
+                        ? "bg-white text-[#E40046] shadow-sm"
                         : "text-gray-600 hover:text-gray-900"
                     }`}
                   >
@@ -169,7 +169,7 @@ export default function SettingsPage() {
 
             {/* Bouton de sauvegarde */}
             <div className="mt-8 flex justify-end">
-              <Button className="bg-pink-600 hover:bg-pink-700">
+              <Button className="bg-[#E40046] hover:bg-[#E40046]/80">
                 <Save className="w-4 h-4 mr-2" />
                 Sauvegarder les modifications
               </Button>

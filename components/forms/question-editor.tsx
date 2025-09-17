@@ -188,9 +188,9 @@ export function QuestionEditor({ question, onUpdate, onDelete, availableQuestion
             <button
               type="button"
               onClick={() => onUpdate({ ...question, required: !question.required })}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 ${
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#E40046] focus:ring-offset-2 ${
                 question.required 
-                  ? 'bg-pink-600' 
+                  ? 'bg-[#E40046]' 
                   : 'bg-gray-300 border-2 border-gray-400'
               }`}
             >

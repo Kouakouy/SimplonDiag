@@ -232,7 +232,7 @@ export default function FormQuestionsPage() {
                   </Button>
                 </Link>
                 <Link href={`/forms/${formId}/share`}>
-                  <Button className="bg-[#E40046] hover:bg-pink-700">
+                  <Button className="bg-[#E40046] hover:bg-[#E40046]/80 text-white">
                     <Share2 className="w-4 h-4 mr-2" />
                     Partager
                   </Button>
@@ -241,13 +241,13 @@ export default function FormQuestionsPage() {
             </div>
 
             {/* Résumé de la configuration + bannière */}
-            <Card className="mb-6 overflow-hidden border-pink-200">
+            <Card className="mb-6 overflow-hidden border-[#E40046]/20">
               <div
                 className={
                   "relative h-32 md:h-40 w-full " +
                   (form.bannerImageUrl
                     ? "bg-center bg-cover"
-                    : "bg-gradient-to-r from-pink-200 via-rose-200 to-red-200")
+                    : "bg-gradient-to-r from-[#E40046]/10 via-[#E40046]/5 to-red-200")
                 }
                 style={
                   form.bannerImageUrl
@@ -318,7 +318,7 @@ export default function FormQuestionsPage() {
                     </div>
                     <h4 className="text-lg font-medium text-gray-600 mb-2">Aucune question</h4>
                     <p className="text-gray-500 mb-4">Commencez par ajouter votre première question</p>
-                    <Button onClick={addQuestion} className="bg-[#E40046] hover:bg-pink-700">
+                    <Button onClick={addQuestion} className="bg-[#E40046] hover:bg-[#E40046]/80 text-white">
                       <Plus className="w-4 h-4 mr-2" />
                       Ajouter une question
                     </Button>
@@ -353,7 +353,7 @@ export default function FormQuestionsPage() {
 
             {/* Bouton de finalisation */}
             <div className="text-center">
-              <Button onClick={finishForm} size="lg" className="bg-[#E40046] hover:bg-pink-700">
+              <Button onClick={finishForm} size="lg" className="bg-[#E40046] hover:bg-[#E40046]/80 text-white">
                 <Save className="w-4 h-4 mr-2" />
                 Terminer le formulaire
               </Button>

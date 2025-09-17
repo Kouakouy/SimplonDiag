@@ -27,7 +27,7 @@ export default function LoginPage() {
           <div className="flex items-center justify-center">
             {/* Logo simplon style */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-pink-600 text-white flex items-center justify-center text-xl font-bold">•</div>
+              <div className="w-10 h-10 rounded-full bg-[#E40046] text-white flex items-center justify-center text-xl font-bold">•</div>
               <div className="text-left">
                 <div className="text-2xl font-semibold tracking-tight">simplon</div>
                 <div className="text-[10px] text-gray-500 -mt-1">CÔTE D'IVOIRE</div>
@@ -61,7 +61,7 @@ export default function LoginPage() {
                 className="mt-2"
               />
             </div>
-            <Button type="submit" disabled={submitting} className="w-full bg-[#E40046] hover:bg-pink-700 h-11 text-base">
+            <Button type="submit" disabled={submitting} className="w-full bg-[#E40046] hover:bg-[#E40046]/80 h-11 text-base">
               {submitting ? "Connexion..." : "Se Connecter"}
             </Button>
             <div className="text-center">

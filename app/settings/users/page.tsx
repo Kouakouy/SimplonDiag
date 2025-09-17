@@ -105,13 +105,13 @@ export default function UsersSettingsPage() {
                   <Label>Rôle</Label>
                   <div className="flex items-center gap-2 mt-1">
                     {(["viewer","admin","owner"] as const).map((r) => (
-                      <button key={r} type="button" onClick={() => setRole(r)} className={`px-3 py-1 rounded-full text-sm border ${role===r? 'bg-pink-600 text-white border-pink-600':'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}>
+                      <button key={r} type="button" onClick={() => setRole(r)} className={`px-3 py-1 rounded-full text-sm border ${role===r? 'bg-[#E40046] text-white border-[#E40046]':'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}>
                         {r}
                       </button>
                     ))}
                   </div>
                 </div>
-                <Button onClick={addUser} className="bg-pink-600 hover:bg-pink-700 w-full">
+                <Button onClick={addUser} className="bg-[#E40046] hover:bg-[#E40046]/80 w-full">
                   <Plus className="w-4 h-4 mr-2" />
                   Ajouter
                 </Button>
@@ -144,7 +144,7 @@ export default function UsersSettingsPage() {
                           <tr key={u.id} className="border-b">
                             <td className="p-3">
                               <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-full bg-pink-100 text-pink-700 flex items-center justify-center text-xs font-semibold">
+                                <div className="w-8 h-8 rounded-full bg-[#E40046]/10 text-[#E40046] flex items-center justify-center text-xs font-semibold">
                                   {(u.name?.trim()?.charAt(0) || u.email.charAt(0)).toUpperCase()}
                                 </div>
                                 <span className="font-medium text-gray-900">{u.name || '—'}</span>

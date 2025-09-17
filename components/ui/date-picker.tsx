@@ -187,8 +187,8 @@ export function DatePicker({ value, onChange, placeholder = "Sélectionner une d
                         selectedDate.getFullYear() === year
                           ? 'bg-[#E40046] text-white'
                           : day === today.getDate() && month === today.getMonth() && year === today.getFullYear()
-                          ? 'bg-pink-100 text-[#E40046] font-semibold'
-                          : 'hover:bg-pink-50'
+                          ? 'bg-[#E40046]/10 text-[#E40046] font-semibold'
+                          : 'hover:bg-[#E40046]/5'
                       }`}
                       onClick={() => handleDateSelect(day)}
                     >

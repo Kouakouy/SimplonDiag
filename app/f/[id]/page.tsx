@@ -170,7 +170,7 @@ export default function PublicFormPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E40046] mx-auto mb-4"></div>
           <p className="text-gray-500">Chargement du formulaire...</p>
         </div>
       </div>
@@ -185,7 +185,7 @@ export default function PublicFormPage() {
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Formulaire introuvable</h2>
             <p className="text-gray-500 mb-4">Le formulaire que vous cherchez n'existe pas ou n'est plus disponible.</p>
-            <Button onClick={() => router.push("/")} variant="outline">
+            <Button onClick={() => router.push("/")} className="bg-[#E40046] hover:bg-[#E40046]/80 text-white">
               Retour à l'accueil
             </Button>
           </CardContent>
@@ -202,7 +202,7 @@ export default function PublicFormPage() {
             <AlertCircle className="w-12 h-12 text-orange-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Formulaire privé</h2>
             <p className="text-gray-500 mb-4">Ce formulaire n'est pas accessible au public.</p>
-            <Button onClick={() => router.push("/")} variant="outline">
+            <Button onClick={() => router.push("/")} className="bg-[#E40046] hover:bg-[#E40046]/80 text-white">
               Retour à l'accueil
             </Button>
           </CardContent>
@@ -224,7 +224,7 @@ export default function PublicFormPage() {
                 Nous avons bien reçu vos réponses. Elles seront analysées dans les plus brefs délais.
               </p>
             </div>
-            <Button onClick={() => router.push("/")} className="bg-pink-600 hover:bg-pink-700">
+            <Button onClick={() => router.push("/")} className="bg-[#E40046] hover:bg-[#E40046]/80 text-white">
               Fermer
             </Button>
           </CardContent>
@@ -236,7 +236,7 @@ export default function PublicFormPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Barre d'accent en haut (style Google Forms) */}
-      <div className="h-2 w-full bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-500"></div>
+      <div className="h-2 w-full bg-gradient-to-r from-[#E40046] via-[#E40046]/80 to-rose-500"></div>
 
       <div className="max-w-3xl md:max-w-4xl mx-auto px-4 py-8">
         {/* Barre de progression */}
@@ -247,7 +247,7 @@ export default function PublicFormPage() {
           </div>
           <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-500"
+              className="h-full bg-gradient-to-r from-[#E40046]/10 via-[#E40046]/5 to-rose-200"
               style={{ width: `${((currentPage + 1) / totalPages) * 100}%` }}
             />
           </div>
@@ -255,7 +255,7 @@ export default function PublicFormPage() {
         {/* Bannière */}
         {(form.bannerTitle || form.bannerImageUrl) ? (
           <div 
-            className={`h-40 md:h-48 mb-6 relative overflow-hidden rounded-xl ${form.bannerImageUrl ? 'bg-cover bg-center' : 'bg-gradient-to-r from-pink-500 via-rose-500 to-red-500'}`}
+            className={`h-40 md:h-48 mb-6 relative overflow-hidden rounded-xl ${form.bannerImageUrl ? 'bg-cover bg-center' : 'bg-gradient-to-r from-[#E40046] via-[#E40046]/80 to-rose-500'}`}
             style={form.bannerImageUrl ? { backgroundImage: `url(${form.bannerImageUrl})` } : {}}
           >
             <div className="absolute inset-0 bg-black/30"></div>
@@ -289,11 +289,11 @@ export default function PublicFormPage() {
 
         {/* Infos répondant */}
         <Card className="mb-6 shadow-sm border border-gray-200 overflow-hidden">
-          <div className="h-1 w-full bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-500" />
+          <div className="h-1 w-full bg-gradient-to-r from-[#E40046] via-[#E40046]/80 to-rose-500" />
           <CardContent className="p-6">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-pink-100 text-pink-700 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-[#E40046]/10 text-[#E40046] flex items-center justify-center">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M12 12c2.761 0 5-2.239 5-5S14.761 2 12 2 7 4.239 7 7s2.239 5 5 5Zm0 2c-3.866 0-7 2.134-7 4.762V21h14v-2.238C19 16.134 15.866 14 12 14Z"/></svg>
                 </div>
                 <div>
@@ -311,7 +311,7 @@ export default function PublicFormPage() {
               {/* Avatar aperçu */}
               <div className="md:col-span-1">
                 <div className="flex items-center gap-3 p-3 rounded-lg border bg-gray-50">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 text-white flex items-center justify-center text-lg font-bold">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#E40046] to-rose-500 text-white flex items-center justify-center text-lg font-bold">
                     {(respondentName?.trim()?.charAt(0) || '?').toUpperCase()}
                   </div>
                   <div className="min-w-0">
@@ -374,7 +374,7 @@ export default function PublicFormPage() {
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">
                     <div className="mt-0.5 select-none">
-                      <div className="w-7 h-7 rounded-full bg-pink-100 text-pink-700 flex items-center justify-center text-sm font-semibold">
+                      <div className="w-7 h-7 rounded-full bg-[#E40046]/10 text-[#E40046] flex items-center justify-center text-sm font-semibold">
                         {startIndex + index + 1}
                       </div>
                     </div>
@@ -508,14 +508,14 @@ export default function PublicFormPage() {
                     Précédent
                   </Button>
                   {currentPage < totalPages - 1 ? (
-                    <Button type="button" onClick={handleNext} disabled={submitting} className="bg-pink-600 hover:bg-pink-700 text-white px-6 md:px-8 py-2">
+                    <Button type="button" onClick={handleNext} disabled={submitting} className="bg-[#E40046] hover:bg-[#E40046]/80 text-white px-6 md:px-8 py-2">
                       Suivant
                     </Button>
                   ) : (
                     <Button
                       type="submit"
                       disabled={submitting}
-                      className="bg-pink-600 hover:bg-pink-700 text-white px-6 md:px-8 py-2"
+                      className="bg-[#E40046] hover:bg-[#E40046]/80 text-white px-6 md:px-8 py-2"
                     >
                       {submitting ? (
                         <>

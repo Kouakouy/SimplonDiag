@@ -51,7 +51,7 @@ export default function FormsPage() {
               <p className="text-gray-600 mt-1">Gérez tous vos formulaires</p>
             </div>
             <Link href="/forms/create">
-              <Button className="bg-pink-600 hover:bg-pink-700" size="lg">
+              <Button className="bg-[#E40046] hover:bg-[#E40046]/80 text-white" size="lg">
                 <Plus className="w-5 h-5 mr-2" />
                 Créer un formulaire
               </Button>
@@ -98,7 +98,7 @@ export default function FormsPage() {
                 </p>
                 {!searchTerm && (
                   <Link href="/forms/create">
-                    <Button className="bg-pink-600 hover:bg-pink-700">
+                    <Button className="bg-[#E40046] hover:bg-[#E40046]/80 text-white">
                       <Plus className="w-4 h-4 mr-2" />
                       Créer un formulaire
                     </Button>
@@ -113,8 +113,8 @@ export default function FormsPage() {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4 flex-1">
-                        <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
-                          <FileText className="w-6 h-6 text-pink-600" />
+                        <div className="w-12 h-12 bg-[#E40046]/10 rounded-lg flex items-center justify-center">
+                          <FileText className="w-6 h-6 text-[#E40046]" />
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
@@ -147,7 +147,7 @@ export default function FormsPage() {
                       <Link
                         href={`/f/${form.public_slug || form._id || form.id}`}
                         target="_blank"
-                        className="text-pink-600 hover:underline break-all"
+                        className="text-[#E40046] hover:underline break-all"
                       >
                         {`/f/${form.public_slug || form._id || form.id}`}
                       </Link>

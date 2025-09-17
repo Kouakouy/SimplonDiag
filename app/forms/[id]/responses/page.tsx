@@ -221,7 +221,7 @@ export default function ResponsesPage() {
         <Sidebar />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E40046] mx-auto mb-4"></div>
             <p className="text-gray-500">Chargement des réponses...</p>
           </div>
         </div>
@@ -376,7 +376,7 @@ export default function ResponsesPage() {
                   onClick={() => setActiveTab("liste")}
                   className={`py-2 px-1 border-b-2 font-medium text-sm ${
                     activeTab === "liste"
-                      ? "border-pink-500 text-pink-600"
+                      ? "border-[#E40046] text-[#E40046]"
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   }`}
                 >
@@ -386,7 +386,7 @@ export default function ResponsesPage() {
                   onClick={() => setActiveTab("resume")}
                   className={`py-2 px-1 border-b-2 font-medium text-sm ${
                     activeTab === "resume"
-                      ? "border-pink-500 text-pink-600"
+                      ? "border-[#E40046] text-[#E40046]"
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   }`}
                 >
@@ -514,7 +514,7 @@ export default function ResponsesPage() {
                                   <div className="flex items-center gap-2">
                                     <div className="w-32 bg-gray-200 rounded-full h-2">
                                       <div
-                                        className="bg-pink-600 h-2 rounded-full"
+                                        className="bg-[#E40046] h-2 rounded-full text-white"
                                         style={{ width: `${percentage}%` }}
                                       ></div>
                                     </div>
@@ -567,7 +567,7 @@ export default function ResponsesPage() {
                       <h4 className="font-medium text-gray-900 mb-3">Réponses aux questions</h4>
                       <div className="space-y-3">
                         {form.questions.map((question) => (
-                          <div key={question.id} className="border-l-4 border-pink-200 pl-4">
+                          <div key={question.id} className="border-l-4 border-[#E40046]/20 pl-4">
                             <h5 className="font-medium text-gray-700 mb-1">{question.title}</h5>
                             <p className="text-gray-900">
                               {selectedResponseForModal.answers[question.id] || "Aucune réponse"}

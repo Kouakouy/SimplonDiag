@@ -162,7 +162,7 @@ export default function FormOverviewPage() {
         <Sidebar />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E40046] mx-auto mb-4"></div>
             <p className="text-gray-500">Chargement du formulaire...</p>
           </div>
         </div>
@@ -218,14 +218,14 @@ export default function FormOverviewPage() {
           {/* Lien de partage rapide */}
           <div className="mb-6 text-sm">
             <span className="text-gray-600">Lien de partage: </span>
-            <Link href={shareUrl} target="_blank" className="text-pink-600 hover:underline break-all">{shareUrl}</Link>
+            <Link href={shareUrl} target="_blank" className="text-[#E40046] hover:underline break-all">{shareUrl}</Link>
           </div>
 
           <div className="space-y-0">
             {(form.bannerTitle || form.bannerImageUrl) && (
               <div 
                 className={`h-40 md:h-48 flex items-center justify-center relative ${
-                  form.bannerImageUrl ? 'bg-cover bg-center' : 'bg-gradient-to-r from-pink-500 via-rose-500 to-red-500'
+                  form.bannerImageUrl ? 'bg-cover bg-center' : 'bg-gradient-to-r from-[#E40046] via-[#E40046]/80 to-red-500'
                 }`}
                 style={form.bannerImageUrl ? { backgroundImage: `url(${form.bannerImageUrl})` } : {}}
               >
