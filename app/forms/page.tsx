@@ -15,6 +15,8 @@ export default function FormsPage() {
   const [forms, setForms] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [formToDelete, setFormToDelete] = useState<string | null>(null)
 
   useEffect(() => {
     const load = async () => {
@@ -50,14 +52,21 @@ export default function FormsPage() {
 
   // Ajout de la fonction de suppression
   const handleDelete = async (formId: string) => {
-    if (!window.confirm("Voulez-vous vraiment supprimer ce formulaire ? Cette action est irréversible.")) return;
+    setFormToDelete(formId)
+    setShowDeleteModal(true)
+  }
+  const confirmDelete = async () => {
+    if (!formToDelete) return
     try {
-      await apiRequest({ url: `/forms/${formId}`, method: "DELETE" });
-      setForms((prev) => prev.filter((f) => f._id !== formId && f.id !== formId));
+      await apiRequest({ url: `/forms/${formToDelete}`, method: "DELETE" })
+      setForms((prev) => prev.filter((f) => f._id !== formToDelete && f.id !== formToDelete))
     } catch (err) {
-      alert("Erreur lors de la suppression du formulaire.");
+      alert("Erreur lors de la suppression du formulaire.")
+    } finally {
+      setShowDeleteModal(false)
+      setFormToDelete(null)
     }
-  };
+  }
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -201,6 +210,19 @@ export default function FormsPage() {
           )}
         </main>
       </div>
+      {/* Modale de suppression */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg max-w-md w-full mx-4 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Supprimer le formulaire</h3>
+            <p className="text-gray-600 mb-6">Voulez-vous vraiment supprimer ce formulaire ? Cette action est irréversible.</p>
+            <div className="flex items-center justify-end gap-3">
+              <Button variant="outline" onClick={() => setShowDeleteModal(false)}>Annuler</Button>
+              <Button onClick={confirmDelete} className="bg-[#E40046] text-white hover:bg-[#E40046]/80">Supprimer</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

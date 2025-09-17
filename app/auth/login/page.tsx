@@ -30,12 +30,12 @@ export default function LoginPage() {
               <div className="w-10 h-10 rounded-full bg-[#E40046] text-white flex items-center justify-center text-xl font-bold">•</div>
               <div className="text-left">
                 <div className="text-2xl font-semibold tracking-tight">simplon</div>
-                <div className="text-[10px] text-gray-500 -mt-1">CÔTE D'IVOIRE</div>
+                <div className="text-[10px] text-gray-500 -mt-1">AFRICA</div>
               </div>
             </div>
           </div>
           <CardTitle className="text-3xl font-bold text-gray-900">Connexion</CardTitle>
-          <p className="text-lg text-gray-700">DEV WEB P6</p>
+          <p className="text-lg text-gray-700">SIMPLON FORM</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -65,7 +65,7 @@ export default function LoginPage() {
               {submitting ? "Connexion..." : "Se Connecter"}
             </Button>
             <div className="text-center">
-              <Link href="#" className="text-blue-600 hover:underline text-sm">Mot de passe oublié ?</Link>
+              <Link href="/auth/forgot-password" className="text-blue-600 hover:underline text-sm">Mot de passe oublié ?</Link>
             </div>
           </form>
         </CardContent>

@@ -57,8 +57,13 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="p-4">
-        <button className="flex items-center gap-3 px-3 py-2 text-pink-200 hover:text-white w-full rounded-lg hover:bg-pink-700 transition-colors">
+      <div className="p-4 space-y-2">
+        <Link href="/auth/login" className="block">
+          <button className="flex items-center justify-center gap-2 px-3 py-2 w-full rounded-lg bg-white text-[#E40046] hover:bg-white/90 transition-colors">
+            <span className="font-medium">Se connecter</span>
+          </button>
+        </Link>
+        <button className="flex items-center gap-3 px-3 py-2 text-white/80 hover:text-white w-full rounded-lg hover:bg-[#E40046]/80 transition-colors">
           <LogOut className="w-5 h-5" />
           <span>Déconnexion</span>
         </button>
