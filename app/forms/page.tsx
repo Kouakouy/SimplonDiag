@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { apiRequest } from "@/lib/api"
-import { FileText, Plus, Search } from "lucide-react"
+import { FileText, Plus, Search, CheckCircle, Copy, Trash2 } from "lucide-react"
 import Link from "next/link"
 
 export default function FormsPage() {
@@ -37,6 +37,27 @@ export default function FormsPage() {
       form.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       form.description.toLowerCase().includes(searchTerm.toLowerCase()),
   )
+
+  // Ajout de la fonction de copie pour le bouton
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      // TODO: Afficher une notification de succès si besoin
+    } catch (err) {
+      console.error('Erreur lors de la copie:', err)
+    }
+  }
+
+  // Ajout de la fonction de suppression
+  const handleDelete = async (formId: string) => {
+    if (!window.confirm("Voulez-vous vraiment supprimer ce formulaire ? Cette action est irréversible.")) return;
+    try {
+      await apiRequest({ url: `/forms/${formId}`, method: "DELETE" });
+      setForms((prev) => prev.filter((f) => f._id !== formId && f.id !== formId));
+    } catch (err) {
+      alert("Erreur lors de la suppression du formulaire.");
+    }
+  };
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -108,53 +129,74 @@ export default function FormsPage() {
             </Card>
           ) : (
             <div className="grid gap-4">
-              {filteredForms.map((form) => (
-                <Card key={form._id || form.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4 flex-1">
-                        <div className="w-12 h-12 bg-[#E40046]/10 rounded-lg flex items-center justify-center">
-                          <FileText className="w-6 h-6 text-[#E40046]" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-semibold text-gray-900">{form.title}</h4>
+              {filteredForms.map((form) => {
+                const shareUrl = typeof window !== 'undefined'
+                  ? `${window.location.origin}/f/${form.public_slug || form._id || form.id}`
+                  : `/f/${form.public_slug || form._id || form.id}`;
+                return (
+                  <Card key={form._id || form.id} className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4 flex-1">
+                          <div className="w-12 h-12 bg-[#E40046]/10 rounded-lg flex items-center justify-center">
+                            <FileText className="w-6 h-6 text-[#E40046]" />
                           </div>
-                          <p className="text-sm text-gray-500 mb-2">{form.description}</p>
-                          <div className="flex items-center gap-4 text-xs text-gray-400">
-                            {form.created_at ? (
-                              <span>Créé le {new Date(form.created_at).toLocaleDateString("fr-FR")}</span>
-                            ) : null}
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-semibold text-gray-900">{form.title}</h4>
+                            </div>
+                            <p className="text-sm text-gray-500 mb-2">{form.description}</p>
+                            <div className="flex items-center gap-4 text-xs text-gray-400">
+                              {form.created_at ? (
+                                <span>Créé le {new Date(form.created_at).toLocaleDateString("fr-FR")}</span>
+                              ) : null}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Link href={`/forms/${form._id || form.id}`}>
+                            <Button variant="outline" size="sm">Voir</Button>
+                          </Link>
+                          <Link href={`/forms/${form._id || form.id}/responses`}>
+                            <Button variant="outline" size="sm">Résultats</Button>
+                          </Link>
+                          <Link href={`/forms/${form._id || form.id}/edit`}>
+                            <Button variant="outline" size="sm">Éditer</Button>
+                          </Link>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-[#E40046] text-[#E40046] hover:bg-[#E40046]/10 hover:text-white hover:border-[#E40046]"
+                            onClick={() => handleDelete(form._id || form.id)}
+                            title="Supprimer le formulaire"
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" /> Supprimer
+                          </Button>
+                        </div>
+                      </div>
+                      {/* Lien de partage */}
+                      <div className="mt-4">
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <CheckCircle className="w-4 h-4 text-green-600" />
+                            <span className="text-sm font-medium text-green-800">Lien public actif</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input
+                              value={shareUrl}
+                              readOnly
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-white text-sm"
+                            />
+                            <Button onClick={() => copyToClipboard(shareUrl)} size="sm">
+                              <Copy className="w-4 h-4" />
+                            </Button>
                           </div>
                         </div>
                       </div>
-
-                      <div className="flex items-center gap-2">
-                        <Link href={`/forms/${form._id || form.id}`}>
-                          <Button variant="outline" size="sm">Voir</Button>
-                        </Link>
-                        <Link href={`/forms/${form._id || form.id}/responses`}>
-                          <Button variant="outline" size="sm">Résultats</Button>
-                        </Link>
-                        <Link href={`/forms/${form._id || form.id}/edit`}>
-                          <Button variant="outline" size="sm">Éditer</Button>
-                        </Link>
-                      </div>
-                    </div>
-                    {/* Lien de partage */}
-                    <div className="mt-4 text-xs text-gray-600">
-                      <span className="mr-1">Lien de partage:</span>
-                      <Link
-                        href={`/f/${form.public_slug || form._id || form.id}`}
-                        target="_blank"
-                        className="text-[#E40046] hover:underline break-all"
-                      >
-                        {`/f/${form.public_slug || form._id || form.id}`}
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                )
+              })}
             </div>
           )}
         </main>
