@@ -49,23 +49,29 @@ export default function ResponsesPage() {
   const [backendStats, setBackendStats] = useState<{ views: number; submissions: number; completionRate: number } | null>(null)
   const [aiAnalysis, setAiAnalysis] = useState<any>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [showAnalyzeMenu, setShowAnalyzeMenu] = useState(false)
+  const [showAnalysisModal, setShowAnalysisModal] = useState(false)
+  const analyzeMenuRef = useRef<HTMLDivElement>(null)
 
-  // Fermer le menu d'export quand on clique ailleurs
+  // Fermer les menus quand on clique ailleurs
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
         setShowExportMenu(false)
       }
+      if (analyzeMenuRef.current && !analyzeMenuRef.current.contains(event.target as Node)) {
+        setShowAnalyzeMenu(false)
+      }
     }
 
-    if (showExportMenu) {
+    if (showExportMenu || showAnalyzeMenu) {
       document.addEventListener('mousedown', handleClickOutside)
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [showExportMenu])
+  }, [showExportMenu, showAnalyzeMenu])
 
   useEffect(() => {
     const load = async () => {
@@ -206,6 +212,7 @@ export default function ResponsesPage() {
     if (!form || responses.length === 0) return
     
     setIsAnalyzing(true)
+    setShowAnalyzeMenu(false)
     try {
       // Simulation d'une analyse IA (à remplacer par un vrai appel API)
       await new Promise(resolve => setTimeout(resolve, 2000))
@@ -234,6 +241,21 @@ export default function ResponsesPage() {
     } finally {
       setIsAnalyzing(false)
     }
+  }
+
+  const viewAnalysis = () => {
+    setShowAnalysisModal(true)
+    setShowAnalyzeMenu(false)
+  }
+
+  const showTableResults = () => {
+    setActiveTab("analyze")
+    setShowAnalyzeMenu(false)
+  }
+
+  const showChartResults = () => {
+    setActiveTab("analyze")
+    setShowAnalyzeMenu(false)
   }
 
   const exportToCSV = () => {
@@ -387,10 +409,60 @@ export default function ResponsesPage() {
                     Partager
                   </Button>
                 </Link>
-                <Button variant="outline" onClick={() => setActiveTab("analyze")}>
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  Analyser avec IA
-                </Button>
+                <div className="relative" ref={analyzeMenuRef}>
+                  <Button variant="outline" onClick={() => setShowAnalyzeMenu(!showAnalyzeMenu)}>
+                    <Brain className="w-4 h-4 mr-2" />
+                    Analyser avec IA
+                  </Button>
+                  
+                  {showAnalyzeMenu && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                      <div className="py-1">
+                        <button
+                          onClick={generateAIAnalysis}
+                          disabled={isAnalyzing || responses.length === 0}
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isAnalyzing ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
+                              Génération en cours...
+                            </>
+                          ) : (
+                            <>
+                              <Brain className="w-4 h-4 mr-2" />
+                              Générer l'analyse
+                            </>
+                          )}
+                        </button>
+                        <button
+                          onClick={viewAnalysis}
+                          disabled={!aiAnalysis}
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          Voir l'analyse
+                        </button>
+                        <button
+                          onClick={showTableResults}
+                          disabled={!aiAnalysis}
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <FileText className="w-4 h-4 mr-2" />
+                          Résultats en tableau
+                        </button>
+                        <button
+                          onClick={showChartResults}
+                          disabled={!aiAnalysis}
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <TrendingUp className="w-4 h-4 mr-2" />
+                          Résultats en graphiques
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 <div className="relative" ref={exportMenuRef}>
                   <Button variant="outline" onClick={() => setShowExportMenu(!showExportMenu)}>
                     <Download className="w-4 h-4 mr-2" />
@@ -656,6 +728,196 @@ export default function ResponsesPage() {
                 </div>
             )}
 
+            {activeTab === "stats" && (
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <BarChart3 className="w-5 h-5" />
+                      Statistiques détaillées
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="text-center p-4 bg-blue-50 rounded-lg">
+                        <div className="text-3xl font-bold text-blue-600">{responses.length}</div>
+                        <div className="text-sm text-blue-800">Total des réponses</div>
+                      </div>
+                      <div className="text-center p-4 bg-green-50 rounded-lg">
+                        <div className="text-3xl font-bold text-green-600">
+                          {responses.filter(r => {
+                            const today = new Date()
+                            const responseDate = r.submittedAt
+                            return responseDate.getDate() === today.getDate() && 
+                                   responseDate.getMonth() === today.getMonth() && 
+                                   responseDate.getFullYear() === today.getFullYear()
+                          }).length}
+                        </div>
+                        <div className="text-sm text-green-800">Aujourd'hui</div>
+                      </div>
+                      <div className="text-center p-4 bg-purple-50 rounded-lg">
+                        <div className="text-3xl font-bold text-purple-600">
+                          {responses.filter(r => {
+                            const weekAgo = new Date()
+                            weekAgo.setDate(weekAgo.getDate() - 7)
+                            return r.submittedAt >= weekAgo
+                          }).length}
+                        </div>
+                        <div className="text-sm text-purple-800">Cette semaine</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Réponses par jour</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center text-gray-500 py-8">
+                      Graphique des réponses par jour (à implémenter avec Chart.js)
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {activeTab === "analyze" && (
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Brain className="w-5 h-5" />
+                      Analyse avec Intelligence Artificielle
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {!aiAnalysis ? (
+                      <div className="text-center py-8">
+                        <Brain className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucune analyse disponible</h3>
+                        <p className="text-gray-600 mb-6">
+                          Utilisez le menu "Analyser avec IA" pour générer une nouvelle analyse.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-lg font-semibold">Résultats de l'analyse</h3>
+                          <div className="flex gap-2">
+                            <Button variant="outline" onClick={() => setAiAnalysis(null)}>
+                              <X className="w-4 h-4 mr-2" />
+                              Nouvelle analyse
+                            </Button>
+                            <Button variant="outline" onClick={() => {
+                              const dataStr = JSON.stringify(aiAnalysis, null, 2)
+                              const blob = new Blob([dataStr], { type: 'application/json' })
+                              const link = document.createElement('a')
+                              link.href = URL.createObjectURL(blob)
+                              link.download = 'analyse_ia.json'
+                              link.click()
+                            }}>
+                              <Download className="w-4 h-4 mr-2" />
+                              Exporter
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <h4 className="font-semibold text-blue-900 mb-2">Résumé exécutif</h4>
+                          <p className="text-blue-800">{aiAnalysis.summary}</p>
+                        </div>
+
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                          <h4 className="font-semibold text-green-900 mb-2">Insights clés</h4>
+                          <ul className="list-disc list-inside text-green-800 space-y-1">
+                            {aiAnalysis.insights.map((insight: string, index: number) => (
+                              <li key={index}>{insight}</li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        {/* Vue tableau */}
+                        <div className="space-y-4">
+                          <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                            <FileText className="w-5 h-5" />
+                            Résultats en tableau
+                          </h4>
+                          <Card>
+                            <CardContent className="p-0">
+                              <div className="overflow-x-auto">
+                                <table className="w-full">
+                                  <thead className="bg-gray-50 border-b">
+                                    <tr>
+                                      <th className="text-left p-4 font-medium text-gray-900">Question</th>
+                                      <th className="text-left p-4 font-medium text-gray-900">Option</th>
+                                      <th className="text-left p-4 font-medium text-gray-900">Nombre</th>
+                                      <th className="text-left p-4 font-medium text-gray-900">Pourcentage</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {aiAnalysis.charts.map((chart: any, chartIndex: number) => 
+                                      chart.data.map((item: any, itemIndex: number) => (
+                                        <tr key={`${chartIndex}-${itemIndex}`} className="border-b hover:bg-gray-50">
+                                          <td className="p-4 text-sm font-medium">{chart.questionTitle}</td>
+                                          <td className="p-4 text-sm">{item.label}</td>
+                                          <td className="p-4 text-sm">{item.value}</td>
+                                          <td className="p-4 text-sm">
+                                            {((item.value / responses.length) * 100).toFixed(1)}%
+                                          </td>
+                                        </tr>
+                                      ))
+                                    )}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </div>
+
+                        {/* Vue graphiques */}
+                        <div className="space-y-4">
+                          <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                            <TrendingUp className="w-5 h-5" />
+                            Résultats en graphiques
+                          </h4>
+                          <div className="grid gap-4">
+                            {aiAnalysis.charts.map((chart: any, index: number) => (
+                              <Card key={index}>
+                                <CardHeader>
+                                  <CardTitle className="text-base">{chart.questionTitle}</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                  <div className="space-y-2">
+                                    {chart.data.map((item: any, itemIndex: number) => (
+                                      <div key={itemIndex} className="flex items-center justify-between">
+                                        <span className="text-sm">{item.label}</span>
+                                        <div className="flex items-center gap-2">
+                                          <div className="w-32 bg-gray-200 rounded-full h-2">
+                                            <div
+                                              className="bg-[#E40046] h-2 rounded-full"
+                                              style={{ width: `${(item.value / responses.length) * 100}%` }}
+                                            ></div>
+                                          </div>
+                                          <span className="text-sm text-gray-600 w-12 text-right">
+                                            {item.value}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
             {/* Modal pour voir les réponses individuelles */}
             {showResponseModal && selectedResponseForModal && form && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -694,6 +956,73 @@ export default function ResponsesPage() {
                               {selectedResponseForModal.answers[question.id] || "Aucune réponse"}
                             </p>
                           </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Modal pour voir l'analyse IA */}
+            {showAnalysisModal && aiAnalysis && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <Brain className="w-5 h-5" />
+                        Analyse IA - {form?.title}
+                      </h3>
+                      <Button variant="outline" onClick={() => setShowAnalysisModal(false)}>
+                        <X className="w-4 h-4 mr-2" />
+                        Fermer
+                      </Button>
+                    </div>
+                    
+                    <div className="space-y-6">
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h4 className="font-semibold text-blue-900 mb-2">Résumé exécutif</h4>
+                        <p className="text-blue-800">{aiAnalysis.summary}</p>
+                      </div>
+
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h4 className="font-semibold text-green-900 mb-2">Insights clés</h4>
+                        <ul className="list-disc list-inside text-green-800 space-y-1">
+                          {aiAnalysis.insights.map((insight: string, index: number) => (
+                            <li key={index}>{insight}</li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="grid gap-4">
+                        <h4 className="font-semibold text-gray-900">Analyses par question</h4>
+                        {aiAnalysis.charts.map((chart: any, index: number) => (
+                          <Card key={index}>
+                            <CardHeader>
+                              <CardTitle className="text-base">{chart.questionTitle}</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="space-y-2">
+                                {chart.data.map((item: any, itemIndex: number) => (
+                                  <div key={itemIndex} className="flex items-center justify-between">
+                                    <span className="text-sm">{item.label}</span>
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-32 bg-gray-200 rounded-full h-2">
+                                        <div
+                                          className="bg-[#E40046] h-2 rounded-full"
+                                          style={{ width: `${(item.value / responses.length) * 100}%` }}
+                                        ></div>
+                                      </div>
+                                      <span className="text-sm text-gray-600 w-12 text-right">
+                                        {item.value}
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </CardContent>
+                          </Card>
                         ))}
                       </div>
                     </div>

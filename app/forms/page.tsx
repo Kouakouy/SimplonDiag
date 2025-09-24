@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { apiRequest } from "@/lib/api"
-import { FileText, Plus, Search, CheckCircle, Copy, Trash2 } from "lucide-react"
+import { FileText, Plus, Search, CheckCircle, Copy, Trash2, Share } from "lucide-react"
 import Link from "next/link"
 
 export default function FormsPage() {
@@ -143,7 +143,29 @@ export default function FormsPage() {
                   ? `${window.location.origin}/f/${form.public_slug || form._id || form.id}`
                   : `/f/${form.public_slug || form._id || form.id}`;
                 return (
-                  <Card key={form._id || form.id} className="hover:shadow-md transition-shadow">
+                  <Card key={form._id || form.id} className="hover:shadow-md transition-shadow overflow-hidden">
+                    {/* Bannière du formulaire */}
+                    {(form.banner_title || form.banner_image_url) ? (
+                      <div 
+                        className={`h-32 relative overflow-hidden ${form.banner_image_url ? 'bg-cover bg-center' : 'bg-gradient-to-r from-[#E40046] via-[#E40046]/80 to-rose-500'}`}
+                        style={form.banner_image_url ? { backgroundImage: `url(${form.banner_image_url})` } : {}}
+                      >
+                        <div className="absolute inset-0 bg-black/30"></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          {form.banner_title && (
+                            <h3 className="text-xl font-bold text-white drop-shadow-lg text-center px-4">{form.banner_title}</h3>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="h-20 bg-gradient-to-r from-gray-100 to-gray-200 flex items-center justify-center">
+                        <div className="text-center">
+                          <FileText className="w-8 h-8 text-gray-400 mx-auto mb-1" />
+                          <p className="text-sm text-gray-500">Aucune bannière</p>
+                        </div>
+                      </div>
+                    )}
+                    
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4 flex-1">
@@ -168,6 +190,12 @@ export default function FormsPage() {
                           </Link>
                           <Link href={`/forms/${form._id || form.id}/responses`}>
                             <Button variant="outline" size="sm">Résultats</Button>
+                          </Link>
+                          <Link href={`/forms/${form._id || form.id}/share`}>
+                            <Button variant="outline" size="sm">
+                              <Share className="w-4 h-4 mr-1" />
+                              Partager
+                            </Button>
                           </Link>
                           <Link href={`/forms/${form._id || form.id}/edit`}>
                             <Button variant="outline" size="sm">Éditer</Button>

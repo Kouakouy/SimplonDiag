@@ -8,7 +8,7 @@ import { Sidebar } from "@/components/layout/sidebar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { apiRequest } from "@/lib/api"
-import { ArrowLeft, Share, Copy, Mail, LinkIcon, CheckCircle } from "lucide-react"
+import { ArrowLeft, Share, Copy, Mail, LinkIcon, CheckCircle, X, Send, Plus } from "lucide-react"
 import Link from "next/link"
 
 export default function ShareFormPage() {
@@ -22,6 +22,12 @@ export default function ShareFormPage() {
     requireAuth: false,
     allowAnonymous: true,
   })
+  const [emailRecipients, setEmailRecipients] = useState<string[]>([])
+  const [emailInput, setEmailInput] = useState("")
+  const [emailSubject, setEmailSubject] = useState("")
+  const [emailMessage, setEmailMessage] = useState("")
+  const [showEmailModal, setShowEmailModal] = useState(false)
+  const [isSendingEmail, setIsSendingEmail] = useState(false)
 
   useEffect(() => {
     const load = async () => {
@@ -56,15 +62,78 @@ export default function ShareFormPage() {
 
   const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/f/${formId}` : ''
 
+  const addEmailRecipient = () => {
+    if (emailInput.trim() && !emailRecipients.includes(emailInput.trim())) {
+      setEmailRecipients([...emailRecipients, emailInput.trim()])
+      setEmailInput("")
+    }
+  }
+
+  const removeEmailRecipient = (email: string) => {
+    setEmailRecipients(emailRecipients.filter(e => e !== email))
+  }
+
+  const handleEmailKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault()
+      addEmailRecipient()
+    }
+  }
+
   const sendShareEmail = async () => {
-    const email = prompt('Adresse email du destinataire:')
-    if (!email) return
+    if (emailRecipients.length === 0) return
+    
+    setIsSendingEmail(true)
     try {
-      await apiRequest({ url: `/forms/${formId}/share`, method: 'POST', body: { to: email } })
-      alert('Lien envoyé avec succès.')
+      await apiRequest({ 
+        url: `/forms/${formId}/share`, 
+        method: 'POST', 
+        body: { 
+          to: emailRecipients,
+          subject: emailSubject || `Formulaire: ${form?.title}`,
+          message: emailMessage || `Bonjour,\n\nJe vous invite à répondre à ce formulaire : ${form?.title}\n\nLien : ${shareUrl}\n\nCordialement`
+        } 
+      })
+      alert('Email(s) envoyé(s) avec succès.')
+      setShowEmailModal(false)
+      setEmailRecipients([])
+      setEmailSubject("")
+      setEmailMessage("")
     } catch (e: any) {
       alert(`Erreur: ${e.message || 'envoi impossible'}`)
+    } finally {
+      setIsSendingEmail(false)
     }
+  }
+
+  const shareOnSocialMedia = (platform: string) => {
+    const encodedUrl = encodeURIComponent(shareUrl)
+    const encodedTitle = encodeURIComponent(form?.title || '')
+    const encodedDescription = encodeURIComponent(form?.description || '')
+    
+    let socialShareUrl = ''
+    
+    switch (platform) {
+      case 'facebook':
+        socialShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`
+        break
+      case 'twitter':
+        socialShareUrl = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`
+        break
+      case 'linkedin':
+        socialShareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`
+        break
+      case 'whatsapp':
+        socialShareUrl = `https://wa.me/?text=${encodedTitle}%20${encodedUrl}`
+        break
+      case 'telegram':
+        socialShareUrl = `https://t.me/share/url?url=${encodedUrl}&text=${encodedTitle}`
+        break
+      default:
+        return
+    }
+    
+    window.open(socialShareUrl, '_blank', 'width=600,height=400')
   }
 
   const copyToClipboard = async (text: string) => {
@@ -171,17 +240,77 @@ export default function ShareFormPage() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle>Options de partage</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                      <Mail className="w-5 h-5" />
+                      Partager par email
+                    </CardTitle>
+                    <p className="text-sm text-gray-600">Envoyez le formulaire à une ou plusieurs personnes par email</p>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <Button variant="outline" className="flex-1" onClick={sendShareEmail}>
+                    <Button 
+                      variant="outline" 
+                      className="w-full" 
+                      onClick={() => setShowEmailModal(true)}
+                    >
                       <Mail className="w-4 h-4 mr-2" />
                       Envoyer par email
                     </Button>
-                    <Button variant="outline" className="flex-1">
-                      <Share className="w-4 h-4 mr-2" />
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Share className="w-5 h-5" />
                       Partager sur les réseaux sociaux
+                    </CardTitle>
+                    <p className="text-sm text-gray-600">Partagez votre formulaire sur vos réseaux sociaux préférés</p>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                      <Button 
+                        variant="outline" 
+                        className="flex flex-col items-center gap-2 h-20"
+                        onClick={() => shareOnSocialMedia('facebook')}
+                      >
+                        <div className="w-6 h-6 bg-blue-600 rounded text-white flex items-center justify-center text-xs font-bold">f</div>
+                        <span className="text-xs">Facebook</span>
+                      </Button>
+                      
+                      <Button 
+                        variant="outline" 
+                        className="flex flex-col items-center gap-2 h-20"
+                        onClick={() => shareOnSocialMedia('twitter')}
+                      >
+                        <div className="w-6 h-6 bg-sky-500 rounded text-white flex items-center justify-center text-xs font-bold">𝕏</div>
+                        <span className="text-xs">Twitter</span>
+                      </Button>
+                      
+                      <Button 
+                        variant="outline" 
+                        className="flex flex-col items-center gap-2 h-20"
+                        onClick={() => shareOnSocialMedia('linkedin')}
+                      >
+                        <div className="w-6 h-6 bg-blue-700 rounded text-white flex items-center justify-center text-xs font-bold">in</div>
+                        <span className="text-xs">LinkedIn</span>
+                      </Button>
+                      
+                      <Button 
+                        variant="outline" 
+                        className="flex flex-col items-center gap-2 h-20"
+                        onClick={() => shareOnSocialMedia('whatsapp')}
+                      >
+                        <div className="w-6 h-6 bg-green-500 rounded text-white flex items-center justify-center text-xs font-bold">W</div>
+                        <span className="text-xs">WhatsApp</span>
+                      </Button>
+                      
+                      <Button 
+                        variant="outline" 
+                        className="flex flex-col items-center gap-2 h-20"
+                        onClick={() => shareOnSocialMedia('telegram')}
+                      >
+                        <div className="w-6 h-6 bg-blue-500 rounded text-white flex items-center justify-center text-xs font-bold">T</div>
+                        <span className="text-xs">Telegram</span>
                       </Button>
                     </div>
                   </CardContent>
@@ -190,6 +319,128 @@ export default function ShareFormPage() {
           </div>
         </main>
       </div>
+
+      {/* Modal d'envoi d'email */}
+      {showEmailModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <Mail className="w-5 h-5" />
+                  Envoyer par email
+                </h3>
+                <Button variant="outline" onClick={() => setShowEmailModal(false)}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              
+              <div className="space-y-4">
+                {/* Destinataires */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Destinataires
+                  </label>
+                  <div className="border border-gray-300 rounded-md p-2 min-h-[40px] flex flex-wrap gap-2">
+                    {emailRecipients.map((email, index) => (
+                      <div key={index} className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm">
+                        <span>{email}</span>
+                        <button
+                          onClick={() => removeEmailRecipient(email)}
+                          className="hover:bg-blue-200 rounded-full p-0.5"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                    <input
+                      type="email"
+                      value={emailInput}
+                      onChange={(e) => setEmailInput(e.target.value)}
+                      onKeyPress={handleEmailKeyPress}
+                      placeholder="Ajouter un email..."
+                      className="flex-1 min-w-[200px] border-none outline-none text-sm"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Button size="sm" onClick={addEmailRecipient} disabled={!emailInput.trim()}>
+                      <Plus className="w-4 h-4 mr-1" />
+                      Ajouter
+                    </Button>
+                    <span className="text-xs text-gray-500">
+                      Appuyez sur Entrée ou virgule pour ajouter
+                    </span>
+                  </div>
+                </div>
+
+                {/* Sujet */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Sujet
+                  </label>
+                  <input
+                    type="text"
+                    value={emailSubject}
+                    onChange={(e) => setEmailSubject(e.target.value)}
+                    placeholder={`Formulaire: ${form?.title}`}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  />
+                </div>
+
+                {/* Message */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Message
+                  </label>
+                  <textarea
+                    value={emailMessage}
+                    onChange={(e) => setEmailMessage(e.target.value)}
+                    placeholder="Bonjour,
+
+Je vous invite à répondre à ce formulaire : [Titre du formulaire]
+
+Lien : [Lien du formulaire]
+
+Cordialement"
+                    rows={6}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm resize-none"
+                  />
+                </div>
+
+                {/* Aperçu du lien */}
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                  <p className="text-sm text-gray-600 mb-1">Lien qui sera inclus :</p>
+                  <p className="text-sm font-mono text-blue-600 break-all">{shareUrl}</p>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center justify-end gap-3 pt-4 border-t">
+                  <Button variant="outline" onClick={() => setShowEmailModal(false)}>
+                    Annuler
+                  </Button>
+                  <Button 
+                    onClick={sendShareEmail} 
+                    disabled={emailRecipients.length === 0 || isSendingEmail}
+                    className="bg-[#E40046] hover:bg-[#E40046]/80 text-white"
+                  >
+                    {isSendingEmail ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Envoi en cours...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4 mr-2" />
+                        Envoyer ({emailRecipients.length} destinataire{emailRecipients.length > 1 ? 's' : ''})
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
