@@ -32,8 +32,6 @@ export default function PublicFormPage() {
   const [submitted, setSubmitted] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({})
-  const [respondentName, setRespondentName] = useState("")
-  const [respondentEmail, setRespondentEmail] = useState("")
   const [currentPage, setCurrentPage] = useState(0)
   const pageSize = 5
 
@@ -83,21 +81,6 @@ export default function PublicFormPage() {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
-
-    // Validation des infos répondant (uniquement page 1)
-    if (currentPage === 0) {
-      if (!respondentName.trim()) {
-        newErrors["__respondent_name"] = "Le nom est obligatoire"
-      }
-      if (!respondentEmail.trim()) {
-        newErrors["__respondent_email"] = "L'email est obligatoire"
-      } else {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        if (!emailRegex.test(respondentEmail)) {
-          newErrors["__respondent_email"] = "Veuillez entrer une adresse email valide"
-        }
-      }
-    }
 
     const start = currentPage * pageSize
     const end = start + pageSize
@@ -155,8 +138,6 @@ export default function PublicFormPage() {
 
     try {
       await apiRequest({ url: `/forms/${form?.id}/responses`, method: 'POST', body: {
-        respondent_name: respondentName.trim(),
-        respondent_email: respondentEmail.trim(),
         answers,
       } })
       setSubmitted(true)
@@ -293,91 +274,6 @@ export default function PublicFormPage() {
           </CardContent>
         </Card>
 
-        {/* Infos répondant */}
-        <Card className="mb-6 shadow-sm border border-gray-200 overflow-hidden">
-          <div className="h-1 w-full bg-gradient-to-r from-[#E40046] via-[#E40046]/80 to-rose-500" />
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#E40046]/10 text-[#E40046] flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M12 12c2.761 0 5-2.239 5-5S14.761 2 12 2 7 4.239 7 7s2.239 5 5 5Zm0 2c-3.866 0-7 2.134-7 4.762V21h14v-2.238C19 16.134 15.866 14 12 14Z"/></svg>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Vos informations</h3>
-                </div>
-              </div>
-              <div className="hidden md:flex items-center gap-2 text-xs text-gray-500">
-                <span className="w-2 h-2 rounded-full bg-green-500" />
-                Sécurisé
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Avatar aperçu */}
-              <div className="md:col-span-1">
-                <div className="flex items-center gap-3 p-3 rounded-lg border bg-gray-50">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#E40046] to-rose-500 text-white flex items-center justify-center text-lg font-bold">
-                    {(respondentName?.trim()?.charAt(0) || '?').toUpperCase()}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-sm font-medium text-gray-900 truncate">{respondentName || 'Nom du répondant'}</div>
-                    <div className="text-xs text-gray-500 truncate">{respondentEmail || 'email@exemple.com'}</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Nom */}
-              <div className="md:col-span-1">
-                <Label htmlFor="respondent_name" className="text-sm font-medium text-gray-800">Nom et Prénom</Label>
-                <div className="relative mt-1">
-                  <svg className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.761 0 5-2.239 5-5S14.761 2 12 2 7 4.239 7 7s2.239 5 5 5Zm0 2c-3.866 0-7 2.134-7 4.762V21h14v-2.238C19 16.134 15.866 14 12 14Z"/></svg>
-                  <Input
-                    id="respondent_name"
-                    value={respondentName}
-                    onChange={(e) => setRespondentName(e.target.value)}
-                    placeholder="Votre nom"
-                    className={`${errors["__respondent_name"] ? "border-red-500" : ""} pl-9`}
-                  />
-                </div>
-                {errors["__respondent_name"] && (
-                  <p className="text-sm text-red-600 mt-1">{errors["__respondent_name"]}</p>
-                )}
-              </div>
-
-              {/* Email */}
-              <div className="md:col-span-1">
-                <Label htmlFor="respondent_email" className="text-sm font-medium text-gray-800">Email</Label>
-                <div className="relative mt-1">
-                  <svg className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm-1.4 4.25-5.64 4.23a2 2 0 0 1-2.52 0L4.8 8.25a.75.75 0 1 1 .9-1.2l5.64 4.23a.5.5 0 0 0 .62 0L18.6 7.05a.75.75 0 1 1 .9 1.2Z"/></svg>
-                  <Input
-                    id="respondent_email"
-                    type="email"
-                    value={respondentEmail}
-                    onChange={(e) => setRespondentEmail(e.target.value)}
-                    placeholder="exemple@email.com"
-                    className={`${errors["__respondent_email"] ? "border-red-500" : ""} pl-9`}
-                  />
-                </div>
-                {errors["__respondent_email"] && (
-                  <p className="text-sm text-red-600 mt-1">{errors["__respondent_email"]}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="mt-4 flex items-center gap-2 text-xs text-gray-500">
-            <svg 
-  className="w-4 h-4 text-gray-400" 
-  xmlns="http://www.w3.org/2000/svg" 
-  viewBox="0 0 24 24" 
-  fill="currentColor"
->
-  <path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5Zm-3 8V7a3 3 0 0 1 6 0v3H9Zm3 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z"/>
-</svg>
-                
-                 Vos informations ne seront jamais partagées sans votre consentement.
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Formulaire */}
         <form onSubmit={handleSubmit} className="space-y-6">

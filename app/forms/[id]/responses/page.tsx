@@ -25,6 +25,10 @@ import {
   Share,
   Edit,
   X,
+  Printer,
+  FileText,
+  Brain,
+  TrendingUp,
 } from "lucide-react"
 import Link from "next/link"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -43,6 +47,8 @@ export default function ResponsesPage() {
   const [selectedResponseForModal, setSelectedResponseForModal] = useState<FormResponse | null>(null)
   const exportMenuRef = useRef<HTMLDivElement>(null)
   const [backendStats, setBackendStats] = useState<{ views: number; submissions: number; completionRate: number } | null>(null)
+  const [aiAnalysis, setAiAnalysis] = useState<any>(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   // Fermer le menu d'export quand on clique ailleurs
   useEffect(() => {
@@ -128,6 +134,106 @@ export default function ResponsesPage() {
   const openResponseModal = (response: FormResponse) => {
     setSelectedResponseForModal(response)
     setShowResponseModal(true)
+  }
+
+  const exportSingleResponse = (response: FormResponse) => {
+    if (!form) return
+    
+    const headers = ["Question", "Réponse"]
+    const rows = form.questions.map((q) => {
+      const value = response.answers[q.id]
+      return [q.title, Array.isArray(value) ? value.join("; ") : (value || "Aucune réponse")]
+    })
+    
+    const csvContent = [headers, ...rows].map((row) => row.map((field) => `"${field}"`).join(",")).join("\n")
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+    const link = document.createElement("a")
+    link.href = URL.createObjectURL(blob)
+    link.download = `reponse_${response.respondentName.replace(/\s+/g, '_')}_${response.submittedAt.toISOString().split('T')[0]}.csv`
+    link.click()
+  }
+
+  const printSingleResponse = (response: FormResponse) => {
+    if (!form) return
+    
+    const printWindow = window.open("", "_blank")
+    if (!printWindow) return
+    
+    const content = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Réponse - ${form.title}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .header { border-bottom: 2px solid #E40046; padding-bottom: 10px; margin-bottom: 20px; }
+            .question { margin-bottom: 15px; padding: 10px; border-left: 4px solid #E40046; background: #f9f9f9; }
+            .answer { margin-top: 5px; font-weight: bold; }
+            .info { background: #f0f0f0; padding: 10px; margin-bottom: 20px; border-radius: 5px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>${form.title}</h1>
+            <p>Réponse de ${response.respondentName}</p>
+          </div>
+          <div class="info">
+            <p><strong>Nom:</strong> ${response.respondentName}</p>
+            <p><strong>Email:</strong> ${response.respondentEmail}</p>
+            <p><strong>Date de soumission:</strong> ${response.submittedAt.toLocaleString("fr-FR")}</p>
+          </div>
+          ${form.questions.map((q) => {
+            const value = response.answers[q.id]
+            const answer = Array.isArray(value) ? value.join(", ") : (value || "Aucune réponse")
+            return `
+              <div class="question">
+                <div><strong>${q.title}</strong></div>
+                <div class="answer">${answer}</div>
+              </div>
+            `
+          }).join("")}
+        </body>
+      </html>
+    `
+    
+    printWindow.document.write(content)
+    printWindow.document.close()
+    printWindow.focus()
+    printWindow.print()
+  }
+
+  const generateAIAnalysis = async () => {
+    if (!form || responses.length === 0) return
+    
+    setIsAnalyzing(true)
+    try {
+      // Simulation d'une analyse IA (à remplacer par un vrai appel API)
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      const analysis = {
+        summary: "Analyse des tendances principales basée sur les réponses collectées",
+        insights: [
+          "La majorité des répondants (65%) préfèrent l'option A",
+          "Les réponses ouvertes montrent une satisfaction générale élevée",
+          "Les questions obligatoires ont un taux de réponse de 100%"
+        ],
+        charts: form.questions.map((q, index) => ({
+          questionId: q.id,
+          questionTitle: q.title,
+          type: q.type,
+          data: q.options?.map(option => ({
+            label: option,
+            value: responses.filter(r => r.answers[q.id] === option).length
+          })) || []
+        }))
+      }
+      
+      setAiAnalysis(analysis)
+    } catch (error) {
+      console.error("Erreur lors de l'analyse IA:", error)
+    } finally {
+      setIsAnalyzing(false)
+    }
   }
 
   const exportToCSV = () => {
@@ -281,12 +387,10 @@ export default function ResponsesPage() {
                     Partager
                   </Button>
                 </Link>
-                <Link href={`/forms/${form.id}/stats`}>
-                  <Button variant="outline">
-                    <BarChart3 className="w-4 h-4 mr-2" />
-                    Statistiques
-                  </Button>
-                </Link>
+                <Button variant="outline" onClick={() => setActiveTab("analyze")}>
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  Analyser avec IA
+                </Button>
                 <div className="relative" ref={exportMenuRef}>
                   <Button variant="outline" onClick={() => setShowExportMenu(!showExportMenu)}>
                     <Download className="w-4 h-4 mr-2" />
@@ -392,6 +496,17 @@ export default function ResponsesPage() {
                 >
                   Résumé
                 </button>
+                <button
+                  onClick={() => setActiveTab("stats")}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === "stats"
+                      ? "border-[#E40046] text-[#E40046]"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
+                >
+                  <BarChart3 className="w-4 h-4 mr-2 inline" />
+                  Statistiques
+                </button>
               </nav>
             </div>
 
@@ -476,8 +591,14 @@ export default function ResponsesPage() {
                                 </td>
                                 <td className="p-4">
                                   <div className="flex items-center justify-end gap-2">
-                                    <Button variant="ghost" size="sm" onClick={() => openResponseModal(response)}>
+                                    <Button variant="ghost" size="sm" onClick={() => openResponseModal(response)} title="Voir la réponse">
                                       <Eye className="w-4 h-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="sm" onClick={() => exportSingleResponse(response)} title="Exporter la réponse">
+                                      <Download className="w-4 h-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="sm" onClick={() => printSingleResponse(response)} title="Imprimer la réponse">
+                                      <Printer className="w-4 h-4" />
                                     </Button>
                                   </div>
                                 </td>
