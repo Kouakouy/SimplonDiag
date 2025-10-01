@@ -444,8 +444,7 @@ export default function ResponsesPage() {
                       <div className="py-1">
                         <button
                           onClick={generateAIAnalysis}
-                          disabled={isAnalyzing || responses.length === 0}
-                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         >
                           {isAnalyzing ? (
                             <>
@@ -461,24 +460,21 @@ export default function ResponsesPage() {
                         </button>
                         <button
                           onClick={viewAnalysis}
-                          disabled={!aiAnalysis}
-                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         >
                           <Eye className="w-4 h-4 mr-2" />
                           Voir l'analyse
                         </button>
                         <button
                           onClick={showTableResults}
-                          disabled={!aiAnalysis}
-                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         >
                           <FileText className="w-4 h-4 mr-2" />
                           Résultats en tableau
                         </button>
                         <button
                           onClick={showChartResults}
-                          disabled={!aiAnalysis}
-                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         >
                           <TrendingUp className="w-4 h-4 mr-2" />
                           Résultats en graphiques
@@ -602,6 +598,17 @@ export default function ResponsesPage() {
                 >
                   <BarChart3 className="w-4 h-4 mr-2 inline" />
                   Statistiques
+                </button>
+                <button
+                  onClick={() => setActiveTab("analyze")}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === "analyze"
+                      ? "border-[#E40046] text-[#E40046]"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
+                >
+                  <Brain className="w-4 h-4 mr-2 inline" />
+                  Analyse avec IA
                 </button>
               </nav>
             </div>
