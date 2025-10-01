@@ -126,14 +126,24 @@ export default function FormsPage() {
 
           {/* États de chargement/erreur */}
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Skeleton loaders pour simuler le contenu */}
-              {Array.from({ length: 8 }).map((_, index) => (
+              {Array.from({ length: 4 }).map((_, index) => (
                 <Card key={index} className="animate-pulse">
+                  {/* Bannière skeleton */}
+                  <div className="h-32 bg-gray-200"></div>
+                  
                   <CardContent className="p-6">
                     {/* En-tête skeleton */}
                     <div className="flex items-start justify-between mb-4">
-                      <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+                        <div className="flex-1">
+                          <div className="h-5 bg-gray-200 rounded w-3/4 mb-2"></div>
+                          <div className="h-3 bg-gray-200 rounded w-full mb-1"></div>
+                          <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                        </div>
+                      </div>
                       <div className="flex items-center gap-1">
                         {Array.from({ length: 3 }).map((_, i) => (
                           <div key={i} className="w-8 h-8 bg-gray-200 rounded"></div>
@@ -141,39 +151,31 @@ export default function FormsPage() {
                       </div>
                     </div>
 
-                    {/* Contenu skeleton */}
-                    <div className="space-y-3">
-                      <div>
-                        <div className="h-5 bg-gray-200 rounded w-3/4 mb-2"></div>
-                        <div className="h-3 bg-gray-200 rounded w-full mb-1"></div>
-                        <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                    {/* Informations skeleton */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-gray-200 rounded-full"></div>
+                        <div className="h-3 bg-gray-200 rounded w-12"></div>
                       </div>
+                    </div>
 
-                      <div className="space-y-2">
-                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-gray-200 rounded-full"></div>
-                          <div className="h-3 bg-gray-200 rounded w-12"></div>
-                        </div>
+                    {/* Lien de partage skeleton */}
+                    <div className="bg-gray-100 rounded-lg p-3 mb-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-3 h-3 bg-gray-200 rounded"></div>
+                        <div className="h-3 bg-gray-200 rounded w-20"></div>
                       </div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-6 bg-gray-200 rounded"></div>
+                        <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                      </div>
+                    </div>
 
-                      {/* Lien de partage skeleton */}
-                      <div className="bg-gray-100 rounded-lg p-3 mt-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="w-3 h-3 bg-gray-200 rounded"></div>
-                          <div className="h-3 bg-gray-200 rounded w-20"></div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 h-6 bg-gray-200 rounded"></div>
-                          <div className="w-6 h-6 bg-gray-200 rounded"></div>
-                        </div>
-                      </div>
-
-                      {/* Actions skeleton */}
-                      <div className="flex gap-2 pt-2">
-                        <div className="flex-1 h-8 bg-gray-200 rounded"></div>
-                        <div className="flex-1 h-8 bg-gray-200 rounded"></div>
-                      </div>
+                    {/* Actions skeleton */}
+                    <div className="flex gap-2">
+                      <div className="flex-1 h-8 bg-gray-200 rounded"></div>
+                      <div className="flex-1 h-8 bg-gray-200 rounded"></div>
                     </div>
                   </CardContent>
                 </Card>
@@ -208,26 +210,63 @@ export default function FormsPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {filteredForms.map((form) => {
                 const shareUrl = getShareUrl(form)
                 
                 return (
-                  <Card key={form._id || form.id} className="hover:shadow-lg transition-all duration-200 hover:scale-105 overflow-hidden group">
+                  <Card key={form._id || form.id} className="hover:shadow-lg transition-all duration-200 hover:scale-[1.02] overflow-hidden group">
+                    {/* Bannière du formulaire */}
+                    {(form.banner_title || form.banner_image_url) ? (
+                      <div className="h-32 relative overflow-hidden">
+                        {form.banner_image_url ? (
+                          <div 
+                            className="w-full h-full bg-cover bg-center"
+                            style={{ backgroundImage: `url(${form.banner_image_url})` }}
+                          >
+                            <div className="absolute inset-0 bg-black/30"></div>
+                            {form.banner_title && (
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <h3 className="text-lg font-bold text-white drop-shadow-lg text-center px-4">{form.banner_title}</h3>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-r from-[#E40046] via-[#E40046]/80 to-rose-500 flex items-center justify-center">
+                            {form.banner_title && (
+                              <h3 className="text-lg font-bold text-white drop-shadow-lg text-center px-4">{form.banner_title}</h3>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="h-24 bg-gradient-to-r from-gray-100 to-gray-200 flex items-center justify-center">
+                        <div className="text-center">
+                          <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                          <p className="text-sm text-gray-500">Aucune bannière</p>
+                        </div>
+                      </div>
+                    )}
+                    
                     <CardContent className="p-6">
-                      {/* En-tête du formulaire */}
                       <div className="flex items-start justify-between mb-4">
-                        <div className="w-12 h-12 bg-[#E40046]/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <FileText className="w-6 h-6 text-[#E40046]" />
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className="w-12 h-12 bg-[#E40046]/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-6 h-6 text-[#E40046]" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-gray-900 text-lg mb-1 line-clamp-1">{form.title}</h4>
+                            <p className="text-sm text-gray-500 line-clamp-2">{form.description || "Aucune description"}</p>
+                          </div>
                         </div>
                         <div className="flex items-center gap-1">
                           <Link href={`/forms/${form._id || form.id}`}>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50">
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50" title="Aperçu">
                               <Eye className="w-4 h-4" />
                             </Button>
                           </Link>
                           <Link href={`/forms/${form._id || form.id}/responses`}>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-green-600 hover:bg-green-50">
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-green-600 hover:bg-green-50" title="Résultats">
                               <BarChart3 className="w-4 h-4" />
                             </Button>
                           </Link>
@@ -243,71 +282,61 @@ export default function FormsPage() {
                         </div>
                       </div>
 
-                      {/* Contenu principal */}
-                      <div className="space-y-3">
-                        <div>
-                          <h4 className="font-semibold text-gray-900 text-lg mb-1 line-clamp-2">{form.title}</h4>
-                          <p className="text-sm text-gray-500 line-clamp-3">{form.description || "Aucune description"}</p>
-                        </div>
-
-                        {/* Informations du formulaire */}
-                        <div className="space-y-2">
+                      {/* Informations et statut */}
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-4 text-xs text-gray-400">
                           {form.created_at && (
-                            <div className="flex items-center gap-2 text-xs text-gray-400">
-                              <span>Créé le {new Date(form.created_at).toLocaleDateString("fr-FR")}</span>
-                            </div>
-                          )}
-                          
-                          {/* Statut du formulaire */}
-                          <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span className="text-xs text-green-600 font-medium">Actif</span>
-                          </div>
-                        </div>
-
-                        {/* Lien de partage compact */}
-                        <div className="bg-gray-50 rounded-lg p-3 mt-4">
-                          <div className="flex items-center gap-2 mb-2">
-                            <CheckCircle className="w-3 h-3 text-green-600" />
-                            <span className="text-xs font-medium text-gray-700">Lien public</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <input
-                              value={shareUrl}
-                              readOnly
-                              className="flex-1 px-2 py-1 border border-gray-200 rounded text-xs bg-white truncate"
-                            />
-                            <Button 
-                              onClick={() => copyToClipboard(shareUrl)} 
-                              size="sm" 
-                              variant="ghost"
-                              className="h-6 w-6 p-0 text-gray-600 hover:bg-gray-200"
-                            >
-                              <Copy className="w-3 h-3" />
-                            </Button>
-                          </div>
-                          {copiedLink === shareUrl && (
-                            <div className="mt-1 text-xs text-green-600 font-medium">
-                              ✓ Copié !
-                            </div>
+                            <span>Créé le {new Date(form.created_at).toLocaleDateString("fr-FR")}</span>
                           )}
                         </div>
-
-                        {/* Actions principales */}
-                        <div className="flex gap-2 pt-2">
-                          <Link href={`/forms/${form._id || form.id}/edit`} className="flex-1">
-                            <Button variant="outline" size="sm" className="w-full text-xs">
-                              <Edit className="w-3 h-3 mr-1" />
-                              Éditer
-                            </Button>
-                          </Link>
-                          <Link href={`/forms/${form._id || form.id}/share`} className="flex-1">
-                            <Button variant="outline" size="sm" className="w-full text-xs">
-                              <Share className="w-3 h-3 mr-1" />
-                              Partager
-                            </Button>
-                          </Link>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="text-xs text-green-600 font-medium">Actif</span>
                         </div>
+                      </div>
+
+                      {/* Lien de partage */}
+                      <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <CheckCircle className="w-3 h-3 text-green-600" />
+                          <span className="text-xs font-medium text-gray-700">Lien public</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            value={shareUrl}
+                            readOnly
+                            className="flex-1 px-2 py-1 border border-gray-200 rounded text-xs bg-white truncate"
+                          />
+                          <Button 
+                            onClick={() => copyToClipboard(shareUrl)} 
+                            size="sm" 
+                            variant="ghost"
+                            className="h-6 w-6 p-0 text-gray-600 hover:bg-gray-200"
+                          >
+                            <Copy className="w-3 h-3" />
+                          </Button>
+                        </div>
+                        {copiedLink === shareUrl && (
+                          <div className="mt-1 text-xs text-green-600 font-medium">
+                            ✓ Lien copié dans le presse-papiers !
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Actions principales */}
+                      <div className="flex gap-2">
+                        <Link href={`/forms/${form._id || form.id}/edit`} className="flex-1">
+                          <Button variant="outline" size="sm" className="w-full text-xs">
+                            <Edit className="w-3 h-3 mr-1" />
+                            Éditer
+                          </Button>
+                        </Link>
+                        <Link href={`/forms/${form._id || form.id}/share`} className="flex-1">
+                          <Button variant="outline" size="sm" className="w-full text-xs">
+                            <Share className="w-3 h-3 mr-1" />
+                            Partager
+                          </Button>
+                        </Link>
                       </div>
                     </CardContent>
                   </Card>
