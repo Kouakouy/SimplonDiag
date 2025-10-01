@@ -133,7 +133,7 @@ export class DeepSeekService {
     })
 
     return `
-Analyse les données suivantes d'un formulaire et fournis une analyse complète en JSON :
+Tu es un expert en analyse de données de formulaires. Tu dois analyser les réponses d'un formulaire et fournir des insights, tendances et recommandations basés sur les données collectées. Réponds UNIQUEMENT en JSON valide selon le format spécifié.
 
 FORMULAIRE: "${formTitle}"
 DESCRIPTION: "${formDescription || 'Aucune description'}"
@@ -144,25 +144,33 @@ ${JSON.stringify(questionAnalysis, null, 2)}
 RÉPONSES COMPLÈTES (${responses.length} réponses):
 ${JSON.stringify(responses.slice(0, 10), null, 2)}${responses.length > 10 ? '\n... (autres réponses similaires)' : ''}
 
+ANALYSE REQUISE:
+En tant qu'expert, analyse ces réponses comme si tu corrigeais un examen. Identifie:
+- Les bonnes réponses et les tendances positives
+- Les problèmes récurrents et les erreurs communes
+- Les incohérences dans les réponses
+- Les opportunités d'amélioration
+- Les recommandations concrètes pour améliorer le formulaire
+
 Fournis une analyse en JSON avec cette structure exacte :
 {
-  "summary": "Résumé exécutif de l'analyse en 2-3 phrases",
+  "summary": "Résumé exécutif de l'analyse en 2-3 phrases, comme un correcteur qui donne son verdict global",
   "insights": [
-    "Insight 1 basé sur les données",
-    "Insight 2 basé sur les données",
-    "Insight 3 basé sur les données"
+    "Insight 1: Correction positive - ce qui fonctionne bien dans les réponses",
+    "Insight 2: Problème identifié - erreur ou incohérence observée",
+    "Insight 3: Tendance remarquable - pattern intéressant dans les données"
   ],
   "trends": [
     {
       "questionId": "id_question",
       "questionTitle": "Titre de la question",
-      "trend": "Description de la tendance observée",
+      "trend": "Description de la tendance observée avec évaluation (ex: '75% des répondants choisissent l'option A, ce qui indique...')",
       "confidence": 0.85
     }
   ],
   "recommendations": [
-    "Recommandation 1 basée sur l'analyse",
-    "Recommandation 2 basée sur l'analyse"
+    "Recommandation 1: Action concrète pour améliorer le formulaire basée sur l'analyse",
+    "Recommandation 2: Suggestion d'amélioration des questions ou du format"
   ],
   "charts": [
     {
@@ -180,7 +188,7 @@ Fournis une analyse en JSON avec cette structure exacte :
   ]
 }
 
-IMPORTANT: Réponds UNIQUEMENT avec le JSON valide, sans texte supplémentaire.
+IMPORTANT: Réponds UNIQUEMENT avec le JSON valide, sans texte supplémentaire. Sois précis et actionnable dans tes analyses.
 `
   }
 
