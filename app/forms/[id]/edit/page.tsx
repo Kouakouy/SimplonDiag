@@ -25,6 +25,31 @@ export default function EditFormPage() {
   const [form, setForm] = useState<Form | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+
+  // Fonction pour compresser les images base64
+  const compressBase64Image = (base64: string, maxWidth = 800, quality = 0.8): Promise<string> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      const img = new Image()
+      
+      img.onload = () => {
+        // Calculer les nouvelles dimensions
+        const ratio = Math.min(maxWidth / img.width, maxWidth / img.height)
+        canvas.width = img.width * ratio
+        canvas.height = img.height * ratio
+        
+        // Dessiner l'image redimensionnée
+        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height)
+        
+        // Convertir en base64 avec compression
+        const compressedBase64 = canvas.toDataURL('image/jpeg', quality)
+        resolve(compressedBase64)
+      }
+      
+      img.src = base64
+    })
+  }
   
 
   useEffect(() => {
@@ -109,13 +134,28 @@ export default function EditFormPage() {
         questionsCount: form.questions.length
       })
 
+      // Traiter l'image banner
+      let bannerImageUrl = null
+      if (form.bannerImageUrl && form.bannerImageUrl.startsWith('data:')) {
+        try {
+          console.log('Compression de l\'image base64...')
+          bannerImageUrl = await compressBase64Image(form.bannerImageUrl)
+          console.log(`Image compressée: ${bannerImageUrl.length} caractères`)
+        } catch (error) {
+          console.error('Erreur lors de la compression:', error)
+          bannerImageUrl = null
+        }
+      } else {
+        bannerImageUrl = isValidUrl(form.bannerImageUrl) ? form.bannerImageUrl : null
+      }
+
       // Préparer les données à envoyer
       const formData = {
         title: form.title,
         description: form.description,
         is_public: form.isPublic,
         banner_title: form.bannerTitle || null,
-        banner_image_url: isValidUrl(form.bannerImageUrl) ? form.bannerImageUrl : null,
+        banner_image_url: bannerImageUrl,
         max_responses: form.maxResponses || null,
         expiration_date: form.expirationDate ? form.expirationDate.toISOString() : null,
         questions: form.questions.map(q => ({
@@ -126,6 +166,23 @@ export default function EditFormPage() {
           options: q.options || null,
           categoryId: q.categoryId || null
         }))
+      }
+
+      // Validation des données avant envoi
+      if (!formData.title || formData.title.trim().length === 0) {
+        throw new Error('Le titre du formulaire est requis')
+      }
+
+      if (!formData.description || formData.description.trim().length === 0) {
+        throw new Error('La description du formulaire est requise')
+      }
+
+      // Vérifier la taille des données
+      const dataSize = JSON.stringify(formData).length
+      console.log(`Taille des données: ${dataSize} caractères`)
+      
+      if (dataSize > 1000000) { // 1MB
+        throw new Error('Les données sont trop volumineuses. Veuillez réduire la taille de l\'image.')
       }
 
       console.log('Données à envoyer:', JSON.stringify(formData, null, 2))
