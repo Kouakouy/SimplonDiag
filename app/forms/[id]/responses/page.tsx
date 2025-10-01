@@ -12,6 +12,9 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { apiRequest } from "@/lib/api"
+import { analysisService } from "@/lib/analysis"
+import type { FormAnalysis } from "@/types/analysis"
+import { DeepSeekStatus } from "@/components/ai/DeepSeekStatus"
 import {
   ArrowLeft,
   Download,
@@ -29,6 +32,7 @@ import {
   FileText,
   Brain,
   TrendingUp,
+  CheckCircle,
 } from "lucide-react"
 import Link from "next/link"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -47,7 +51,7 @@ export default function ResponsesPage() {
   const [selectedResponseForModal, setSelectedResponseForModal] = useState<FormResponse | null>(null)
   const exportMenuRef = useRef<HTMLDivElement>(null)
   const [backendStats, setBackendStats] = useState<{ views: number; submissions: number; completionRate: number } | null>(null)
-  const [aiAnalysis, setAiAnalysis] = useState<any>(null)
+  const [aiAnalysis, setAiAnalysis] = useState<FormAnalysis | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [showAnalyzeMenu, setShowAnalyzeMenu] = useState(false)
   const [showAnalysisModal, setShowAnalysisModal] = useState(false)
@@ -214,48 +218,68 @@ export default function ResponsesPage() {
     setIsAnalyzing(true)
     setShowAnalyzeMenu(false)
     try {
-      // Simulation d'une analyse IA (à remplacer par un vrai appel API)
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      const analysis = {
-        summary: "Analyse des tendances principales basée sur les réponses collectées",
-        insights: [
-          "La majorité des répondants (65%) préfèrent l'option A",
-          "Les réponses ouvertes montrent une satisfaction générale élevée",
-          "Les questions obligatoires ont un taux de réponse de 100%"
-        ],
-        charts: form.questions.map((q, index) => ({
-          questionId: q.id,
-          questionTitle: q.title,
-          type: q.type,
-          data: q.options?.map(option => ({
-            label: option,
-            value: responses.filter(r => r.answers[q.id] === option).length
-          })) || []
-        }))
+      // Utiliser le vrai service d'analyse avec DeepSeek
+      const result = await analysisService.analyzeForm(form, responses, {
+        formId: form.id,
+        includeCharts: true,
+        includeRecommendations: true,
+        analysisDepth: 'detailed'
+      })
+
+      if (result.success && result.analysis) {
+        setAiAnalysis(result.analysis)
+        // Basculer automatiquement vers l'onglet d'analyse pour voir les résultats
+        setActiveTab("analyze")
+      } else {
+        throw new Error(result.error || 'Erreur lors de l\'analyse')
       }
-      
-      setAiAnalysis(analysis)
     } catch (error) {
       console.error("Erreur lors de l'analyse IA:", error)
+      alert(`Erreur lors de l'analyse: ${error instanceof Error ? error.message : 'Erreur inconnue'}`)
     } finally {
       setIsAnalyzing(false)
     }
   }
 
   const viewAnalysis = () => {
-    setShowAnalysisModal(true)
-    setShowAnalyzeMenu(false)
+    if (aiAnalysis) {
+      setShowAnalysisModal(true)
+      setShowAnalyzeMenu(false)
+    } else {
+      alert("Aucune analyse disponible. Veuillez d'abord générer une analyse.")
+    }
   }
 
   const showTableResults = () => {
-    setActiveTab("analyze")
-    setShowAnalyzeMenu(false)
+    if (aiAnalysis) {
+      setActiveTab("analyze")
+      setShowAnalyzeMenu(false)
+      // Scroll vers la section tableau
+      setTimeout(() => {
+        const tableSection = document.querySelector('[data-section="table"]')
+        if (tableSection) {
+          tableSection.scrollIntoView({ behavior: 'smooth' })
+        }
+      }, 100)
+    } else {
+      alert("Aucune analyse disponible. Veuillez d'abord générer une analyse.")
+    }
   }
 
   const showChartResults = () => {
-    setActiveTab("analyze")
-    setShowAnalyzeMenu(false)
+    if (aiAnalysis) {
+      setActiveTab("analyze")
+      setShowAnalyzeMenu(false)
+      // Scroll vers la section graphiques
+      setTimeout(() => {
+        const chartSection = document.querySelector('[data-section="charts"]')
+        if (chartSection) {
+          chartSection.scrollIntoView({ behavior: 'smooth' })
+        }
+      }, 100)
+    } else {
+      alert("Aucune analyse disponible. Veuillez d'abord générer une analyse.")
+    }
   }
 
   const exportToCSV = () => {
@@ -792,18 +816,47 @@ export default function ResponsesPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {!aiAnalysis ? (
-                      <div className="text-center py-8">
-                        <Brain className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucune analyse disponible</h3>
-                        <p className="text-gray-600 mb-6">
-                          Utilisez le menu "Analyser avec IA" pour générer une nouvelle analyse.
+                    {isAnalyzing ? (
+                      <div className="text-center py-12">
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#E40046] mx-auto mb-4"></div>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Analyse en cours...</h3>
+                        <p className="text-gray-600 mb-4">
+                          DeepSeek analyse vos réponses. Cela peut prendre quelques secondes.
                         </p>
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
+                          <p className="text-sm text-blue-800">
+                            <strong>Étapes :</strong><br/>
+                            1. Analyse des données...<br/>
+                            2. Identification des tendances...<br/>
+                            3. Génération des insights...<br/>
+                            4. Création des graphiques...
+                          </p>
+                        </div>
+                      </div>
+                    ) : !aiAnalysis ? (
+                      <div className="space-y-6">
+                        <div className="text-center py-8">
+                          <Brain className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucune analyse disponible</h3>
+                          <p className="text-gray-600 mb-6">
+                            Utilisez le menu "Analyser avec IA" pour générer une nouvelle analyse.
+                          </p>
+                        </div>
+                        
+                        <div className="flex justify-center">
+                          <DeepSeekStatus />
+                        </div>
                       </div>
                     ) : (
                       <div className="space-y-6">
                         <div className="flex items-center justify-between">
-                          <h3 className="text-lg font-semibold">Résultats de l'analyse</h3>
+                          <div className="flex items-center gap-3">
+                            <h3 className="text-lg font-semibold">Résultats de l'analyse</h3>
+                            <div className="flex items-center gap-1 text-sm text-green-600">
+                              <CheckCircle className="w-4 h-4" />
+                              <span>Analyse terminée</span>
+                            </div>
+                          </div>
                           <div className="flex gap-2">
                             <Button variant="outline" onClick={() => setAiAnalysis(null)}>
                               <X className="w-4 h-4 mr-2" />
@@ -826,19 +879,53 @@ export default function ResponsesPage() {
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                           <h4 className="font-semibold text-blue-900 mb-2">Résumé exécutif</h4>
                           <p className="text-blue-800">{aiAnalysis.summary}</p>
+                          <div className="mt-2 text-xs text-blue-600">
+                            Confiance: {Math.round(aiAnalysis.metadata.confidence * 100)}% • 
+                            {aiAnalysis.metadata.totalResponses} réponses analysées
+                          </div>
                         </div>
 
                         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                           <h4 className="font-semibold text-green-900 mb-2">Insights clés</h4>
-                          <ul className="list-disc list-inside text-green-800 space-y-1">
-                            {aiAnalysis.insights.map((insight: string, index: number) => (
-                              <li key={index}>{insight}</li>
+                          <div className="space-y-2">
+                            {aiAnalysis.insights.map((insight, index) => (
+                              <div key={index} className="flex items-start gap-2">
+                                <div className={`w-2 h-2 rounded-full mt-2 ${
+                                  insight.category === 'trend' ? 'bg-blue-500' :
+                                  insight.category === 'recommendation' ? 'bg-purple-500' :
+                                  insight.category === 'warning' ? 'bg-red-500' : 'bg-green-500'
+                                }`} />
+                                <div>
+                                  <p className="text-green-800 font-medium">{insight.title}</p>
+                                  <p className="text-green-700 text-sm">{insight.description}</p>
+                                </div>
+                              </div>
                             ))}
-                          </ul>
+                          </div>
                         </div>
 
+                        {aiAnalysis.recommendations.length > 0 && (
+                          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                            <h4 className="font-semibold text-purple-900 mb-2">Recommandations</h4>
+                            <div className="space-y-2">
+                              {aiAnalysis.recommendations.map((rec, index) => (
+                                <div key={index} className="flex items-start gap-2">
+                                  <div className={`w-2 h-2 rounded-full mt-2 ${
+                                    rec.priority === 'high' ? 'bg-red-500' :
+                                    rec.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                                  }`} />
+                                  <div>
+                                    <p className="text-purple-800 font-medium">{rec.title}</p>
+                                    <p className="text-purple-700 text-sm">{rec.description}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         {/* Vue tableau */}
-                        <div className="space-y-4">
+                        <div className="space-y-4" data-section="table">
                           <h4 className="font-semibold text-gray-900 flex items-center gap-2">
                             <FileText className="w-5 h-5" />
                             Résultats en tableau
@@ -856,14 +943,14 @@ export default function ResponsesPage() {
                                     </tr>
                                   </thead>
                                   <tbody>
-                                    {aiAnalysis.charts.map((chart: any, chartIndex: number) => 
-                                      chart.data.map((item: any, itemIndex: number) => (
+                                    {aiAnalysis.charts.map((chart, chartIndex: number) => 
+                                      chart.data.map((item, itemIndex: number) => (
                                         <tr key={`${chartIndex}-${itemIndex}`} className="border-b hover:bg-gray-50">
                                           <td className="p-4 text-sm font-medium">{chart.questionTitle}</td>
                                           <td className="p-4 text-sm">{item.label}</td>
                                           <td className="p-4 text-sm">{item.value}</td>
                                           <td className="p-4 text-sm">
-                                            {((item.value / responses.length) * 100).toFixed(1)}%
+                                            {item.percentage.toFixed(1)}%
                                           </td>
                                         </tr>
                                       ))
@@ -876,27 +963,35 @@ export default function ResponsesPage() {
                         </div>
 
                         {/* Vue graphiques */}
-                        <div className="space-y-4">
+                        <div className="space-y-4" data-section="charts">
                           <h4 className="font-semibold text-gray-900 flex items-center gap-2">
                             <TrendingUp className="w-5 h-5" />
                             Résultats en graphiques
                           </h4>
                           <div className="grid gap-4">
-                            {aiAnalysis.charts.map((chart: any, index: number) => (
+                            {aiAnalysis.charts.map((chart, index: number) => (
                               <Card key={index}>
                                 <CardHeader>
-                                  <CardTitle className="text-base">{chart.questionTitle}</CardTitle>
+                                  <CardTitle className="text-base flex items-center gap-2">
+                                    {chart.questionTitle}
+                                    <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                                      {chart.type}
+                                    </span>
+                                  </CardTitle>
                                 </CardHeader>
                                 <CardContent>
                                   <div className="space-y-2">
-                                    {chart.data.map((item: any, itemIndex: number) => (
+                                    {chart.data.map((item, itemIndex: number) => (
                                       <div key={itemIndex} className="flex items-center justify-between">
                                         <span className="text-sm">{item.label}</span>
                                         <div className="flex items-center gap-2">
                                           <div className="w-32 bg-gray-200 rounded-full h-2">
                                             <div
-                                              className="bg-[#E40046] h-2 rounded-full"
-                                              style={{ width: `${(item.value / responses.length) * 100}%` }}
+                                              className="h-2 rounded-full"
+                                              style={{ 
+                                                width: `${item.percentage}%`,
+                                                backgroundColor: item.color || '#E40046'
+                                              }}
                                             ></div>
                                           </div>
                                           <span className="text-sm text-gray-600 w-12 text-right">
@@ -984,34 +1079,76 @@ export default function ResponsesPage() {
                       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                         <h4 className="font-semibold text-blue-900 mb-2">Résumé exécutif</h4>
                         <p className="text-blue-800">{aiAnalysis.summary}</p>
+                        <div className="mt-2 text-xs text-blue-600">
+                          Confiance: {Math.round(aiAnalysis.metadata.confidence * 100)}% • 
+                          {aiAnalysis.metadata.totalResponses} réponses analysées
+                        </div>
                       </div>
 
                       <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                         <h4 className="font-semibold text-green-900 mb-2">Insights clés</h4>
-                        <ul className="list-disc list-inside text-green-800 space-y-1">
-                          {aiAnalysis.insights.map((insight: string, index: number) => (
-                            <li key={index}>{insight}</li>
+                        <div className="space-y-2">
+                          {aiAnalysis.insights.map((insight, index) => (
+                            <div key={index} className="flex items-start gap-2">
+                              <div className={`w-2 h-2 rounded-full mt-2 ${
+                                insight.category === 'trend' ? 'bg-blue-500' :
+                                insight.category === 'recommendation' ? 'bg-purple-500' :
+                                insight.category === 'warning' ? 'bg-red-500' : 'bg-green-500'
+                              }`} />
+                              <div>
+                                <p className="text-green-800 font-medium">{insight.title}</p>
+                                <p className="text-green-700 text-sm">{insight.description}</p>
+                              </div>
+                            </div>
                           ))}
-                        </ul>
+                        </div>
                       </div>
+
+                      {aiAnalysis.recommendations.length > 0 && (
+                        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                          <h4 className="font-semibold text-purple-900 mb-2">Recommandations</h4>
+                          <div className="space-y-2">
+                            {aiAnalysis.recommendations.map((rec, index) => (
+                              <div key={index} className="flex items-start gap-2">
+                                <div className={`w-2 h-2 rounded-full mt-2 ${
+                                  rec.priority === 'high' ? 'bg-red-500' :
+                                  rec.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                                }`} />
+                                <div>
+                                  <p className="text-purple-800 font-medium">{rec.title}</p>
+                                  <p className="text-purple-700 text-sm">{rec.description}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                       <div className="grid gap-4">
                         <h4 className="font-semibold text-gray-900">Analyses par question</h4>
-                        {aiAnalysis.charts.map((chart: any, index: number) => (
+                        {aiAnalysis.charts.map((chart, index: number) => (
                           <Card key={index}>
                             <CardHeader>
-                              <CardTitle className="text-base">{chart.questionTitle}</CardTitle>
+                              <CardTitle className="text-base flex items-center gap-2">
+                                {chart.questionTitle}
+                                <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                                  {chart.type}
+                                </span>
+                              </CardTitle>
                             </CardHeader>
                             <CardContent>
                               <div className="space-y-2">
-                                {chart.data.map((item: any, itemIndex: number) => (
+                                {chart.data.map((item, itemIndex: number) => (
                                   <div key={itemIndex} className="flex items-center justify-between">
                                     <span className="text-sm">{item.label}</span>
                                     <div className="flex items-center gap-2">
                                       <div className="w-32 bg-gray-200 rounded-full h-2">
                                         <div
-                                          className="bg-[#E40046] h-2 rounded-full"
-                                          style={{ width: `${(item.value / responses.length) * 100}%` }}
+                                          className="h-2 rounded-full"
+                                          style={{ 
+                                            width: `${item.percentage}%`,
+                                            backgroundColor: item.color || '#E40046'
+                                          }}
                                         ></div>
                                       </div>
                                       <span className="text-sm text-gray-600 w-12 text-right">
