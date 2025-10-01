@@ -24,16 +24,27 @@ export async function apiRequest<T = any>({ url, method = 'GET', body, headers }
   if (!res.ok) {
     const status = res.status
     const contentType = res.headers.get('content-type') || ''
+    
+    let errorData: any = { status, url }
+    
     try {
       if (contentType.includes('application/json')) {
         const data = await res.json()
-        throw new Error(JSON.stringify({ status, url, ...data }))
+        errorData = { ...errorData, ...data }
+      } else {
+        const text = await res.text().catch(() => '')
+        errorData.message = text || `HTTP ${status}`
       }
     } catch {
-      // fallthrough to text
+      errorData.message = `HTTP ${status}`
     }
-    const text = await res.text().catch(() => '')
-    throw new Error(JSON.stringify({ status, url, message: text || `HTTP ${status}` }))
+    
+    // Créer une erreur avec les détails structurés
+    const error = new Error(errorData.message || `HTTP ${status}`) as any
+    error.status = status
+    error.url = url
+    error.response = errorData
+    throw error
   }
   const contentType = res.headers.get('content-type') || ''
   if (contentType.includes('application/json')) return (await res.json()) as T

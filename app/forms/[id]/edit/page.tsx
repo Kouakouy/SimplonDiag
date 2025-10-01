@@ -109,20 +109,32 @@ export default function EditFormPage() {
         questionsCount: form.questions.length
       })
 
+      // Préparer les données à envoyer
+      const formData = {
+        title: form.title,
+        description: form.description,
+        is_public: form.isPublic,
+        banner_title: form.bannerTitle || null,
+        banner_image_url: isValidUrl(form.bannerImageUrl) ? form.bannerImageUrl : null,
+        max_responses: form.maxResponses || null,
+        expiration_date: form.expirationDate ? form.expirationDate.toISOString() : null,
+        questions: form.questions.map(q => ({
+          id: q.id,
+          type: q.type,
+          title: q.title,
+          required: q.required || false,
+          options: q.options || null,
+          categoryId: q.categoryId || null
+        }))
+      }
+
+      console.log('Données à envoyer:', JSON.stringify(formData, null, 2))
+
       // Sauvegarder les informations du formulaire ET les questions
       await apiRequest({ 
         url: `/forms/${formId}`, 
         method: 'PUT', 
-        body: {
-          title: form.title,
-          description: form.description,
-          is_public: form.isPublic,
-          banner_title: form.bannerTitle,
-          banner_image_url: isValidUrl(form.bannerImageUrl) ? form.bannerImageUrl : undefined,
-          max_responses: form.maxResponses,
-          expiration_date: form.expirationDate ? form.expirationDate.toISOString() : undefined,
-          questions: form.questions // Ajouter les questions à la sauvegarde
-        } 
+        body: formData
       })
 
       console.log('Formulaire sauvegardé avec succès')
@@ -130,7 +142,27 @@ export default function EditFormPage() {
       router.push("/forms")
     } catch (e: any) {
       console.error('Erreur lors de la sauvegarde:', e)
-      alert(`Erreur lors de la sauvegarde: ${e.message || 'Erreur inconnue'}`)
+      
+      // Essayer d'extraire plus de détails de l'erreur
+      let errorMessage = 'Erreur inconnue'
+      
+      if (e.message) {
+        errorMessage = e.message
+      } else if (e.status) {
+        errorMessage = `Erreur HTTP ${e.status}: ${e.url || 'Requête échouée'}`
+      } else if (typeof e === 'string') {
+        errorMessage = e
+      }
+      
+      // Afficher les détails de l'erreur dans la console pour le debugging
+      console.error('Détails de l\'erreur:', {
+        status: e.status,
+        url: e.url,
+        message: e.message,
+        response: e.response
+      })
+      
+      alert(`Erreur lors de la sauvegarde:\n${errorMessage}\n\nVérifiez la console pour plus de détails.`)
     } finally {
       setSaving(false)
     }
