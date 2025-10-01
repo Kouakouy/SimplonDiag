@@ -213,11 +213,21 @@ export default function ResponsesPage() {
   }
 
   const generateAIAnalysis = async () => {
-    if (!form || responses.length === 0) return
+    if (!form) {
+      alert("Formulaire non trouvé")
+      return
+    }
+    
+    if (responses.length === 0) {
+      alert("Aucune réponse disponible pour l'analyse. Veuillez d'abord collecter des réponses.")
+      return
+    }
     
     setIsAnalyzing(true)
     setShowAnalyzeMenu(false)
     try {
+      console.log("Début de l'analyse IA...", { formId: form.id, responsesCount: responses.length })
+      
       // Utiliser le vrai service d'analyse avec DeepSeek
       const result = await analysisService.analyzeForm(form, responses, {
         formId: form.id,
@@ -226,10 +236,13 @@ export default function ResponsesPage() {
         analysisDepth: 'detailed'
       })
 
+      console.log("Résultat de l'analyse:", result)
+
       if (result.success && result.analysis) {
         setAiAnalysis(result.analysis)
         // Basculer automatiquement vers l'onglet d'analyse pour voir les résultats
         setActiveTab("analyze")
+        alert("Analyse générée avec succès !")
       } else {
         throw new Error(result.error || 'Erreur lors de l\'analyse')
       }
