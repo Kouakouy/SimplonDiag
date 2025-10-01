@@ -34,6 +34,8 @@ import {
   TrendingUp,
   CheckCircle,
   Upload,
+  Settings,
+  Columns,
 } from "lucide-react"
 import Link from "next/link"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -58,6 +60,8 @@ export default function ResponsesPage() {
   const [showAnalyzeMenu, setShowAnalyzeMenu] = useState(false)
   const [showAnalysisModal, setShowAnalysisModal] = useState(false)
   const analyzeMenuRef = useRef<HTMLDivElement>(null)
+  const [showColumnSettings, setShowColumnSettings] = useState(false)
+  const [visibleColumns, setVisibleColumns] = useState<string[]>([])
 
   // Fermer les menus quand on clique ailleurs
   useEffect(() => {
@@ -137,11 +141,198 @@ export default function ResponsesPage() {
     load()
   }, [formId])
 
-  const filteredResponses = responses.filter(
-    (response) =>
-      response.respondentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      response.respondentEmail.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  // Fonction pour détecter si le formulaire demande des informations personnelles
+  const hasPersonalInfoFields = () => {
+    if (!form) return false
+    
+    // Vérifier si le formulaire a des questions de type nom/prénom
+    const hasNameField = form.questions.some(q => 
+      q.type === 'text' && (
+        q.title.toLowerCase().includes('nom') || 
+        q.title.toLowerCase().includes('name') ||
+        q.title.toLowerCase().includes('prénom') ||
+        q.title.toLowerCase().includes('prenom') ||
+        q.title.toLowerCase().includes('firstname') ||
+        q.title.toLowerCase().includes('lastname')
+      )
+    )
+    
+    const hasEmailField = form.questions.some(q => 
+      q.type === 'email' || (
+        q.type === 'text' && (
+          q.title.toLowerCase().includes('email') || 
+          q.title.toLowerCase().includes('courriel') ||
+          q.title.toLowerCase().includes('e-mail')
+        )
+      )
+    )
+    
+    return hasNameField || hasEmailField
+  }
+
+  // Fonction pour obtenir le type de formulaire
+  const getFormType = () => {
+    if (!form) return 'unknown'
+    
+    const hasPersonalInfo = hasPersonalInfoFields()
+    
+    if (hasPersonalInfo) {
+      return 'personal' // Formulaire avec informations personnelles
+    } else {
+      return 'survey' // Sondage/anonyme
+    }
+  }
+
+  // Fonction pour obtenir toutes les colonnes disponibles
+  const getAllAvailableColumns = () => {
+    if (!form) return []
+    
+    const columns = []
+    const formType = getFormType()
+    
+    // Pour les sondages (sans infos personnelles), ajouter un ID de réponse
+    if (formType === 'survey') {
+      columns.push({
+        key: 'response_id',
+        title: 'Réponse #',
+        type: 'response_id',
+        width: '80px',
+        required: true
+      })
+    }
+    
+    // Ajouter les colonnes nom/email seulement si elles existent dans les questions
+    const nameQuestion = form.questions.find(q => 
+      q.type === 'text' && (
+        q.title.toLowerCase().includes('nom') || 
+        q.title.toLowerCase().includes('name') ||
+        q.title.toLowerCase().includes('prénom') ||
+        q.title.toLowerCase().includes('prenom') ||
+        q.title.toLowerCase().includes('firstname') ||
+        q.title.toLowerCase().includes('lastname')
+      )
+    )
+    
+    const emailQuestion = form.questions.find(q => 
+      q.type === 'email' || (
+        q.type === 'text' && (
+          q.title.toLowerCase().includes('email') || 
+          q.title.toLowerCase().includes('courriel') ||
+          q.title.toLowerCase().includes('e-mail')
+        )
+      )
+    )
+    
+    if (nameQuestion) {
+      columns.push({
+        key: 'respondent_name',
+        title: nameQuestion.title,
+        type: 'name',
+        width: '150px',
+        required: false
+      })
+    }
+    
+    if (emailQuestion) {
+      columns.push({
+        key: 'respondent_email',
+        title: emailQuestion.title,
+        type: 'email',
+        width: '200px',
+        required: false
+      })
+    }
+    
+    // Ajouter la colonne date (toujours visible)
+    columns.push({
+      key: 'submitted_at',
+      title: 'Date de soumission',
+      type: 'date',
+      width: '150px',
+      required: true
+    })
+    
+    // Ajouter toutes les questions comme colonnes supplémentaires
+    form.questions.forEach(q => {
+      // Exclure les questions nom/email déjà ajoutées
+      const isNameOrEmail = (q.type === 'text' && (
+        q.title.toLowerCase().includes('nom') || 
+        q.title.toLowerCase().includes('name') ||
+        q.title.toLowerCase().includes('prénom') ||
+        q.title.toLowerCase().includes('prenom') ||
+        q.title.toLowerCase().includes('firstname') ||
+        q.title.toLowerCase().includes('lastname') ||
+        q.title.toLowerCase().includes('email') || 
+        q.title.toLowerCase().includes('courriel') ||
+        q.title.toLowerCase().includes('e-mail')
+      )) || q.type === 'email'
+      
+      if (!isNameOrEmail) {
+        columns.push({
+          key: `question_${q.id}`,
+          title: q.title.length > 25 ? q.title.substring(0, 25) + '...' : q.title,
+          type: 'question',
+          questionId: q.id,
+          width: '120px',
+          required: false
+        })
+      }
+    })
+    
+    return columns
+  }
+
+  // Fonction pour obtenir les colonnes à afficher (filtrées par visibleColumns)
+  const getDisplayColumns = () => {
+    const allColumns = getAllAvailableColumns()
+    
+    // Si aucune colonne n'est sélectionnée, afficher les colonnes par défaut
+    if (visibleColumns.length === 0) {
+      return allColumns.filter(col => col.required || allColumns.indexOf(col) < 5)
+    }
+    
+    return allColumns.filter(col => visibleColumns.includes(col.key))
+  }
+
+  // Fonction pour obtenir la valeur d'une cellule
+  const getCellValue = (response: FormResponse, column: any) => {
+    switch (column.type) {
+      case 'response_id':
+        return `#${responses.indexOf(response) + 1}`
+      case 'name':
+        return response.respondentName || 'Non renseigné'
+      case 'email':
+        return response.respondentEmail || 'Non renseigné'
+      case 'date':
+        return response.submittedAt.toLocaleDateString("fr-FR")
+      case 'question':
+        const answer = response.answers[column.questionId]
+        if (Array.isArray(answer)) {
+          return answer.join(', ')
+        }
+        return answer || 'Non renseigné'
+      default:
+        return ''
+    }
+  }
+
+  const filteredResponses = responses.filter((response) => {
+    if (!searchTerm) return true
+    
+    const searchLower = searchTerm.toLowerCase()
+    
+    // Rechercher dans les champs nom/email si disponibles
+    if (response.respondentName?.toLowerCase().includes(searchLower)) return true
+    if (response.respondentEmail?.toLowerCase().includes(searchLower)) return true
+    
+    // Rechercher dans les réponses aux questions
+    return Object.values(response.answers).some(answer => {
+      if (Array.isArray(answer)) {
+        return answer.some(item => item.toLowerCase().includes(searchLower))
+      }
+      return String(answer).toLowerCase().includes(searchLower)
+    })
+  })
 
   const openResponseModal = (response: FormResponse) => {
     setSelectedResponseForModal(response)
@@ -348,7 +539,9 @@ export default function ResponsesPage() {
         <div class="header">
           <div class="header-content">
             <div class="logo-section">
-              <div class="logo">S</div>
+              <div class="logo">
+                <img src="https://s10.aconvert.com/convert/p3r68-cdx67/auyhc-1st4f.jpg" alt="Simplon Logo" style="height:40px;vertical-align:middle;" />
+              </div>
               <div class="company-info">
                 <h1>Simplon</h1>
                 <p>Plateforme de Formulaires</p>
@@ -818,8 +1011,34 @@ export default function ResponsesPage() {
         <main className="flex-1 p-4 lg:p-6 overflow-y-auto">
           {/* En-tête */}
           <div className="mb-6 lg:mb-8">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">Réponses: {form.title}</h1>
-            <p className="text-gray-600 mt-1">{responses.length} réponse(s) collectée(s)</p>
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">Réponses: {form.title}</h1>
+              {getFormType() === 'survey' && (
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
+                  <FileText className="w-3 h-3 mr-1" />
+                  Sondage
+                </Badge>
+              )}
+              {getFormType() === 'personal' && (
+                <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+                  <User className="w-3 h-3 mr-1" />
+                  Avec identité
+                </Badge>
+              )}
+            </div>
+            <p className="text-gray-600 mt-1">
+              {responses.length} réponse(s) collectée(s)
+              {getFormType() === 'survey' && (
+                <span className="text-sm text-gray-500 ml-2">
+                  • Sondage sans informations personnelles
+                </span>
+              )}
+              {getFormType() === 'personal' && (
+                <span className="text-sm text-gray-500 ml-2">
+                  • Formulaire avec informations personnelles
+                </span>
+              )}
+            </p>
           </div>
           <div className="max-w-6xl mx-auto">
             {/* Actions en haut */}
@@ -1045,11 +1264,94 @@ export default function ResponsesPage() {
                   <div className="relative flex-1 max-w-md">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <Input
-                      placeholder="Rechercher par nom ou email..."
+                      placeholder={getFormType() === 'survey' ? "Rechercher dans les réponses..." : "Rechercher par nom ou email..."}
                       className="pl-10"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
+                  </div>
+                  
+                  <div className="relative">
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowColumnSettings(!showColumnSettings)}
+                      className="flex items-center gap-2"
+                    >
+                      <Columns className="w-4 h-4" />
+                      Colonnes
+                    </Button>
+                    
+                    {showColumnSettings && (
+                      <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                        <div className="p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <h3 className="font-medium text-gray-900">Colonnes à afficher</h3>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setShowColumnSettings(false)}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          
+                          <div className="space-y-2 max-h-60 overflow-y-auto">
+                            {getAllAvailableColumns().map((column) => (
+                              <div key={column.key} className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  id={`column-${column.key}`}
+                                  checked={visibleColumns.length === 0 ? column.required : visibleColumns.includes(column.key)}
+                                  onChange={(e) => {
+                                    if (column.required) return // Les colonnes requises ne peuvent pas être désactivées
+                                    
+                                    if (e.target.checked) {
+                                      setVisibleColumns([...visibleColumns, column.key])
+                                    } else {
+                                      setVisibleColumns(visibleColumns.filter(key => key !== column.key))
+                                    }
+                                  }}
+                                  disabled={column.required}
+                                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                                />
+                                <label 
+                                  htmlFor={`column-${column.key}`}
+                                  className={`text-sm ${column.required ? 'text-gray-500' : 'text-gray-700'}`}
+                                >
+                                  {column.title}
+                                  {column.required && <span className="text-xs text-gray-400 ml-1">(requis)</span>}
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                          
+                          <div className="flex justify-between mt-4 pt-3 border-t">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const defaultColumns = getAllAvailableColumns()
+                                  .filter(col => col.required || getAllAvailableColumns().indexOf(col) < 5)
+                                  .map(col => col.key)
+                                setVisibleColumns(defaultColumns)
+                              }}
+                            >
+                              Par défaut
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const allColumns = getAllAvailableColumns().map(col => col.key)
+                                setVisibleColumns(allColumns)
+                              }}
+                            >
+                              Tout afficher
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -1077,9 +1379,15 @@ export default function ResponsesPage() {
                         <table className="w-full">
                           <thead className="bg-gray-50 border-b">
                             <tr>
-                              <th className="text-left p-4 font-medium text-gray-900">Répondant</th>
-                              <th className="text-left p-4 font-medium text-gray-900">Email</th>
-                              <th className="text-left p-4 font-medium text-gray-900">Date</th>
+                              {getDisplayColumns().map((column) => (
+                                <th 
+                                  key={column.key} 
+                                  className="text-left p-4 font-medium text-gray-900"
+                                  style={{ width: column.width }}
+                                >
+                                  {column.title}
+                                </th>
+                              ))}
                               <th className="text-left p-4 font-medium text-gray-900">Statut</th>
                               <th className="text-right p-4 font-medium text-gray-900">Actions</th>
                             </tr>
@@ -1087,30 +1395,36 @@ export default function ResponsesPage() {
                           <tbody>
                             {filteredResponses.map((response) => (
                               <tr key={response.id} className="border-b hover:bg-gray-50">
-                                <td className="p-4">
-                                  <div className="flex items-center gap-2">
-                                    <User className="w-4 h-4 text-gray-400" />
-                                    <span className="font-medium">{response.respondentName}</span>
-                                  </div>
-                                </td>
-                                <td className="p-4">
-                                  <div className="flex items-center gap-2">
-                                    <Mail className="w-4 h-4 text-gray-400" />
-                                    <span className="text-gray-600">{response.respondentEmail}</span>
-                                  </div>
-                                </td>
-                                <td className="p-4">
-                                  <div className="flex items-center gap-2">
-                                    <Calendar className="w-4 h-4 text-gray-400" />
-                                    <span className="text-gray-600">
-                                      {response.submittedAt.toLocaleDateString("fr-FR")} à{" "}
-                                      {response.submittedAt.toLocaleTimeString("fr-FR", {
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                      })}
-                                    </span>
-                                  </div>
-                                </td>
+                                {getDisplayColumns().map((column) => (
+                                  <td key={column.key} className="p-4">
+                                    <div className="flex items-center gap-2">
+                                      {column.type === 'response_id' && (
+                                        <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-xs font-mono text-blue-600">
+                                          #
+                                        </div>
+                                      )}
+                                      {column.type === 'name' && (
+                                        <User className="w-4 h-4 text-gray-400" />
+                                      )}
+                                      {column.type === 'email' && (
+                                        <Mail className="w-4 h-4 text-gray-400" />
+                                      )}
+                                      {column.type === 'date' && (
+                                        <Calendar className="w-4 h-4 text-gray-400" />
+                                      )}
+                                      {column.type === 'question' && (
+                                        <FileText className="w-4 h-4 text-gray-400" />
+                                      )}
+                                      <span className={`${
+                                        column.type === 'name' ? 'font-medium' : 
+                                        column.type === 'response_id' ? 'font-mono text-sm text-blue-600' :
+                                        'text-gray-600'
+                                      }`}>
+                                        {getCellValue(response, column)}
+                                      </span>
+                                    </div>
+                                  </td>
+                                ))}
                                 <td className="p-4">
                                   <Badge variant="default" className="bg-green-100 text-green-800">
                                     Complète
