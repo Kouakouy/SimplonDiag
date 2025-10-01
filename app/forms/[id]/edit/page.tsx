@@ -26,30 +26,6 @@ export default function EditFormPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
-  // Fonction pour compresser les images base64
-  const compressBase64Image = (base64: string, maxWidth = 800, quality = 0.8): Promise<string> => {
-    return new Promise((resolve) => {
-      const canvas = document.createElement('canvas')
-      const ctx = canvas.getContext('2d')
-      const img = new Image()
-      
-      img.onload = () => {
-        // Calculer les nouvelles dimensions
-        const ratio = Math.min(maxWidth / img.width, maxWidth / img.height)
-        canvas.width = img.width * ratio
-        canvas.height = img.height * ratio
-        
-        // Dessiner l'image redimensionnée
-        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height)
-        
-        // Convertir en base64 avec compression
-        const compressedBase64 = canvas.toDataURL('image/jpeg', quality)
-        resolve(compressedBase64)
-      }
-      
-      img.src = base64
-    })
-  }
   
 
   useEffect(() => {
@@ -57,25 +33,33 @@ export default function EditFormPage() {
       try {
         setLoading(true)
         const f = await apiRequest<any>({ url: `/forms/${formId}` })
+        
+        // Log pour vérifier les données reçues
+        console.log('Données reçues du serveur:', f)
+        
         const adapted: Form = {
           id: f._id || f.id || formId,
           title: f.title || "",
           description: f.description || "",
-          bannerTitle: f.banner_title,
-          bannerImageUrl: f.banner_image_url,
+          bannerTitle: f.banner_title || "",
+          bannerImageUrl: f.banner_image_url || "",
           questions: f.questions || [],
           isPublic: f.is_public ?? true,
           expirationDate: f.expiration_date ? new Date(f.expiration_date) : undefined,
-          maxResponses: f.max_responses,
+          maxResponses: f.max_responses || undefined,
           createdAt: f.created_at ? new Date(f.created_at) : new Date(),
           updatedAt: f.updated_at ? new Date(f.updated_at) : new Date(),
           responses: [],
           publicSlug: f.public_slug,
         }
+        
+        // Log pour vérifier les données adaptées
+        console.log('Données adaptées pour le formulaire:', adapted)
+        
         setForm(adapted)
       } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error(e)
+        console.error('Erreur lors du chargement du formulaire:', e)
+        alert('Erreur lors du chargement du formulaire')
       } finally {
         setLoading(false)
       }
@@ -128,98 +112,36 @@ export default function EditFormPage() {
         try { new URL(u); return true } catch { return false }
       }
 
-      console.log('Sauvegarde du formulaire:', {
-        formId,
-        title: form.title,
-        questionsCount: form.questions.length
-      })
-
-      // Traiter l'image banner
-      let bannerImageUrl = null
-      if (form.bannerImageUrl && form.bannerImageUrl.startsWith('data:')) {
-        try {
-          console.log('Compression de l\'image base64...')
-          bannerImageUrl = await compressBase64Image(form.bannerImageUrl)
-          console.log(`Image compressée: ${bannerImageUrl.length} caractères`)
-        } catch (error) {
-          console.error('Erreur lors de la compression:', error)
-          bannerImageUrl = null
-        }
-      } else {
-        bannerImageUrl = isValidUrl(form.bannerImageUrl) ? form.bannerImageUrl : null
-      }
-
-      // Préparer les données à envoyer
+      // Préparer les données à envoyer (EXACTEMENT comme create/page.tsx)
       const formData = {
-        title: form.title,
-        description: form.description,
-        is_public: form.isPublic,
-        banner_title: form.bannerTitle || null,
-        banner_image_url: bannerImageUrl,
-        max_responses: form.maxResponses || null,
-        expiration_date: form.expirationDate ? form.expirationDate.toISOString() : null,
-        questions: form.questions.map(q => ({
-          id: q.id,
-          type: q.type,
-          title: q.title,
-          required: q.required || false,
-          options: q.options || null,
-          categoryId: q.categoryId || null
-        }))
+        title: form.title || "",
+        description: form.description || "",
+        is_public: form.isPublic ?? true,
+        questions: [], // Comme dans create - les questions sont gérées séparément
+        max_responses: form.maxResponses,
+        expiration_date: form.expirationDate ? form.expirationDate.toISOString() : undefined,
+        banner_title: form.bannerTitle || undefined,
+        banner_image_url: isValidUrl(form.bannerImageUrl) ? form.bannerImageUrl : undefined,
       }
 
-      // Validation des données avant envoi
+      // Validation simple (comme dans create/page.tsx)
       if (!formData.title || formData.title.trim().length === 0) {
-        throw new Error('Le titre du formulaire est requis')
+        alert('Veuillez saisir un titre pour votre formulaire')
+        return
       }
 
-      if (!formData.description || formData.description.trim().length === 0) {
-        throw new Error('La description du formulaire est requise')
-      }
-
-      // Vérifier la taille des données
-      const dataSize = JSON.stringify(formData).length
-      console.log(`Taille des données: ${dataSize} caractères`)
-      
-      if (dataSize > 1000000) { // 1MB
-        throw new Error('Les données sont trop volumineuses. Veuillez réduire la taille de l\'image.')
-      }
-
-      console.log('Données à envoyer:', JSON.stringify(formData, null, 2))
-
-      // Sauvegarder les informations du formulaire ET les questions
+      // Sauvegarder les informations du formulaire (comme dans create/page.tsx)
       await apiRequest({ 
         url: `/forms/${formId}`, 
         method: 'PUT', 
         body: formData
       })
 
-      console.log('Formulaire sauvegardé avec succès')
       alert('Formulaire sauvegardé avec succès !')
       router.push("/forms")
     } catch (e: any) {
-      console.error('Erreur lors de la sauvegarde:', e)
-      
-      // Essayer d'extraire plus de détails de l'erreur
-      let errorMessage = 'Erreur inconnue'
-      
-      if (e.message) {
-        errorMessage = e.message
-      } else if (e.status) {
-        errorMessage = `Erreur HTTP ${e.status}: ${e.url || 'Requête échouée'}`
-      } else if (typeof e === 'string') {
-        errorMessage = e
-      }
-      
-      // Afficher les détails de l'erreur dans la console pour le debugging
-      console.error('Détails de l\'erreur:', {
-        status: e.status,
-        url: e.url,
-        message: e.message,
-        response: e.response
-      })
-      
-      alert(`Erreur lors de la sauvegarde:\n${errorMessage}\n\nVérifiez la console pour plus de détails.`)
+      // Afficher l'erreur détaillée renvoyée par lib/api.ts (comme dans create/page.tsx)
+      alert(`Erreur lors de la sauvegarde: ${e.message}`)
     } finally {
       setSaving(false)
     }
@@ -232,7 +154,8 @@ export default function EditFormPage() {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E40046] mx-auto mb-4"></div>
-            <p className="text-gray-500">Chargement du formulaire...</p>
+            <p className="text-gray-500">Chargement des informations du formulaire...</p>
+            <p className="text-sm text-gray-400 mt-2">Récupération des données sauvegardées</p>
           </div>
         </div>
       </div>
