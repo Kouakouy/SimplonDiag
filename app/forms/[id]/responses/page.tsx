@@ -33,9 +33,11 @@ import {
   Brain,
   TrendingUp,
   CheckCircle,
+  Upload,
 } from "lucide-react"
 import Link from "next/link"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { FormStatsCharts } from "@/components/forms/form-stats-charts"
 
 export default function ResponsesPage() {
   const params = useParams()
@@ -171,38 +173,234 @@ export default function ResponsesPage() {
     
     const content = `
       <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Réponse - ${form.title}</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            .header { border-bottom: 2px solid #E40046; padding-bottom: 10px; margin-bottom: 20px; }
-            .question { margin-bottom: 15px; padding: 10px; border-left: 4px solid #E40046; background: #f9f9f9; }
-            .answer { margin-top: 5px; font-weight: bold; }
-            .info { background: #f0f0f0; padding: 10px; margin-bottom: 20px; border-radius: 5px; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>${form.title}</h1>
-            <p>Réponse de ${response.respondentName}</p>
-          </div>
-          <div class="info">
-            <p><strong>Nom:</strong> ${response.respondentName}</p>
-            <p><strong>Email:</strong> ${response.respondentEmail}</p>
-            <p><strong>Date de soumission:</strong> ${response.submittedAt.toLocaleString("fr-FR")}</p>
-          </div>
-          ${form.questions.map((q) => {
-            const value = response.answers[q.id]
-            const answer = Array.isArray(value) ? value.join(", ") : (value || "Aucune réponse")
-            return `
-              <div class="question">
-                <div><strong>${q.title}</strong></div>
-                <div class="answer">${answer}</div>
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8">
+        <title>Réponse - ${form.title}</title>
+        <style>
+          @page {
+            margin: 1in;
+            size: A4;
+          }
+          
+          body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            line-height: 1.6;
+          }
+          
+          .header {
+            background: linear-gradient(135deg, #E40046 0%, #C7003A 100%);
+            color: white;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+          }
+          
+          .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+          }
+          
+          .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+          }
+          
+          .logo {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #E40046;
+            font-size: 18px;
+          }
+          
+          .company-info h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+          }
+          
+          .company-info p {
+            margin: 5px 0 0 0;
+            font-size: 14px;
+            opacity: 0.9;
+          }
+          
+          .response-info {
+            text-align: right;
+          }
+          
+          .response-info .respondent {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+          }
+          
+          .response-info .date {
+            font-size: 14px;
+            opacity: 0.9;
+          }
+          
+          .content {
+            margin-bottom: 30px;
+          }
+          
+          h2 {
+            color: #E40046;
+            font-size: 20px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #E40046;
+            padding-bottom: 10px;
+          }
+          
+          .info-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          }
+          
+          .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+          }
+          
+          .info-item {
+            display: flex;
+            flex-direction: column;
+          }
+          
+          .info-label {
+            font-weight: bold;
+            color: #E40046;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+          }
+          
+          .info-value {
+            font-size: 14px;
+            color: #333;
+          }
+          
+          .questions-section {
+            margin-top: 30px;
+          }
+          
+          .question {
+            margin-bottom: 20px;
+            padding: 20px;
+            border-left: 4px solid #E40046;
+            background: #f8f9fa;
+            border-radius: 0 8px 8px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          }
+          
+          .question-title {
+            font-weight: bold;
+            color: #E40046;
+            font-size: 16px;
+            margin-bottom: 10px;
+          }
+          
+          .answer {
+            font-size: 14px;
+            color: #333;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+          }
+          
+          .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #E40046;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+          }
+          
+          @media print {
+            .header {
+              background: #E40046 !important;
+              -webkit-print-color-adjust: exact;
+              color-adjust: exact;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="header-content">
+            <div class="logo-section">
+              <div class="logo">S</div>
+              <div class="company-info">
+                <h1>Simplon</h1>
+                <p>Plateforme de Formulaires</p>
               </div>
-            `
-          }).join("")}
-        </body>
+            </div>
+            <div class="response-info">
+              <div class="respondent">${response.respondentName}</div>
+              <div class="date">${response.submittedAt.toLocaleDateString("fr-FR")}</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="content">
+          <h2>📝 Réponse au Formulaire - ${form.title}</h2>
+          
+          <div class="info-card">
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">Nom du répondant</div>
+                <div class="info-value">${response.respondentName}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Email</div>
+                <div class="info-value">${response.respondentEmail}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Date de soumission</div>
+                <div class="info-value">${response.submittedAt.toLocaleString("fr-FR")}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="questions-section">
+            <h2>📋 Réponses aux Questions</h2>
+            ${form.questions.map((q) => {
+              const value = response.answers[q.id]
+              const answer = Array.isArray(value) ? value.join(", ") : (value || "Aucune réponse")
+              return `
+                <div class="question">
+                  <div class="question-title">${q.title}</div>
+                  <div class="answer">${answer}</div>
+                </div>
+              `
+            }).join("")}
+          </div>
+        </div>
+        
+        <div class="footer">
+          <p>Généré le ${new Date().toLocaleString("fr-FR")} par Simplon Form Platform</p>
+          <p>© ${new Date().getFullYear()} Simplon - Tous droits réservés</p>
+        </div>
+      </body>
       </html>
     `
     
@@ -349,6 +547,7 @@ export default function ResponsesPage() {
 
   const exportToPDF = () => {
     if (!form || responses.length === 0) return
+    
     const headers = ["Nom", "Email", "Date", ...form.questions.map((q) => q.title)]
     const rows = responses.map((response) => [
       response.respondentName,
@@ -359,25 +558,215 @@ export default function ResponsesPage() {
         return Array.isArray(v) ? v.join(", ") : (v || "")
       }),
     ])
-    const win = window.open("", "_blank")
-    if (!win) return
-    const style = `
-      body{font-family: ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial; padding:24px;}
-      h1{font-size:18px;margin:0 0 12px}
-      table{width:100%;border-collapse:collapse}
-      th,td{border:1px solid #ddd;padding:6px;font-size:12px;vertical-align:top}
-      th{background:#f3f4f6;text-align:left}
+
+    // Template HTML avec header Simplon
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${form.title} - Réponses</title>
+        <style>
+          @page {
+            margin: 1in;
+            size: A4;
+          }
+          
+          body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            line-height: 1.6;
+          }
+          
+          .header {
+            background: linear-gradient(135deg, #E40046 0%, #C7003A 100%);
+            color: white;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+          }
+          
+          .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+          }
+          
+          .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+          }
+          
+          .logo {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #E40046;
+            font-size: 18px;
+          }
+          
+          .company-info h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+          }
+          
+          .company-info p {
+            margin: 5px 0 0 0;
+            font-size: 14px;
+            opacity: 0.9;
+          }
+          
+          .report-info {
+            text-align: right;
+          }
+          
+          .report-info .date {
+            font-size: 14px;
+            opacity: 0.9;
+          }
+          
+          .report-info .count {
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 5px;
+          }
+          
+          .content {
+            margin-bottom: 30px;
+          }
+          
+          h2 {
+            color: #E40046;
+            font-size: 20px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #E40046;
+            padding-bottom: 10px;
+          }
+          
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          }
+          
+          th {
+            background: #E40046;
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 12px;
+          }
+          
+          td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #eee;
+            font-size: 11px;
+            vertical-align: top;
+          }
+          
+          tr:nth-child(even) {
+            background: #f8f9fa;
+          }
+          
+          tr:hover {
+            background: #e3f2fd;
+          }
+          
+          .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #E40046;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+          }
+          
+          .page-break {
+            page-break-before: always;
+          }
+          
+          @media print {
+            .header {
+              background: #E40046 !important;
+              -webkit-print-color-adjust: exact;
+              color-adjust: exact;
+            }
+            
+            th {
+              background: #E40046 !important;
+              -webkit-print-color-adjust: exact;
+              color-adjust: exact;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="header-content">
+            <div class="logo-section">
+              <div class="logo">S</div>
+              <div class="company-info">
+                <h1>Simplon</h1>
+                <p>Plateforme de Formulaires</p>
+              </div>
+            </div>
+            <div class="report-info">
+              <div class="date">${new Date().toLocaleDateString("fr-FR")}</div>
+              <div class="count">${responses.length} réponse${responses.length > 1 ? 's' : ''}</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="content">
+          <h2>📊 Rapport des Réponses - ${form.title}</h2>
+          
+          <table>
+            <thead>
+              <tr>
+                ${headers.map((h) => `<th>${h}</th>`).join("")}
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map((r) => 
+                `<tr>${r.map((c) => `<td>${String(c).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</td>`).join("")}</tr>`
+              ).join("")}
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="footer">
+          <p>Généré le ${new Date().toLocaleString("fr-FR")} par Simplon Form Platform</p>
+          <p>© ${new Date().getFullYear()} Simplon - Tous droits réservés</p>
+        </div>
+      </body>
+      </html>
     `
-    win.document.write(`<!doctype html><html><head><meta charset="utf-8"/><title>${form.title} - Réponses</title><style>${style}</style></head><body>`)
-    win.document.write(`<h1>${form.title} - Réponses</h1>`)
-    win.document.write(`<table><thead><tr>${headers.map((h) => `<th>${h}</th>`).join("")}</tr></thead><tbody>`)
-    rows.forEach((r) => {
-      win!.document.write(`<tr>${r.map((c) => `<td>${String(c).replace(/&/g,'&amp;').replace(/</g,'&lt;')}</td>`).join("")}</tr>`)
-    })
-    win.document.write(`</tbody></table></body></html>`)
-    win.document.close()
-    win.focus()
-    win.print()
+
+    // Créer un blob HTML et le télécharger
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' })
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = `${form.title}_reponses_${new Date().toISOString().split('T')[0]}.html`
+    link.click()
+    
+    // Afficher un message pour indiquer que le fichier peut être converti en PDF
+    alert('Fichier HTML téléchargé ! Ouvrez-le dans votre navigateur et utilisez "Imprimer > Enregistrer au format PDF" pour créer un PDF.')
   }
 
   if (loading) {
@@ -498,7 +887,7 @@ export default function ResponsesPage() {
                 </div>
                 <div className="relative" ref={exportMenuRef}>
                   <Button variant="outline" onClick={() => setShowExportMenu(!showExportMenu)}>
-                    <Download className="w-4 h-4 mr-2" />
+                    <Upload className="w-4 h-4 mr-2" />
                     Exporter
                   </Button>
                   
@@ -774,55 +1163,8 @@ export default function ResponsesPage() {
 
             {activeTab === "stats" && (
               <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BarChart3 className="w-5 h-5" />
-                      Statistiques détaillées
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div className="text-center p-4 bg-blue-50 rounded-lg">
-                        <div className="text-3xl font-bold text-blue-600">{responses.length}</div>
-                        <div className="text-sm text-blue-800">Total des réponses</div>
-                      </div>
-                      <div className="text-center p-4 bg-green-50 rounded-lg">
-                        <div className="text-3xl font-bold text-green-600">
-                          {responses.filter(r => {
-                            const today = new Date()
-                            const responseDate = r.submittedAt
-                            return responseDate.getDate() === today.getDate() && 
-                                   responseDate.getMonth() === today.getMonth() && 
-                                   responseDate.getFullYear() === today.getFullYear()
-                          }).length}
-                        </div>
-                        <div className="text-sm text-green-800">Aujourd'hui</div>
-                      </div>
-                      <div className="text-center p-4 bg-purple-50 rounded-lg">
-                        <div className="text-3xl font-bold text-purple-600">
-                          {responses.filter(r => {
-                            const weekAgo = new Date()
-                            weekAgo.setDate(weekAgo.getDate() - 7)
-                            return r.submittedAt >= weekAgo
-                          }).length}
-                        </div>
-                        <div className="text-sm text-purple-800">Cette semaine</div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Réponses par jour</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-center text-gray-500 py-8">
-                      Graphique des réponses par jour (à implémenter avec Chart.js)
-                    </div>
-                  </CardContent>
-                </Card>
+                {/* Intégration du composant FormStatsCharts */}
+                <FormStatsCharts form={form} responses={responses} serverStats={backendStats} />
               </div>
             )}
 

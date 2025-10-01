@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { apiRequest } from "@/lib/api"
-import { FileText, Plus, Search, CheckCircle, Copy, Trash2, Share } from "lucide-react"
+import { FileText, Plus, Search, CheckCircle, Copy, Trash2, Share, Eye, BarChart3, Edit, Trash } from "lucide-react"
 import Link from "next/link"
 
 export default function FormsPage() {
@@ -17,6 +17,7 @@ export default function FormsPage() {
   const [error, setError] = useState<string | null>(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [formToDelete, setFormToDelete] = useState<string | null>(null)
+  const [copiedLink, setCopiedLink] = useState<string | null>(null)
 
   useEffect(() => {
     const load = async () => {
@@ -44,7 +45,9 @@ export default function FormsPage() {
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text)
-      // TODO: Afficher une notification de succès si besoin
+      setCopiedLink(text)
+      // Masquer le message après 2 secondes
+      setTimeout(() => setCopiedLink(null), 2000)
     } catch (err) {
       console.error('Erreur lors de la copie:', err)
     }
@@ -144,24 +147,38 @@ export default function FormsPage() {
                   : `/f/${form.public_slug || form._id || form.id}`;
                 return (
                   <Card key={form._id || form.id} className="hover:shadow-md transition-shadow overflow-hidden">
-                    {/* Bannière du formulaire */}
+                    {/* Bannière du formulaire en grille */}
                     {(form.banner_title || form.banner_image_url) ? (
-                      <div 
-                        className={`h-32 relative overflow-hidden ${form.banner_image_url ? 'bg-cover bg-center' : 'bg-gradient-to-r from-[#E40046] via-[#E40046]/80 to-rose-500'}`}
-                        style={form.banner_image_url ? { backgroundImage: `url(${form.banner_image_url})` } : {}}
-                      >
-                        <div className="absolute inset-0 bg-black/30"></div>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          {form.banner_title && (
-                            <h3 className="text-xl font-bold text-white drop-shadow-lg text-center px-4">{form.banner_title}</h3>
-                          )}
+                      <div className="p-4">
+                        <div className="grid grid-cols-3 gap-2">
+                          {/* Afficher 3-4 miniatures de la bannière */}
+                          {Array.from({ length: 3 }).map((_, index) => (
+                            <div 
+                              key={index}
+                              className={`h-16 relative overflow-hidden rounded ${form.banner_image_url ? 'bg-cover bg-center' : 'bg-gradient-to-r from-[#E40046] via-[#E40046]/80 to-rose-500'}`}
+                              style={form.banner_image_url ? { backgroundImage: `url(${form.banner_image_url})` } : {}}
+                            >
+                              <div className="absolute inset-0 bg-black/20"></div>
+                              {form.banner_title && (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <h3 className="text-xs font-bold text-white drop-shadow-lg text-center px-1">{form.banner_title}</h3>
+                                </div>
+                              )}
+                            </div>
+                          ))}
                         </div>
                       </div>
                     ) : (
-                      <div className="h-20 bg-gradient-to-r from-gray-100 to-gray-200 flex items-center justify-center">
-                        <div className="text-center">
-                          <FileText className="w-8 h-8 text-gray-400 mx-auto mb-1" />
-                          <p className="text-sm text-gray-500">Aucune bannière</p>
+                      <div className="p-4">
+                        <div className="grid grid-cols-3 gap-2">
+                          {Array.from({ length: 3 }).map((_, index) => (
+                            <div key={index} className="h-16 bg-gradient-to-r from-gray-100 to-gray-200 flex items-center justify-center rounded">
+                              <div className="text-center">
+                                <FileText className="w-4 h-4 text-gray-400 mx-auto mb-1" />
+                                <p className="text-xs text-gray-500">Aucune bannière</p>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     )}
@@ -186,28 +203,38 @@ export default function FormsPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           <Link href={`/forms/${form._id || form.id}`}>
-                            <Button variant="outline" size="sm">Voir</Button>
+                            <Button variant="outline" size="sm" className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:border-blue-300">
+                              <Eye className="w-4 h-4 mr-1" />
+                              Aperçu
+                            </Button>
                           </Link>
                           <Link href={`/forms/${form._id || form.id}/responses`}>
-                            <Button variant="outline" size="sm">Résultats</Button>
+                            <Button variant="outline" size="sm" className="text-green-600 border-green-200 hover:bg-green-50 hover:border-green-300">
+                              <BarChart3 className="w-4 h-4 mr-1" />
+                              Résultats
+                            </Button>
                           </Link>
                           <Link href={`/forms/${form._id || form.id}/share`}>
-                            <Button variant="outline" size="sm">
+                            <Button variant="outline" size="sm" className="text-purple-600 border-purple-200 hover:bg-purple-50 hover:border-purple-300">
                               <Share className="w-4 h-4 mr-1" />
                               Partager
                             </Button>
                           </Link>
                           <Link href={`/forms/${form._id || form.id}/edit`}>
-                            <Button variant="outline" size="sm">Éditer</Button>
+                            <Button variant="outline" size="sm" className="text-orange-600 border-orange-200 hover:bg-orange-50 hover:border-orange-300">
+                              <Edit className="w-4 h-4 mr-1" />
+                              Éditer
+                            </Button>
                           </Link>
                           <Button
                             variant="outline"
                             size="sm"
-                            className="border-[#E40046] text-[#E40046] hover:bg-[#E40046]/10 hover:text-white hover:border-[#E40046]"
+                            className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
                             onClick={() => handleDelete(form._id || form.id)}
                             title="Supprimer le formulaire"
                           >
-                            <Trash2 className="w-4 h-4 mr-1" /> Supprimer
+                            <Trash className="w-4 h-4 mr-1" />
+                            Supprimer
                           </Button>
                         </div>
                       </div>
@@ -228,6 +255,11 @@ export default function FormsPage() {
                               <Copy className="w-4 h-4" />
                             </Button>
                           </div>
+                          {copiedLink === shareUrl && (
+                            <div className="mt-2 text-sm text-green-600 font-medium">
+                              ✓ Lien copié dans le presse-papiers !
+                            </div>
+                          )}
                         </div>
                       </div>
                     </CardContent>
