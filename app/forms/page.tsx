@@ -1,7 +1,7 @@
 "use client"
 
 // Page de liste des formulaires
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,22 +24,42 @@ export default function FormsPage() {
       try {
         setLoading(true)
         setError(null)
+        
+        // Charger les données en parallèle si possible
         const data = await apiRequest<any[]>({ url: "/forms" })
-        setForms(data)
+        
+        // Optimiser le rendu en mettant à jour l'état immédiatement
+        setForms(data || [])
       } catch (e: any) {
+        console.error('Erreur lors du chargement des formulaires:', e)
         setError(e.message || "Erreur de chargement")
+        setForms([]) // S'assurer qu'on a un tableau vide en cas d'erreur
       } finally {
         setLoading(false)
       }
     }
+    
+    // Démarrer le chargement immédiatement
     load()
   }, [])
 
-  const filteredForms = forms.filter(
-    (form) =>
-      form.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      form.description.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  // Optimiser le filtrage avec useMemo
+  const filteredForms = useMemo(() => {
+    if (!searchTerm.trim()) return forms
+    
+    const term = searchTerm.toLowerCase()
+    return forms.filter(
+      (form) =>
+        form.title?.toLowerCase().includes(term) ||
+        form.description?.toLowerCase().includes(term)
+    )
+  }, [forms, searchTerm])
+
+  // Fonction utilitaire pour générer l'URL de partage
+  const getShareUrl = (form: any) => {
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+    return `${baseUrl}/f/${form.public_slug || form._id || form.id}`
+  }
 
   // Ajout de la fonction de copie pour le bouton
   const copyToClipboard = async (text: string) => {
@@ -106,11 +126,43 @@ export default function FormsPage() {
 
           {/* États de chargement/erreur */}
           {loading ? (
-            <Card>
-              <CardContent className="p-12 text-center">
-                <p className="text-gray-500">Chargement...</p>
-              </CardContent>
-            </Card>
+            <div className="grid gap-4">
+              {/* Skeleton loaders pour simuler le contenu */}
+              {Array.from({ length: 3 }).map((_, index) => (
+                <Card key={index} className="animate-pulse">
+                  <div className="p-4">
+                    <div className="grid grid-cols-3 gap-2 mb-4">
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} className="h-16 bg-gray-200 rounded"></div>
+                      ))}
+                    </div>
+                  </div>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+                        <div className="flex-1">
+                          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                          <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
+                          <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <div key={i} className="w-16 h-8 bg-gray-200 rounded"></div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <div className="bg-gray-100 rounded-lg p-4">
+                        <div className="h-3 bg-gray-200 rounded w-1/4 mb-2"></div>
+                        <div className="h-8 bg-gray-200 rounded"></div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           ) : error ? (
             <Card>
               <CardContent className="p-12 text-center">
@@ -142,9 +194,8 @@ export default function FormsPage() {
           ) : (
             <div className="grid gap-4">
               {filteredForms.map((form) => {
-                const shareUrl = typeof window !== 'undefined'
-                  ? `${window.location.origin}/f/${form.public_slug || form._id || form.id}`
-                  : `/f/${form.public_slug || form._id || form.id}`;
+                const shareUrl = getShareUrl(form)
+                
                 return (
                   <Card key={form._id || form.id} className="hover:shadow-md transition-shadow overflow-hidden">
                     {/* Bannière du formulaire en grille */}

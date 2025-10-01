@@ -24,6 +24,7 @@ export default function EditFormPage() {
 
   const [form, setForm] = useState<Form | null>(null)
   const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   
 
   useEffect(() => {
@@ -93,25 +94,45 @@ export default function EditFormPage() {
 
   // Sauvegarder le formulaire
   const saveForm = async () => {
-    if (!form) return
+    if (!form || saving) return
+    
+    setSaving(true)
     try {
       const isValidUrl = (u?: string) => {
         if (!u) return false
         try { new URL(u); return true } catch { return false }
       }
-      await apiRequest({ url: `/forms/${formId}`, method: 'PUT', body: {
+
+      console.log('Sauvegarde du formulaire:', {
+        formId,
         title: form.title,
-        description: form.description,
-        is_public: form.isPublic,
-        banner_title: form.bannerTitle,
-        banner_image_url: isValidUrl(form.bannerImageUrl) ? form.bannerImageUrl : undefined,
-        max_responses: form.maxResponses,
-        expiration_date: form.expirationDate ? form.expirationDate.toISOString() : undefined,
-      } })
+        questionsCount: form.questions.length
+      })
+
+      // Sauvegarder les informations du formulaire ET les questions
+      await apiRequest({ 
+        url: `/forms/${formId}`, 
+        method: 'PUT', 
+        body: {
+          title: form.title,
+          description: form.description,
+          is_public: form.isPublic,
+          banner_title: form.bannerTitle,
+          banner_image_url: isValidUrl(form.bannerImageUrl) ? form.bannerImageUrl : undefined,
+          max_responses: form.maxResponses,
+          expiration_date: form.expirationDate ? form.expirationDate.toISOString() : undefined,
+          questions: form.questions // Ajouter les questions à la sauvegarde
+        } 
+      })
+
+      console.log('Formulaire sauvegardé avec succès')
+      alert('Formulaire sauvegardé avec succès !')
       router.push("/forms")
-    } catch (e) {
-      // eslint-disable-next-line no-alert
-      alert('Erreur lors de la sauvegarde')
+    } catch (e: any) {
+      console.error('Erreur lors de la sauvegarde:', e)
+      alert(`Erreur lors de la sauvegarde: ${e.message || 'Erreur inconnue'}`)
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -181,9 +202,22 @@ export default function EditFormPage() {
                     Aperçu
                   </Button>
                 </Link>
-                <Button onClick={saveForm} className="bg-[#E40046] hover:bg-[#E40046]/80 text-white">
-                  <Save className="w-4 h-4 mr-2" />
-                  Sauvegarder
+                <Button 
+                  onClick={saveForm} 
+                  disabled={saving}
+                  className="bg-[#E40046] hover:bg-[#E40046]/80 text-white disabled:opacity-50"
+                >
+                  {saving ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Sauvegarde...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Sauvegarder
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
