@@ -550,27 +550,31 @@ export default function ResponsesPage() {
     
     const headers = ["Nom", "Email", "Date", ...form.questions.map((q) => q.title)]
     const rows = responses.map((response) => [
-      response.respondentName,
-      response.respondentEmail,
+      response.respondentName || "Anonyme",
+      response.respondentEmail || "Non renseigné",
       response.submittedAt.toLocaleString("fr-FR"),
       ...form.questions.map((q) => {
         const v = response.answers[q.id]
-        return Array.isArray(v) ? v.join(", ") : (v || "")
+        return Array.isArray(v) ? v.join(", ") : (v || "Non renseigné")
       }),
     ])
 
-    // Template HTML avec header Simplon
+    // Template HTML optimisé pour l'impression PDF
     const htmlContent = `
       <!DOCTYPE html>
       <html lang="fr">
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>${form.title} - Réponses</title>
+        <title>${form.title} - Réponses PDF</title>
         <style>
           @page {
-            margin: 1in;
-            size: A4;
+            margin: 0.5in;
+            size: A4 landscape;
+          }
+          
+          * {
+            box-sizing: border-box;
           }
           
           body {
@@ -578,19 +582,17 @@ export default function ResponsesPage() {
             margin: 0;
             padding: 0;
             color: #333;
-            line-height: 1.6;
+            line-height: 1.4;
+            font-size: 11px;
+            background: white;
           }
           
           .header {
-            background: linear-gradient(135deg, #E40046 0%, #C7003A 100%);
+            background: #E40046;
             color: white;
-            padding: 20px;
-            margin-bottom: 30px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
             border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-          }
-          
-          .header-content {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -603,27 +605,27 @@ export default function ResponsesPage() {
           }
           
           .logo {
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             background: white;
-            border-radius: 8px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
             color: #E40046;
-            font-size: 18px;
+            font-size: 16px;
           }
           
           .company-info h1 {
             margin: 0;
-            font-size: 24px;
+            font-size: 18px;
             font-weight: bold;
           }
           
           .company-info p {
-            margin: 5px 0 0 0;
-            font-size: 14px;
+            margin: 2px 0 0 0;
+            font-size: 12px;
             opacity: 0.9;
           }
           
@@ -632,73 +634,68 @@ export default function ResponsesPage() {
           }
           
           .report-info .date {
-            font-size: 14px;
+            font-size: 11px;
             opacity: 0.9;
           }
           
           .report-info .count {
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 3px;
+          }
+          
+          .form-title {
             font-size: 16px;
             font-weight: bold;
-            margin-top: 5px;
-          }
-          
-          .content {
-            margin-bottom: 30px;
-          }
-          
-          h2 {
             color: #E40046;
-            font-size: 20px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #E40046;
-            padding-bottom: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid #E40046;
           }
           
           table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 15px;
             background: white;
-            border-radius: 8px;
+            border-radius: 6px;
             overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
           }
           
           th {
             background: #E40046;
             color: white;
-            padding: 12px 8px;
+            padding: 8px 6px;
             text-align: left;
             font-weight: bold;
-            font-size: 12px;
+            font-size: 10px;
+            white-space: nowrap;
           }
           
           td {
-            padding: 10px 8px;
-            border-bottom: 1px solid #eee;
-            font-size: 11px;
+            padding: 6px;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 9px;
             vertical-align: top;
+            word-wrap: break-word;
+            max-width: 120px;
           }
           
           tr:nth-child(even) {
             background: #f8f9fa;
           }
           
-          tr:hover {
-            background: #e3f2fd;
-          }
-          
           .footer {
-            margin-top: 40px;
-            padding-top: 20px;
+            margin-top: 30px;
+            padding-top: 15px;
             border-top: 2px solid #E40046;
             text-align: center;
             color: #666;
-            font-size: 12px;
-          }
-          
-          .page-break {
-            page-break-before: always;
+            font-size: 10px;
           }
           
           @media print {
@@ -713,60 +710,74 @@ export default function ResponsesPage() {
               -webkit-print-color-adjust: exact;
               color-adjust: exact;
             }
+            
+            body {
+              -webkit-print-color-adjust: exact;
+              color-adjust: exact;
+            }
           }
         </style>
       </head>
       <body>
         <div class="header">
-          <div class="header-content">
-            <div class="logo-section">
-              <div class="logo">S</div>
-              <div class="company-info">
-                <h1>Simplon</h1>
-                <p>Plateforme de Formulaires</p>
-              </div>
+          <div class="logo-section">
+            <div class="logo">S</div>
+            <div class="company-info">
+              <h1>Simplon Africa</h1>
+              <p>Plateforme de Formulaires</p>
             </div>
-            <div class="report-info">
-              <div class="date">${new Date().toLocaleDateString("fr-FR")}</div>
-              <div class="count">${responses.length} réponse${responses.length > 1 ? 's' : ''}</div>
-            </div>
+          </div>
+          <div class="report-info">
+            <div class="date">Généré le ${new Date().toLocaleString("fr-FR")}</div>
+            <div class="count">${responses.length} réponse${responses.length > 1 ? 's' : ''}</div>
           </div>
         </div>
         
-        <div class="content">
-          <h2>📊 Rapport des Réponses - ${form.title}</h2>
-          
-          <table>
-            <thead>
-              <tr>
-                ${headers.map((h) => `<th>${h}</th>`).join("")}
-              </tr>
-            </thead>
-            <tbody>
-              ${rows.map((r) => 
-                `<tr>${r.map((c) => `<td>${String(c).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</td>`).join("")}</tr>`
-              ).join("")}
-            </tbody>
-          </table>
-        </div>
+        <div class="form-title">📊 ${form.title}</div>
+        
+        <table>
+          <thead>
+            <tr>
+              ${headers.map((h) => `<th>${h}</th>`).join("")}
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map((r) => 
+              `<tr>${r.map((c) => `<td>${String(c).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</td>`).join("")}</tr>`
+            ).join("")}
+          </tbody>
+        </table>
         
         <div class="footer">
           <p>Généré le ${new Date().toLocaleString("fr-FR")} par Simplon Form Platform</p>
-          <p>© ${new Date().getFullYear()} Simplon - Tous droits réservés</p>
+          <p>© ${new Date().getFullYear()} Simplon Africa - Tous droits réservés</p>
         </div>
       </body>
       </html>
     `
 
-    // Créer un blob HTML et le télécharger
-    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' })
-    const link = document.createElement('a')
-    link.href = URL.createObjectURL(blob)
-    link.download = `${form.title}_reponses_${new Date().toISOString().split('T')[0]}.html`
-    link.click()
-    
-    // Afficher un message pour indiquer que le fichier peut être converti en PDF
-    alert('Fichier HTML téléchargé ! Ouvrez-le dans votre navigateur et utilisez "Imprimer > Enregistrer au format PDF" pour créer un PDF.')
+    // Ouvrir une nouvelle fenêtre pour l'impression PDF
+    const printWindow = window.open('', '_blank')
+    if (printWindow) {
+      printWindow.document.write(htmlContent)
+      printWindow.document.close()
+      
+      // Attendre que le contenu soit chargé puis déclencher l'impression
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.focus()
+          printWindow.print()
+          
+          // Fermer la fenêtre après l'impression
+          printWindow.onafterprint = () => {
+            printWindow.close()
+          }
+        }, 500)
+      }
+    } else {
+      // Fallback si les popups sont bloqués
+      alert('Les popups sont bloqués. Veuillez autoriser les popups pour cette page et réessayer.')
+    }
   }
 
   if (loading) {
