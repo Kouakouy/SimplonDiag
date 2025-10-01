@@ -803,126 +803,134 @@ export default function ResponsesPage() {
     <div className="bg-gray-50 min-h-screen">
       <Sidebar />
 
-      <div className="ml-64 flex flex-col min-h-screen">
-        <main className="flex-1 p-6 overflow-y-auto">
+      <div className="ml-0 lg:ml-64 flex flex-col min-h-screen">
+        <main className="flex-1 p-4 lg:p-6 overflow-y-auto">
           {/* En-tête */}
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Réponses: {form.title}</h1>
-              <p className="text-gray-600 mt-1">{responses.length} réponse(s) collectée(s)</p>
-            </div>
+          <div className="mb-6 lg:mb-8">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">Réponses: {form.title}</h1>
+            <p className="text-gray-600 mt-1">{responses.length} réponse(s) collectée(s)</p>
           </div>
           <div className="max-w-6xl mx-auto">
             {/* Actions en haut */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between mb-6 gap-4">
               <Link href="/forms">
-                <Button variant="outline">
+                <Button variant="outline" className="w-full sm:w-auto">
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Retour aux formulaires
                 </Button>
               </Link>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-1 lg:gap-2">
                 <Link href={`/forms/${form.id}/edit`}>
-                  <Button variant="outline">
-                    <Edit className="w-4 h-4 mr-2" />
-                    Éditer
+                  <Button variant="outline" className="text-xs lg:text-sm">
+                    <Edit className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
+                    <span className="hidden sm:inline">Éditer</span>
                   </Button>
                 </Link>
                 <Link href={`/forms/${form.id}/share`}>
-                  <Button variant="outline">
-                    <Share className="w-4 h-4 mr-2" />
-                    Partager
+                  <Button variant="outline" className="text-xs lg:text-sm">
+                    <Share className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
+                    <span className="hidden sm:inline">Partager</span>
                   </Button>
                 </Link>
                 <div className="relative" ref={analyzeMenuRef}>
-                  <Button variant="outline" onClick={() => setShowAnalyzeMenu(!showAnalyzeMenu)}>
-                    <Brain className="w-4 h-4 mr-2" />
-                    Analyser avec IA
+                  <Button variant="outline" onClick={() => setShowAnalyzeMenu(!showAnalyzeMenu)} className="text-xs lg:text-sm">
+                    <Brain className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
+                    <span className="hidden sm:inline">Analyser avec IA</span>
+                    <span className="sm:hidden">IA</span>
                   </Button>
                   
                   {showAnalyzeMenu && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                    <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-white border border-gray-200 rounded-md shadow-lg z-10">
                       <div className="py-1">
                         <button
                           onClick={generateAIAnalysis}
-                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="flex items-center w-full px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-700 hover:bg-gray-100"
                         >
                           {isAnalyzing ? (
                             <>
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
-                              Génération en cours...
+                              <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-gray-600 mr-2"></div>
+                              <span className="hidden sm:inline">Génération en cours...</span>
+                              <span className="sm:hidden">Génération...</span>
                             </>
                           ) : (
                             <>
-                              <Brain className="w-4 h-4 mr-2" />
-                              Générer l'analyse
+                              <Brain className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                              <span className="hidden sm:inline">Générer l'analyse</span>
+                              <span className="sm:hidden">Générer</span>
                             </>
                           )}
                         </button>
                         <button
                           onClick={viewAnalysis}
-                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="flex items-center w-full px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-700 hover:bg-gray-100"
                         >
-                          <Eye className="w-4 h-4 mr-2" />
-                          Voir l'analyse
+                          <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                          <span className="hidden sm:inline">Voir l'analyse</span>
+                          <span className="sm:hidden">Voir</span>
                         </button>
                         <button
                           onClick={showTableResults}
-                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="flex items-center w-full px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-700 hover:bg-gray-100"
                         >
-                          <FileText className="w-4 h-4 mr-2" />
-                          Résultats en tableau
+                          <FileText className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                          <span className="hidden sm:inline">Résultats en tableau</span>
+                          <span className="sm:hidden">Tableau</span>
                         </button>
                         <button
                           onClick={showChartResults}
-                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="flex items-center w-full px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-700 hover:bg-gray-100"
                         >
-                          <TrendingUp className="w-4 h-4 mr-2" />
-                          Résultats en graphiques
+                          <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                          <span className="hidden sm:inline">Résultats en graphiques</span>
+                          <span className="sm:hidden">Graphiques</span>
                         </button>
                       </div>
                     </div>
                   )}
                 </div>
                 <div className="relative" ref={exportMenuRef}>
-                  <Button variant="outline" onClick={() => setShowExportMenu(!showExportMenu)}>
-                    <Upload className="w-4 h-4 mr-2" />
-                    Exporter
+                  <Button variant="outline" onClick={() => setShowExportMenu(!showExportMenu)} className="text-xs lg:text-sm">
+                    <Upload className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
+                    <span className="hidden sm:inline">Exporter</span>
+                    <span className="sm:hidden">Export</span>
                   </Button>
                   
                   {showExportMenu && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                    <div className="absolute right-0 mt-2 w-40 sm:w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
                       <div className="py-1">
                         <button
                           onClick={() => {
                             setShowExportMenu(false)
                             exportToCSV()
                           }}
-                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="flex items-center w-full px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-700 hover:bg-gray-100"
                         >
-                          <FileSpreadsheet className="w-4 h-4 mr-2" />
-                          Exporter en CSV
+                          <FileSpreadsheet className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                          <span className="hidden sm:inline">Exporter en CSV</span>
+                          <span className="sm:hidden">CSV</span>
                         </button>
                         <button
                           onClick={() => {
                             setShowExportMenu(false)
                             exportToExcel()
                           }}
-                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="flex items-center w-full px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-700 hover:bg-gray-100"
                         >
-                          <FileSpreadsheet className="w-4 h-4 mr-2" />
-                          Exporter en Excel
+                          <FileSpreadsheet className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                          <span className="hidden sm:inline">Exporter en Excel</span>
+                          <span className="sm:hidden">Excel</span>
                         </button>
                         <button
                           onClick={() => {
                             setShowExportMenu(false)
                             exportToPDF()
                           }}
-                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="flex items-center w-full px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-700 hover:bg-gray-100"
                         >
-                          <FileSpreadsheet className="w-4 h-4 mr-2" />
-                          Exporter en PDF
+                          <FileSpreadsheet className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                          <span className="hidden sm:inline">Exporter en PDF</span>
+                          <span className="sm:hidden">PDF</span>
                         </button>
                       </div>
                     </div>
@@ -932,7 +940,7 @@ export default function ResponsesPage() {
             </div>
 
             {/* Statistiques rapides */}
-            <div className="grid grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-4 mb-6">
               <Card>
                 <CardContent className="p-4">
                   <div className="text-2xl font-bold text-gray-900">{responses.length}</div>
@@ -969,20 +977,21 @@ export default function ResponsesPage() {
 
             {/* Onglets */}
             <div className="border-b border-gray-200 mb-6">
-              <nav className="-mb-px flex space-x-8">
+              <nav className="-mb-px flex flex-wrap space-x-2 lg:space-x-8">
                 <button
                   onClick={() => setActiveTab("liste")}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  className={`py-2 px-1 border-b-2 font-medium text-xs sm:text-sm ${
                     activeTab === "liste"
                       ? "border-[#E40046] text-[#E40046]"
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   }`}
                 >
-                  Liste des réponses
+                  <span className="hidden sm:inline">Liste des réponses</span>
+                  <span className="sm:hidden">Liste</span>
                 </button>
                 <button
                   onClick={() => setActiveTab("resume")}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  className={`py-2 px-1 border-b-2 font-medium text-xs sm:text-sm ${
                     activeTab === "resume"
                       ? "border-[#E40046] text-[#E40046]"
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -992,25 +1001,27 @@ export default function ResponsesPage() {
                 </button>
                 <button
                   onClick={() => setActiveTab("stats")}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  className={`py-2 px-1 border-b-2 font-medium text-xs sm:text-sm ${
                     activeTab === "stats"
                       ? "border-[#E40046] text-[#E40046]"
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   }`}
                 >
-                  <BarChart3 className="w-4 h-4 mr-2 inline" />
-                  Statistiques
+                  <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 inline" />
+                  <span className="hidden sm:inline">Statistiques</span>
+                  <span className="sm:hidden">Stats</span>
                 </button>
                 <button
                   onClick={() => setActiveTab("analyze")}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  className={`py-2 px-1 border-b-2 font-medium text-xs sm:text-sm ${
                     activeTab === "analyze"
                       ? "border-[#E40046] text-[#E40046]"
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   }`}
                 >
-                  <Brain className="w-4 h-4 mr-2 inline" />
-                  Analyse avec IA
+                  <Brain className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 inline" />
+                  <span className="hidden sm:inline">Analyse avec IA</span>
+                  <span className="sm:hidden">IA</span>
                 </button>
               </nav>
             </div>

@@ -95,16 +95,16 @@ export default function FormsPage() {
     <div className="bg-gray-50 min-h-screen">
       <Sidebar />
 
-      <div className="ml-64 flex flex-col min-h-screen">
-        <main className="flex-1 p-6">
+      <div className="ml-0 lg:ml-64 flex flex-col min-h-screen">
+        <main className="flex-1 p-4 lg:p-6">
           {/* En-tête avec bouton de création */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 lg:mb-8 gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Mes formulaires</h1>
+              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Mes formulaires</h1>
               <p className="text-gray-600 mt-1">Gérez tous vos formulaires</p>
             </div>
             <Link href="/forms/create">
-              <Button className="bg-[#E40046] hover:bg-[#E40046]/80 text-white" size="lg">
+              <Button className="bg-[#E40046] hover:bg-[#E40046]/80 text-white w-full sm:w-auto" size="lg">
                 <Plus className="w-5 h-5 mr-2" />
                 Créer un formulaire
               </Button>
@@ -113,11 +113,11 @@ export default function FormsPage() {
 
           {/* Barre de recherche */}
           <div className="mb-6">
-            <div className="relative max-w-md">
+            <div className="relative max-w-md w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
                 placeholder="Rechercher des formulaires..."
-                className="pl-10"
+                className="pl-10 w-full"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -234,17 +234,17 @@ export default function FormsPage() {
                       </div>
                     )}
                     
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
+                    <CardContent className="p-4 lg:p-6">
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                         <div className="flex items-center gap-4 flex-1">
-                          <div className="w-12 h-12 bg-[#E40046]/10 rounded-lg flex items-center justify-center">
+                          <div className="w-12 h-12 bg-[#E40046]/10 rounded-lg flex items-center justify-center flex-shrink-0">
                             <FileText className="w-6 h-6 text-[#E40046]" />
                           </div>
-                          <div className="flex-1">
+                          <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <h4 className="font-semibold text-gray-900">{form.title}</h4>
+                              <h4 className="font-semibold text-gray-900 truncate">{form.title}</h4>
                             </div>
-                            <p className="text-sm text-gray-500 mb-2">{form.description}</p>
+                            <p className="text-sm text-gray-500 mb-2 line-clamp-2">{form.description}</p>
                             <div className="flex items-center gap-4 text-xs text-gray-400">
                               {form.created_at ? (
                                 <span>Créé le {new Date(form.created_at).toLocaleDateString("fr-FR")}</span>
@@ -252,62 +252,63 @@ export default function FormsPage() {
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-1 lg:gap-2">
                           <Link href={`/forms/${form._id || form.id}`}>
-                            <Button variant="outline" size="sm" className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:border-blue-300">
-                              <Eye className="w-4 h-4 mr-1" />
-                              Aperçu
+                            <Button variant="outline" size="sm" className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:border-blue-300 text-xs lg:text-sm">
+                              <Eye className="w-3 h-3 lg:w-4 lg:h-4 mr-1" />
+                              <span className="hidden sm:inline">Aperçu</span>
                             </Button>
                           </Link>
                           <Link href={`/forms/${form._id || form.id}/responses`}>
-                            <Button variant="outline" size="sm" className="text-green-600 border-green-200 hover:bg-green-50 hover:border-green-300">
-                              <BarChart3 className="w-4 h-4 mr-1" />
-                              Résultats
+                            <Button variant="outline" size="sm" className="text-green-600 border-green-200 hover:bg-green-50 hover:border-green-300 text-xs lg:text-sm">
+                              <BarChart3 className="w-3 h-3 lg:w-4 lg:h-4 mr-1" />
+                              <span className="hidden sm:inline">Résultats</span>
                             </Button>
                           </Link>
                           <Link href={`/forms/${form._id || form.id}/share`}>
-                            <Button variant="outline" size="sm" className="text-purple-600 border-purple-200 hover:bg-purple-50 hover:border-purple-300">
-                              <Share className="w-4 h-4 mr-1" />
-                              Partager
+                            <Button variant="outline" size="sm" className="text-purple-600 border-purple-200 hover:bg-purple-50 hover:border-purple-300 text-xs lg:text-sm">
+                              <Share className="w-3 h-3 lg:w-4 lg:h-4 mr-1" />
+                              <span className="hidden sm:inline">Partager</span>
                             </Button>
                           </Link>
                           <Link href={`/forms/${form._id || form.id}/edit`}>
-                            <Button variant="outline" size="sm" className="text-orange-600 border-orange-200 hover:bg-orange-50 hover:border-orange-300">
-                              <Edit className="w-4 h-4 mr-1" />
-                              Éditer
+                            <Button variant="outline" size="sm" className="text-orange-600 border-orange-200 hover:bg-orange-50 hover:border-orange-300 text-xs lg:text-sm">
+                              <Edit className="w-3 h-3 lg:w-4 lg:h-4 mr-1" />
+                              <span className="hidden sm:inline">Éditer</span>
                             </Button>
                           </Link>
                           <Button
                             variant="outline"
                             size="sm"
-                            className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+                            className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 text-xs lg:text-sm"
                             onClick={() => handleDelete(form._id || form.id)}
                             title="Supprimer le formulaire"
                           >
-                            <Trash className="w-4 h-4 mr-1" />
-                            Supprimer
+                            <Trash className="w-3 h-3 lg:w-4 lg:h-4 mr-1" />
+                            <span className="hidden sm:inline">Supprimer</span>
                           </Button>
                         </div>
                       </div>
                       {/* Lien de partage */}
                       <div className="mt-4">
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-3 lg:p-4">
                           <div className="flex items-center gap-2 mb-2">
                             <CheckCircle className="w-4 h-4 text-green-600" />
                             <span className="text-sm font-medium text-green-800">Lien public actif</span>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                             <input
                               value={shareUrl}
                               readOnly
-                              className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-white text-sm"
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-white text-xs lg:text-sm"
                             />
-                            <Button onClick={() => copyToClipboard(shareUrl)} size="sm">
-                              <Copy className="w-4 h-4" />
+                            <Button onClick={() => copyToClipboard(shareUrl)} size="sm" className="w-full sm:w-auto">
+                              <Copy className="w-3 h-3 lg:w-4 lg:h-4 mr-1" />
+                              <span className="text-xs lg:text-sm">Copier</span>
                             </Button>
                           </div>
                           {copiedLink === shareUrl && (
-                            <div className="mt-2 text-sm text-green-600 font-medium">
+                            <div className="mt-2 text-xs lg:text-sm text-green-600 font-medium">
                               ✓ Lien copié dans le presse-papiers !
                             </div>
                           )}

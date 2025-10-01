@@ -179,20 +179,18 @@ export default function ShareFormPage() {
     <div className="bg-gray-50 min-h-screen">
       <Sidebar />
 
-      <div className="ml-64 flex flex-col min-h-screen">
-        <main className="flex-1 p-6 overflow-y-auto">
+      <div className="ml-0 lg:ml-64 flex flex-col min-h-screen">
+        <main className="flex-1 p-4 lg:p-6 overflow-y-auto">
           {/* En-tête */}
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Partager: {form.title}</h1>
-              <p className="text-gray-600 mt-1">Partagez votre formulaire avec vos utilisateurs</p>
-            </div>
+          <div className="mb-6 lg:mb-8">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">Partager: {form.title}</h1>
+            <p className="text-gray-600 mt-1">Partagez votre formulaire avec vos utilisateurs</p>
           </div>
           <div className="max-w-4xl mx-auto">
             {/* Actions en haut */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="mb-6">
               <Link href={`/forms/${formId}/questions`}>
-                <Button variant="outline">
+                <Button variant="outline" className="w-full sm:w-auto">
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Retour aux questions
                 </Button>
@@ -205,33 +203,34 @@ export default function ShareFormPage() {
 
             {/* Titre */}
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Partager le formulaire</h2>
+              <h2 className="text-xl lg:text-2xl font-bold text-gray-900">Partager le formulaire</h2>
             </div>
 
             {/* Contenu de partage */}
-            <div className="space-y-6">
+            <div className="space-y-4 lg:space-y-6">
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <LinkIcon className="w-5 h-5" />
+                  <CardHeader className="p-4 lg:p-6">
+                    <CardTitle className="flex items-center gap-2 text-base lg:text-lg">
+                      <LinkIcon className="w-4 h-4 lg:w-5 lg:h-5" />
                       Générer un lien de partage
                     </CardTitle>
-                    <p className="text-sm text-gray-600">Créez un lien sécurisé pour partager votre formulaire</p>
+                    <p className="text-xs lg:text-sm text-gray-600">Créez un lien sécurisé pour partager votre formulaire</p>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <CardContent className="space-y-4 p-4 lg:p-6">
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-3 lg:p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <CheckCircle className="w-4 h-4 text-green-600" />
                           <span className="text-sm font-medium text-green-800">Lien public actif</span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                       <input 
                         value={shareUrl} 
                         readOnly 
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-white text-sm" 
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-white text-xs lg:text-sm" 
                       />
-                          <Button onClick={() => copyToClipboard(shareUrl)} size="sm">
-                            <Copy className="w-4 h-4" />
+                          <Button onClick={() => copyToClipboard(shareUrl)} size="sm" className="w-full sm:w-auto">
+                            <Copy className="w-3 h-3 lg:w-4 lg:h-4 mr-1" />
+                            <span className="text-xs lg:text-sm">Copier</span>
                           </Button>
                         </div>
                       </div>
@@ -239,14 +238,14 @@ export default function ShareFormPage() {
                 </Card>
 
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Mail className="w-5 h-5" />
+                  <CardHeader className="p-4 lg:p-6">
+                    <CardTitle className="flex items-center gap-2 text-base lg:text-lg">
+                      <Mail className="w-4 h-4 lg:w-5 lg:h-5" />
                       Partager par email
                     </CardTitle>
-                    <p className="text-sm text-gray-600">Envoyez le formulaire à une ou plusieurs personnes par email</p>
+                    <p className="text-xs lg:text-sm text-gray-600">Envoyez le formulaire à une ou plusieurs personnes par email</p>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-4 p-4 lg:p-6">
                     <Button 
                       variant="outline" 
                       className="w-full" 
@@ -259,57 +258,57 @@ export default function ShareFormPage() {
                 </Card>
 
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Share className="w-5 h-5" />
+                  <CardHeader className="p-4 lg:p-6">
+                    <CardTitle className="flex items-center gap-2 text-base lg:text-lg">
+                      <Share className="w-4 h-4 lg:w-5 lg:h-5" />
                       Partager sur les réseaux sociaux
                     </CardTitle>
-                    <p className="text-sm text-gray-600">Partagez votre formulaire sur vos réseaux sociaux préférés</p>
+                    <p className="text-xs lg:text-sm text-gray-600">Partagez votre formulaire sur vos réseaux sociaux préférés</p>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  <CardContent className="space-y-4 p-4 lg:p-6">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 lg:gap-3">
                       <Button 
                         variant="outline" 
-                        className="flex flex-col items-center gap-2 h-20"
+                        className="flex flex-col items-center gap-1 lg:gap-2 h-16 lg:h-20"
                         onClick={() => shareOnSocialMedia('facebook')}
                       >
-                        <div className="w-6 h-6 bg-blue-600 rounded text-white flex items-center justify-center text-xs font-bold">f</div>
+                        <div className="w-5 h-5 lg:w-6 lg:h-6 bg-blue-600 rounded text-white flex items-center justify-center text-xs font-bold">f</div>
                         <span className="text-xs">Facebook</span>
                       </Button>
                       
                       <Button 
                         variant="outline" 
-                        className="flex flex-col items-center gap-2 h-20"
+                        className="flex flex-col items-center gap-1 lg:gap-2 h-16 lg:h-20"
                         onClick={() => shareOnSocialMedia('twitter')}
                       >
-                        <div className="w-6 h-6 bg-sky-500 rounded text-white flex items-center justify-center text-xs font-bold">𝕏</div>
+                        <div className="w-5 h-5 lg:w-6 lg:h-6 bg-sky-500 rounded text-white flex items-center justify-center text-xs font-bold">𝕏</div>
                         <span className="text-xs">Twitter</span>
                       </Button>
                       
                       <Button 
                         variant="outline" 
-                        className="flex flex-col items-center gap-2 h-20"
+                        className="flex flex-col items-center gap-1 lg:gap-2 h-16 lg:h-20"
                         onClick={() => shareOnSocialMedia('linkedin')}
                       >
-                        <div className="w-6 h-6 bg-blue-700 rounded text-white flex items-center justify-center text-xs font-bold">in</div>
+                        <div className="w-5 h-5 lg:w-6 lg:h-6 bg-blue-700 rounded text-white flex items-center justify-center text-xs font-bold">in</div>
                         <span className="text-xs">LinkedIn</span>
                       </Button>
                       
                       <Button 
                         variant="outline" 
-                        className="flex flex-col items-center gap-2 h-20"
+                        className="flex flex-col items-center gap-1 lg:gap-2 h-16 lg:h-20"
                         onClick={() => shareOnSocialMedia('whatsapp')}
                       >
-                        <div className="w-6 h-6 bg-green-500 rounded text-white flex items-center justify-center text-xs font-bold">W</div>
+                        <div className="w-5 h-5 lg:w-6 lg:h-6 bg-green-500 rounded text-white flex items-center justify-center text-xs font-bold">W</div>
                         <span className="text-xs">WhatsApp</span>
                       </Button>
                       
                       <Button 
                         variant="outline" 
-                        className="flex flex-col items-center gap-2 h-20"
+                        className="flex flex-col items-center gap-1 lg:gap-2 h-16 lg:h-20"
                         onClick={() => shareOnSocialMedia('telegram')}
                       >
-                        <div className="w-6 h-6 bg-blue-500 rounded text-white flex items-center justify-center text-xs font-bold">T</div>
+                        <div className="w-5 h-5 lg:w-6 lg:h-6 bg-blue-500 rounded text-white flex items-center justify-center text-xs font-bold">T</div>
                         <span className="text-xs">Telegram</span>
                       </Button>
                     </div>

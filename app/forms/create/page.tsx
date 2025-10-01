@@ -118,20 +118,18 @@ export default function CreateFormPage() {
     <div className="bg-gray-50 min-h-screen">
       <Sidebar />
 
-      <div className="ml-64 flex flex-col min-h-screen">
-        <main className="flex-1 p-6 overflow-y-auto">
+      <div className="ml-0 lg:ml-64 flex flex-col min-h-screen">
+        <main className="flex-1 p-4 lg:p-6 overflow-y-auto">
           {/* En-tête */}
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Créer un formulaire</h1>
-              <p className="text-gray-600 mt-1">Concevez votre formulaire personnalisé</p>
-            </div>
+          <div className="mb-6 lg:mb-8">
+            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Créer un formulaire</h1>
+            <p className="text-gray-600 mt-1">Concevez votre formulaire personnalisé</p>
           </div>
           <div className="max-w-4xl mx-auto">
             {/* Actions en haut */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="mb-6">
               <Link href="/forms">
-                <Button variant="outline">
+                <Button variant="outline" className="w-full sm:w-auto">
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Retour aux formulaires
                 </Button>
@@ -156,11 +154,11 @@ export default function CreateFormPage() {
 
             {/* Bouton d'enregistrement en bas */}
             <div className="text-center">
-              <Button onClick={saveFormConfiguration} size="lg" className="bg-[#E40046] hover:bg-[#E40046]/80 text-white">
+              <Button onClick={saveFormConfiguration} size="lg" className="bg-[#E40046] hover:bg-[#E40046]/80 text-white w-full sm:w-auto">
                 <Save className="w-4 h-4 mr-2" />
                 Enregistrer et continuer
               </Button>
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-xs lg:text-sm text-gray-500 mt-2">
                 Vous pourrez ajouter des questions à l'étape suivante
               </p>
             </div>

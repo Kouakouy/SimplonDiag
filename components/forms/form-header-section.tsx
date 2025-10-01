@@ -91,7 +91,7 @@ export function FormHeaderSection({
       {/* Bannière */}
       <div className="relative">
         <div 
-          className={`h-48 flex items-center justify-center relative ${
+          className={`h-32 sm:h-40 lg:h-48 flex items-center justify-center relative ${
             bannerImageUrl 
               ? 'bg-cover bg-center' 
               : 'bg-gradient-to-r from-[#E40046] via-[#E40046]/80 to-yellow-500'
@@ -102,27 +102,28 @@ export function FormHeaderSection({
           <div className="absolute inset-0 bg-black bg-opacity-30"></div>
           
           {/* Contenu de la bannière */}
-          <div className="relative z-10 text-center text-white px-6">
+          <div className="relative z-10 text-center text-white px-4 sm:px-6">
             {bannerTitle ? (
-              <h1 className="text-4xl font-bold drop-shadow-lg">{bannerTitle}</h1>
+              <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold drop-shadow-lg">{bannerTitle}</h1>
             ) : (
               <div className="text-white/70">
-                <ImageIcon className="w-16 h-16 mx-auto mb-4" />
-                <p className="text-lg">Votre bannière de formulaire</p>
+                <ImageIcon className="w-8 h-8 sm:w-12 sm:h-12 lg:w-16 lg:h-16 mx-auto mb-2 sm:mb-4" />
+                <p className="text-sm sm:text-base lg:text-lg">Votre bannière de formulaire</p>
               </div>
             )}
           </div>
 
           {/* Boutons d'action */}
-          <div className="absolute top-4 right-4 flex gap-2">
+          <div className="absolute top-2 right-2 sm:top-4 sm:right-4 flex flex-col sm:flex-row gap-1 sm:gap-2">
             <Button
               size="sm"
               variant="secondary"
-              className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+              className="bg-white/20 hover:bg-white/30 text-white border-white/30 text-xs sm:text-sm"
               onClick={() => setShowImageUpload(true)}
             >
-              <Upload className="w-4 h-4 mr-1" />
-              {bannerImageUrl ? 'Changer' : 'Ajouter'} image
+              <Upload className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+              <span className="hidden sm:inline">{bannerImageUrl ? 'Changer' : 'Ajouter'} image</span>
+              <span className="sm:hidden">{bannerImageUrl ? 'Changer' : 'Ajouter'}</span>
             </Button>
             {bannerImageUrl && (
               <Button
@@ -131,7 +132,7 @@ export function FormHeaderSection({
                 className="bg-red-500/80 hover:bg-red-600/80"
                 onClick={removeImage}
               >
-                <X className="w-4 h-4" />
+                <X className="w-3 h-3 sm:w-4 sm:h-4" />
               </Button>
             )}
           </div>
@@ -139,12 +140,12 @@ export function FormHeaderSection({
       </div>
 
       {/* Informations générales */}
-      <CardHeader>
-        <CardTitle>Configuration du formulaire</CardTitle>
+      <CardHeader className="p-4 lg:p-6">
+        <CardTitle className="text-lg lg:text-xl">Configuration du formulaire</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4 lg:space-y-6 p-4 lg:p-6">
         {/* Titre de la bannière et titre du formulaire */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="banner-title" className="text-sm font-medium text-gray-700">
               Titre de la bannière
@@ -154,6 +155,7 @@ export function FormHeaderSection({
               value={bannerTitle || ""}
               onChange={(e) => onBannerTitleChange(e.target.value)}
               placeholder="Entrez le titre qui apparaîtra sur la bannière"
+              className="text-sm"
             />
           </div>
           <div>
@@ -163,6 +165,7 @@ export function FormHeaderSection({
               value={title || ""}
               onChange={(e) => onTitleChange(e.target.value)}
               placeholder="Nouveau formulaire"
+              className="text-sm"
             />
           </div>
         </div>
@@ -176,11 +179,12 @@ export function FormHeaderSection({
             onChange={(e) => onDescriptionChange(e.target.value)}
             placeholder="Décrivez l'objectif de votre formulaire"
             rows={3}
+            className="text-sm"
           />
         </div>
 
         {/* Nombre de soumissions et date d'expiration */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="maxResponses">
               <Users className="w-4 h-4 inline mr-1" />

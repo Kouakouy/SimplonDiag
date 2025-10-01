@@ -222,10 +222,10 @@ export default function PublicFormPage() {
       {/* Barre d'accent en haut (style Google Forms) */}
       <div className="h-2 w-full bg-gradient-to-r from-[#E40046] via-[#E40046]/80 to-rose-500"></div>
 
-      <div className="max-w-3xl md:max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-3xl lg:max-w-4xl mx-auto px-4 py-4 lg:py-8">
         {/* Barre de progression */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
+        <div className="mb-4 lg:mb-6">
+          <div className="flex items-center justify-between text-xs lg:text-sm text-gray-600 mb-2">
             <span>Page {currentPage + 1} / {totalPages}</span>
             <span>{form.questions.length} questions</span>
           </div>
@@ -239,29 +239,29 @@ export default function PublicFormPage() {
         {/* Bannière */}
         {(form.bannerTitle || form.bannerImageUrl) ? (
           <div 
-            className={`h-40 md:h-48 mb-6 relative overflow-hidden rounded-xl ${form.bannerImageUrl ? 'bg-cover bg-center' : 'bg-gradient-to-r from-[#E40046] via-[#E40046]/80 to-rose-500'}`}
+            className={`h-32 sm:h-40 lg:h-48 mb-4 lg:mb-6 relative overflow-hidden rounded-xl ${form.bannerImageUrl ? 'bg-cover bg-center' : 'bg-gradient-to-r from-[#E40046] via-[#E40046]/80 to-rose-500'}`}
             style={form.bannerImageUrl ? { backgroundImage: `url(${form.bannerImageUrl})` } : {}}
           >
             <div className="absolute inset-0 bg-black/30"></div>
             <div className="absolute inset-0 flex items-center justify-center">
               {form.bannerTitle && (
-                <h1 className="text-3xl md:text-4xl font-bold text-white drop-shadow-lg text-center px-6">{form.bannerTitle}</h1>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-white drop-shadow-lg text-center px-4 lg:px-6">{form.bannerTitle}</h1>
               )}
             </div>
           </div>
         ) : null}
 
         {/* En-tête du formulaire */}
-        <Card className="mb-8 shadow-sm border border-gray-200">
-          <CardHeader className="text-center pb-4">
-            <CardTitle className="text-3xl text-balance leading-tight">{form.title}</CardTitle>
-            {form.description && <p className="text-gray-600 text-pretty mt-2">{form.description}</p>}
+        <Card className="mb-6 lg:mb-8 shadow-sm border border-gray-200">
+          <CardHeader className="text-center pb-4 p-4 lg:p-6">
+            <CardTitle className="text-xl sm:text-2xl lg:text-3xl text-balance leading-tight">{form.title}</CardTitle>
+            {form.description && <p className="text-sm lg:text-base text-gray-600 text-pretty mt-2">{form.description}</p>}
           </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-center gap-6 text-sm text-gray-500">
+          <CardContent className="p-4 lg:p-6 pt-0">
+            <div className="flex items-center justify-center gap-4 lg:gap-6 text-xs lg:text-sm text-gray-500">
                 <div className="flex items-center gap-2">
                     <svg 
-                      className="w-4 h-4 text-gray-400" 
+                      className="w-3 h-3 lg:w-4 lg:h-4 text-gray-400" 
                       xmlns="http://www.w3.org/2000/svg" 
                       viewBox="0 0 24 24" 
                       fill="currentColor"
@@ -276,23 +276,23 @@ export default function PublicFormPage() {
 
 
         {/* Formulaire */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 lg:space-y-6">
           {visibleQuestions.map((question, index) => (
             <Card key={question.id} className="shadow-sm border border-gray-200">
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3">
+              <CardContent className="p-4 lg:p-6">
+                <div className="space-y-3 lg:space-y-4">
+                  <div className="flex items-start gap-2 lg:gap-3">
                     <div className="mt-0.5 select-none">
-                      <div className="w-7 h-7 rounded-full bg-[#E40046]/10 text-[#E40046] flex items-center justify-center text-sm font-semibold">
+                      <div className="w-6 h-6 lg:w-7 lg:h-7 rounded-full bg-[#E40046]/10 text-[#E40046] flex items-center justify-center text-xs lg:text-sm font-semibold">
                         {startIndex + index + 1}
                       </div>
                     </div>
                     <div className="flex-1">
-                      <Label htmlFor={question.id} className="text-base font-semibold text-gray-900">
+                      <Label htmlFor={question.id} className="text-sm lg:text-base font-semibold text-gray-900">
                         {question.title}
                         {question.required && <span className="text-red-500 ml-1">*</span>}
                       </Label>
-                      {question.description && <p className="text-sm text-gray-500 mt-1">{question.description}</p>}
+                      {question.description && <p className="text-xs lg:text-sm text-gray-500 mt-1">{question.description}</p>}
                     </div>
                   </div>
 
@@ -406,33 +406,37 @@ export default function PublicFormPage() {
           ))}
 
           {/* Barre de soumission collante */}
-          <div className="sticky bottom-0 left-0 right-0 py-4 bg-white/80 backdrop-blur border-t border-gray-200">
-            <div className="max-w-3xl md:max-w-4xl mx-auto px-4">
-              <div className="flex items-center justify-between gap-4">
-                <p className="text-xs md:text-sm text-gray-600 hidden md:block">
+          <div className="sticky bottom-0 left-0 right-0 py-3 lg:py-4 bg-white/80 backdrop-blur border-t border-gray-200">
+            <div className="max-w-3xl lg:max-w-4xl mx-auto px-4">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 lg:gap-4">
+                <p className="text-xs lg:text-sm text-gray-600 hidden sm:block">
                   Vos réponses sont sécurisées et utilisées.
                 </p>
                 <div className="flex items-center gap-2">
-                  <Button type="button" variant="outline" onClick={handlePrev} disabled={currentPage === 0 || submitting}>
+                  <Button type="button" variant="outline" onClick={handlePrev} disabled={currentPage === 0 || submitting} className="flex-1 sm:flex-none text-xs lg:text-sm">
                     Précédent
                   </Button>
                   {currentPage < totalPages - 1 ? (
-                    <Button type="button" onClick={handleNext} disabled={submitting} className="bg-[#E40046] hover:bg-[#E40046]/80 text-white px-6 md:px-8 py-2">
+                    <Button type="button" onClick={handleNext} disabled={submitting} className="bg-[#E40046] hover:bg-[#E40046]/80 text-white px-4 lg:px-6 xl:px-8 py-2 flex-1 sm:flex-none text-xs lg:text-sm">
                       Suivant
                     </Button>
                   ) : (
                     <Button
                       type="submit"
                       disabled={submitting}
-                      className="bg-[#E40046] hover:bg-[#E40046]/80 text-white px-6 md:px-8 py-2"
+                      className="bg-[#E40046] hover:bg-[#E40046]/80 text-white px-4 lg:px-6 xl:px-8 py-2 flex-1 sm:flex-none text-xs lg:text-sm"
                     >
                       {submitting ? (
                         <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          Envoi en cours...
+                          <div className="animate-spin rounded-full h-3 w-3 lg:h-4 lg:w-4 border-b-2 border-white mr-1 lg:mr-2"></div>
+                          <span className="hidden sm:inline">Envoi en cours...</span>
+                          <span className="sm:hidden">Envoi...</span>
                         </>
                       ) : (
-                        "Envoyer mes réponses"
+                        <>
+                          <span className="hidden sm:inline">Envoyer mes réponses</span>
+                          <span className="sm:hidden">Envoyer</span>
+                        </>
                       )}
                     </Button>
                   )}

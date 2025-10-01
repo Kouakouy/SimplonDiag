@@ -183,51 +183,51 @@ export default function EditFormPage() {
     <div className="bg-gray-50 min-h-screen">
       <Sidebar />
 
-      <div className="ml-64 flex flex-col min-h-screen">
-        <main className="flex-1 p-6 overflow-y-auto">
+      <div className="ml-0 lg:ml-64 flex flex-col min-h-screen">
+        <main className="flex-1 p-4 lg:p-6 overflow-y-auto">
           {/* En-tête */}
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Modifier: {form.title}</h1>
-              <p className="text-gray-600 mt-1">Éditez votre formulaire</p>
-            </div>
+          <div className="mb-6 lg:mb-8">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">Modifier: {form.title}</h1>
+            <p className="text-gray-600 mt-1">Éditez votre formulaire</p>
           </div>
           <div className="max-w-4xl mx-auto">
             {/* Actions en haut */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between mb-6 gap-4">
               <Link href={`/forms/${form.id}/responses`}>
-                <Button variant="outline">
+                <Button variant="outline" className="w-full sm:w-auto">
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Retour aux réponses
                 </Button>
               </Link>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <Link href={`/forms/${form.id}/share`}>
-                  <Button variant="outline">
-                    <Share className="w-4 h-4 mr-2" />
-                    Partager
+                  <Button variant="outline" className="w-full sm:w-auto text-xs sm:text-sm">
+                    <Share className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">Partager</span>
                   </Button>
                 </Link>
                 <Link href={`/f/${form.publicSlug || form.id}`} target="_blank">
-                  <Button variant="outline">
-                    <Eye className="w-4 h-4 mr-2" />
-                    Aperçu
+                  <Button variant="outline" className="w-full sm:w-auto text-xs sm:text-sm">
+                    <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">Aperçu</span>
                   </Button>
                 </Link>
                 <Button 
                   onClick={saveForm} 
                   disabled={saving}
-                  className="bg-[#E40046] hover:bg-[#E40046]/80 text-white disabled:opacity-50"
+                  className="bg-[#E40046] hover:bg-[#E40046]/80 text-white disabled:opacity-50 w-full sm:w-auto text-xs sm:text-sm"
                 >
                   {saving ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Sauvegarde...
+                      <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-white mr-1 sm:mr-2"></div>
+                      <span className="hidden sm:inline">Sauvegarde...</span>
+                      <span className="sm:hidden">Sauvegarde...</span>
                     </>
                   ) : (
                     <>
-                      <Save className="w-4 h-4 mr-2" />
-                      Sauvegarder
+                      <Save className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">Sauvegarder</span>
+                      <span className="sm:hidden">Sauvegarder</span>
                     </>
                   )}
                 </Button>
@@ -252,9 +252,9 @@ export default function EditFormPage() {
 
             {/* Questions */}
             <div className="space-y-4 mb-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <h3 className="text-lg font-semibold">Questions ({form.questions.length})</h3>
-                <Button onClick={addQuestion} className="bg-[#E40046] hover:bg-[#E40046]/80 text-white">
+                <Button onClick={addQuestion} className="bg-[#E40046] hover:bg-[#E40046]/80 text-white w-full sm:w-auto">
                   <Plus className="w-4 h-4 mr-2" />
                   Ajouter une question
                 </Button>
@@ -262,13 +262,13 @@ export default function EditFormPage() {
 
               {form.questions.length === 0 ? (
                 <Card>
-                  <CardContent className="p-12 text-center">
+                  <CardContent className="p-6 lg:p-12 text-center">
                     <div className="text-gray-400 mb-4">
-                      <Plus className="w-12 h-12 mx-auto mb-2" />
+                      <Plus className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-2" />
                     </div>
-                    <h4 className="text-lg font-medium text-gray-600 mb-2">Aucune question</h4>
-                    <p className="text-gray-500 mb-4">Commencez par ajouter votre première question</p>
-                    <Button onClick={addQuestion} className="bg-[#E40046] hover:bg-[#E40046]/80 text-white">
+                    <h4 className="text-base sm:text-lg font-medium text-gray-600 mb-2">Aucune question</h4>
+                    <p className="text-sm sm:text-base text-gray-500 mb-4">Commencez par ajouter votre première question</p>
+                    <Button onClick={addQuestion} className="bg-[#E40046] hover:bg-[#E40046]/80 text-white w-full sm:w-auto">
                       <Plus className="w-4 h-4 mr-2" />
                       Ajouter une question
                     </Button>
@@ -289,7 +289,7 @@ export default function EditFormPage() {
             {/* Bouton d'ajout en bas */}
             {form.questions.length > 0 && (
               <div className="text-center">
-                <Button onClick={addQuestion} variant="outline" size="lg">
+                <Button onClick={addQuestion} variant="outline" size="lg" className="w-full sm:w-auto">
                   <Plus className="w-4 h-4 mr-2" />
                   Ajouter une question
                 </Button>
