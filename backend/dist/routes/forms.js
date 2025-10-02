@@ -14,3 +14,5 @@ exports.formsRouter.get('/:id/responses', controllers_1.listResponses);
 exports.formsRouter.post('/:id/responses', controllers_1.submitResponse);
 exports.formsRouter.get('/:id/stats', controllers_1.getStats);
 exports.formsRouter.post('/:id/share', controllers_1.shareForm);
+exports.formsRouter.get('/:id/analyses', controllers_1.listAnalyses);
+exports.formsRouter.post('/:id/analyses', controllers_1.saveAnalysis);

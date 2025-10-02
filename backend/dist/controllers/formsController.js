@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.shareForm = exports.getStats = exports.submitResponse = exports.listResponses = exports.deleteForm = exports.updateForm = exports.getForm = exports.createForm = exports.listForms = void 0;
+exports.saveAnalysis = exports.listAnalyses = exports.shareForm = exports.getStats = exports.submitResponse = exports.listResponses = exports.deleteForm = exports.updateForm = exports.getForm = exports.createForm = exports.listForms = void 0;
 const zod_1 = require("zod");
 const db_1 = require("../config/db");
 const mongodb_1 = require("mongodb");
@@ -240,3 +240,55 @@ const shareForm = async (req, res) => {
     }
 };
 exports.shareForm = shareForm;
+// Fonctions pour gérer les analyses IA
+const listAnalyses = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const db = await (0, db_1.getDb)();
+        // Vérifier que le formulaire existe
+        const form = await db.collection('forms').findOne({ _id: new mongodb_1.ObjectId(id) });
+        if (!form)
+            return res.status(404).json({ message: 'Form not found' });
+        const analyses = await db.collection('form_analyses').find({ formId: id }).sort({ createdAt: -1 }).toArray();
+        return res.json(analyses);
+    }
+    catch (error) {
+        console.error('Error listing analyses:', error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+};
+exports.listAnalyses = listAnalyses;
+const saveAnalysis = async (req, res) => {
+    const { id } = req.params;
+    // Validation basique des données requises
+    if (!req.body || !req.body.summary) {
+        return res.status(400).json({ message: 'Analysis data is required' });
+    }
+    try {
+        const db = await (0, db_1.getDb)();
+        // Vérifier que le formulaire existe
+        const form = await db.collection('forms').findOne({ _id: new mongodb_1.ObjectId(id) });
+        if (!form)
+            return res.status(404).json({ message: 'Form not found' });
+        // Préparer l'analyse à sauvegarder avec validation
+        const analysisData = {
+            ...req.body,
+            formId: id,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        };
+        // Insérer l'analyse dans la base de données
+        const result = await db.collection('form_analyses').insertOne(analysisData);
+        // Ajouter l'ID généré à l'analyse
+        const savedAnalysis = {
+            ...analysisData,
+            _id: result.insertedId
+        };
+        return res.status(201).json(savedAnalysis);
+    }
+    catch (error) {
+        console.error('Error saving analysis:', error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+};
+exports.saveAnalysis = saveAnalysis;
