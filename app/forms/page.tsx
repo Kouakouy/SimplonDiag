@@ -19,6 +19,10 @@ export default function FormsPage() {
   const [formToDelete, setFormToDelete] = useState<string | null>(null)
   const [copiedLink, setCopiedLink] = useState<string | null>(null)
   const [formStats, setFormStats] = useState<Record<string, { submissions: number; views: number }>>({})
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1)
+  const formsPerPage = 9 // 3 lignes × 3 colonnes
 
   useEffect(() => {
     const load = async () => {
@@ -88,6 +92,17 @@ export default function FormsPage() {
         form.description?.toLowerCase().includes(term)
     )
   }, [forms, searchTerm])
+
+  // Pagination
+  const totalPages = Math.ceil(filteredForms.length / formsPerPage)
+  const startIndex = (currentPage - 1) * formsPerPage
+  const endIndex = startIndex + formsPerPage
+  const currentForms = filteredForms.slice(startIndex, endIndex)
+
+  // Reset pagination when search changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm])
 
   // Fonction utilitaire pour générer l'URL de partage
   const getShareUrl = (form: any) => {
@@ -203,8 +218,9 @@ export default function FormsPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {filteredForms.map((form) => {
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {currentForms.map((form) => {
                 const shareUrl = getShareUrl(form)
                 
                 return (
@@ -359,7 +375,64 @@ export default function FormsPage() {
                   </Card>
                 )
               })}
-            </div>
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center mt-8 gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="flex items-center gap-1"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Précédent
+                  </Button>
+                  
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <Button
+                        key={page}
+                        variant={currentPage === page ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(page)}
+                        className={`w-8 h-8 p-0 ${
+                          currentPage === page 
+                            ? "bg-[#E40046] text-white hover:bg-[#E40046]/80" 
+                            : "hover:bg-gray-100"
+                        }`}
+                      >
+                        {page}
+                      </Button>
+                    ))}
+                  </div>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    className="flex items-center gap-1"
+                  >
+                    Suivant
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </Button>
+                </div>
+              )}
+
+              {/* Informations de pagination */}
+              {filteredForms.length > 0 && (
+                <div className="text-center mt-4 text-sm text-gray-500">
+                  Affichage de {startIndex + 1} à {Math.min(endIndex, filteredForms.length)} sur {filteredForms.length} formulaire{filteredForms.length > 1 ? 's' : ''}
+                </div>
+              )}
+            </>
           )}
         </main>
       </div>
