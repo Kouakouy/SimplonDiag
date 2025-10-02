@@ -7,18 +7,12 @@ import type { Form, FormResponse } from "@/types/form"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Button } from "@/components/ui/button"
 import { apiRequest } from "@/lib/api"
-import { ArrowLeft, RefreshCw, Download, Share2, Bell, Calendar, Filter } from "lucide-react"
+import { ArrowLeft, RefreshCw, Download, Share2, BarChart3, PieChart, Users, FileText } from "lucide-react"
 import Link from "next/link"
-import { FormStatsCharts } from "@/components/forms/form-stats-charts"
-import { RealTimeMetrics } from "@/components/forms/real-time-metrics"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-// import { Switch } from "@/components/ui/switch"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
-// import { motion } from "framer-motion"
 
 export default function FormStatsPage() {
   const params = useParams()
@@ -26,58 +20,38 @@ export default function FormStatsPage() {
   const [form, setForm] = useState<Form | null>(null)
   const [loading, setLoading] = useState(true)
   const [responses, setResponses] = useState<FormResponse[]>([])
-  const [serverStats, setServerStats] = useState<{ views: number; submissions: number; completionRate: number } | null>(null)
-  
-  // États pour la dynamisation
-  const [refreshing, setRefreshing] = useState(false)
-  const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
-  const [autoRefresh, setAutoRefresh] = useState(false)
-  const [timeRange, setTimeRange] = useState<"7d" | "30d" | "90d" | "all">("30d")
-  const [startDate, setStartDate] = useState<string>("")
-  const [endDate, setEndDate] = useState<string>("")
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false)
-  const [newResponsesCount, setNewResponsesCount] = useState(0)
-  const [isLive, setIsLive] = useState(false)
+  const [activeTab, setActiveTab] = useState<"overview" | "questions" | "individual">("overview")
+  const [selectedQuestionIndex, setSelectedQuestionIndex] = useState<number>(0)
+  const [selectedResponseIndex, setSelectedResponseIndex] = useState<number>(0)
 
   // Fonction de chargement des données
-  const loadData = useCallback(async (showToast = false) => {
+  const loadData = useCallback(async () => {
     try {
-      if (showToast) {
-        setRefreshing(true)
-        toast.loading("Actualisation des données...")
-      }
+      console.log('Chargement des données pour le formulaire:', formId)
       
       const f = await apiRequest<any>({ url: `/forms/${formId}` })
+      console.log('Formulaire chargé:', f)
+      
       const adaptedForm: Form = {
         id: f._id || f.id || formId,
         title: f.title || "",
         description: f.description || "",
-        bannerTitle: undefined,
-        bannerImageUrl: undefined,
-        questions: [],
+        bannerTitle: f.banner_title,
+        bannerImageUrl: f.banner_image_url,
+        questions: f.questions || [],
         isPublic: f.is_public ?? true,
-        expirationDate: undefined,
-        maxResponses: undefined,
+        expirationDate: f.expiration_date ? new Date(f.expiration_date) : undefined,
+        maxResponses: f.max_responses,
         createdAt: f.created_at ? new Date(f.created_at) : new Date(),
         updatedAt: f.updated_at ? new Date(f.updated_at) : new Date(),
         responses: [],
+        publicSlug: f.public_slug,
       }
       setForm(adaptedForm)
 
-      // Charger réponses pour les métriques avec filtres temporels
-      const queryParams = new URLSearchParams()
-      if (timeRange !== "all") {
-        const days = timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 90
-        const startDate = new Date()
-        startDate.setDate(startDate.getDate() - days)
-        queryParams.set("start_date", startDate.toISOString())
-      }
-      if (startDate) queryParams.set("start_date", startDate)
-      if (endDate) queryParams.set("end_date", endDate)
-
-      const resp = await apiRequest<any[]>({ 
-        url: `/forms/${formId}/responses${queryParams.toString() ? `?${queryParams.toString()}` : ""}` 
-      })
+      console.log('Chargement des réponses...')
+      const resp = await apiRequest<any[]>({ url: `/forms/${formId}/responses` })
+      console.log('Réponses chargées:', resp)
       
       const adaptedResponses: FormResponse[] = (resp || []).map((r: any) => ({
         id: r._id || r.id,
@@ -88,74 +62,27 @@ export default function FormStatsPage() {
         submittedAt: r.submitted_at ? new Date(r.submitted_at) : new Date(),
       }))
       
-      // Détecter les nouvelles réponses
-      const previousCount = responses.length
-      const newCount = adaptedResponses.length - previousCount
-      if (newCount > 0 && previousCount > 0) {
-        setNewResponsesCount(newCount)
-        if (notificationsEnabled) {
-          toast.success(`${newCount} nouvelle${newCount > 1 ? 's' : ''} réponse${newCount > 1 ? 's' : ''} reçue${newCount > 1 ? 's' : ''}!`)
-        }
-      }
-      
+      console.log('Réponses adaptées:', adaptedResponses)
       setResponses(adaptedResponses)
-
-      // Stats backend si dispo
-      try {
-        const stats = await apiRequest<any>({ url: `/forms/${formId}/stats` })
-        if (stats) setServerStats({
-          views: stats.views ?? 0,
-          submissions: stats.submissions ?? adaptedResponses.length,
-          completionRate: stats.completionRate ?? 0,
-        })
-      } catch {
-        // ignore
-      }
-
-      setLastRefresh(new Date())
-      setIsLive(true)
       
-      if (showToast) {
-        toast.success("Données actualisées avec succès!")
-      }
+      toast.success(`Données chargées: ${adaptedResponses.length} réponses`)
     } catch (e) {
-      console.error(e)
-      if (showToast) {
-        toast.error("Erreur lors de l'actualisation des données")
-      }
+      console.error('Erreur lors du chargement:', e)
+      toast.error("Erreur lors du chargement des données")
     } finally {
       setLoading(false)
-      setRefreshing(false)
     }
-  }, [formId, timeRange, startDate, endDate, responses.length, notificationsEnabled])
-
-  // Chargement initial
-  useEffect(() => {
-    loadData()
   }, [formId])
 
-  // Auto-refresh
   useEffect(() => {
-    if (!autoRefresh) return
-
-    const interval = setInterval(() => {
-      loadData(true)
-    }, 30000) // 30 secondes
-
-    return () => clearInterval(interval)
-  }, [autoRefresh, loadData])
-
-  // Fonction de rafraîchissement manuel
-  const handleRefresh = () => {
-    loadData(true)
-  }
+    loadData()
+  }, [loadData])
 
   // Fonction d'export des données
   const handleExport = () => {
     const data = {
       form: form,
       responses: responses,
-      stats: serverStats,
       exportDate: new Date().toISOString()
     }
     
@@ -185,9 +112,126 @@ export default function FormStatsPage() {
         console.log('Erreur lors du partage:', err)
       }
     } else {
-      // Fallback: copier le lien
       navigator.clipboard.writeText(window.location.href)
       toast.success("Lien copié dans le presse-papiers!")
+    }
+  }
+
+  // Fonction pour analyser les réponses d'une question
+  const analyzeQuestionResponses = (questionId: string) => {
+    const questionResponses = responses.map(r => r.answers[questionId]).filter(Boolean)
+    const responseCounts: Record<string, number> = {}
+    
+    questionResponses.forEach(response => {
+      if (Array.isArray(response)) {
+        response.forEach(item => {
+          responseCounts[item] = (responseCounts[item] || 0) + 1
+        })
+      } else {
+        responseCounts[response] = (responseCounts[response] || 0) + 1
+      }
+    })
+
+    return {
+      totalResponses: questionResponses.length,
+      responseCounts,
+      uniqueResponses: Object.keys(responseCounts).length
+    }
+  }
+
+  // Fonction pour générer un graphique à barres
+  const renderBarChart = (questionId: string, questionTitle: string) => {
+    const analysis = analyzeQuestionResponses(questionId)
+    const maxCount = Math.max(...Object.values(analysis.responseCounts))
+    
+    return (
+      <div className="space-y-3">
+        {Object.entries(analysis.responseCounts).map(([response, count]) => (
+          <div key={response} className="flex items-center gap-3">
+            <div className="w-32 text-sm text-gray-600 truncate">{response}</div>
+            <div className="flex-1 bg-gray-200 rounded-full h-6 relative">
+              <div 
+                className="bg-[#E40046] h-6 rounded-full flex items-center justify-end pr-2"
+                style={{ width: `${(count / maxCount) * 100}%` }}
+              >
+                <span className="text-white text-xs font-medium">{count}</span>
+              </div>
+            </div>
+            <div className="w-12 text-sm text-gray-600 text-right">
+              {((count / analysis.totalResponses) * 100).toFixed(1)}%
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  // Fonction pour générer un graphique circulaire
+  const renderPieChart = (questionId: string, questionTitle: string) => {
+    const analysis = analyzeQuestionResponses(questionId)
+    const colors = ['#E40046', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8']
+    
+    return (
+      <div className="flex flex-wrap gap-4">
+        {Object.entries(analysis.responseCounts).map(([response, count], index) => (
+          <div key={response} className="flex items-center gap-2">
+            <div 
+              className="w-4 h-4 rounded-full"
+              style={{ backgroundColor: colors[index % colors.length] }}
+            />
+            <span className="text-sm text-gray-600">{response}</span>
+            <span className="text-sm font-medium text-gray-800">({count})</span>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  // Fonction pour générer un tableau de texte
+  const renderTextTable = (questionId: string, questionTitle: string) => {
+    const questionResponses = responses.map(r => r.answers[questionId]).filter(Boolean)
+    
+    return (
+      <div className="space-y-2 max-h-64 overflow-y-auto">
+        {questionResponses.map((response, index) => (
+          <div key={index} className="p-3 bg-gray-50 rounded-lg border">
+            <div className="text-sm text-gray-600 mb-1">Réponse #{index + 1}</div>
+            <div className="text-gray-800">{response}</div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  // Fonction pour déterminer le type de graphique selon le type de question
+  const renderQuestionChart = (question: any, index: number) => {
+    const analysis = analyzeQuestionResponses(question.id)
+    
+    if (analysis.totalResponses === 0) {
+      return (
+        <div className="text-center py-8 text-gray-500">
+          <BarChart3 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+          <p>Aucune réponse pour cette question</p>
+        </div>
+      )
+    }
+
+    switch (question.type) {
+      case 'radio':
+      case 'select':
+        return renderPieChart(question.id, question.title)
+      case 'checkbox':
+        return renderBarChart(question.id, question.title)
+      case 'rating':
+        return renderBarChart(question.id, question.title)
+      case 'text':
+      case 'textarea':
+      case 'email':
+      case 'number':
+      case 'date':
+        return renderTextTable(question.id, question.title)
+      default:
+        return renderBarChart(question.id, question.title)
     }
   }
 
@@ -229,61 +273,24 @@ export default function FormStatsPage() {
         <main className="flex-1 p-6 overflow-y-auto">
           {/* En-tête */}
           <div className="flex items-center justify-between mb-8">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-3xl font-bold text-gray-900">Statistiques: {form.title}</h1>
-                {isLive && (
-                  <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
-                    En direct
-                  </Badge>
-                )}
-                {newResponsesCount > 0 && (
-                  <Badge variant="destructive" className="animate-bounce">
-                    <Bell className="w-3 h-3 mr-1" />
-                    {newResponsesCount} nouvelle{newResponsesCount > 1 ? 's' : ''}
-                  </Badge>
-                )}
-              </div>
-              <p className="text-gray-600 mt-1">
-                Analysez les performances de ce formulaire
-                {lastRefresh && (
-                  <span className="text-sm text-gray-500 ml-2">
-                    • Dernière mise à jour: {lastRefresh.toLocaleTimeString()}
-                  </span>
-                )}
-              </p>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Statistiques: {form.title}</h1>
+              <p className="text-gray-600 mt-1">Analysez les performances de ce formulaire</p>
             </div>
             
             {/* Actions rapides */}
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRefresh}
-                disabled={refreshing}
-                className="transition-all duration-200 hover:scale-105"
-              >
-                <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+              <Button variant="outline" size="sm" onClick={loadData}>
+                <RefreshCw className="w-4 h-4 mr-2" />
                 Actualiser
               </Button>
               
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExport}
-                className="transition-all duration-200 hover:scale-105"
-              >
+              <Button variant="outline" size="sm" onClick={handleExport}>
                 <Download className="w-4 h-4 mr-2" />
                 Exporter
               </Button>
               
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleShare}
-                className="transition-all duration-200 hover:scale-105"
-              >
+              <Button variant="outline" size="sm" onClick={handleShare}>
                 <Share2 className="w-4 h-4 mr-2" />
                 Partager
               </Button>
@@ -291,138 +298,203 @@ export default function FormStatsPage() {
           </div>
           
           <div className="max-w-7xl mx-auto">
-            {/* Filtres et contrôles */}
-            <div>
-              <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Filter className="w-5 h-5" />
-                  Filtres et contrôles
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {/* Période */}
-                  <div className="space-y-2">
-                    <Label htmlFor="timeRange">Période</Label>
-                    <Select value={timeRange} onValueChange={(value) => setTimeRange(value as "7d" | "30d" | "90d" | "all")}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner une période" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="7d">7 derniers jours</SelectItem>
-                        <SelectItem value="30d">30 derniers jours</SelectItem>
-                        <SelectItem value="90d">90 derniers jours</SelectItem>
-                        <SelectItem value="all">Toutes les données</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Date de début */}
-                  <div className="space-y-2">
-                    <Label htmlFor="startDate">Date de début</Label>
-                    <Input
-                      id="startDate"
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                      className="transition-all duration-200"
-                    />
-                  </div>
-
-                  {/* Date de fin */}
-                  <div className="space-y-2">
-                    <Label htmlFor="endDate">Date de fin</Label>
-                    <Input
-                      id="endDate"
-                      type="date"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                      className="transition-all duration-200"
-                    />
-                  </div>
-
-                  {/* Contrôles */}
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="autoRefresh"
-                        checked={autoRefresh}
-                        onChange={(e) => setAutoRefresh(e.target.checked)}
-                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                      />
-                      <Label htmlFor="autoRefresh" className="text-sm">
-                        Actualisation auto (30s)
-                      </Label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="notifications"
-                        checked={notificationsEnabled}
-                        onChange={(e) => setNotificationsEnabled(e.target.checked)}
-                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                      />
-                      <Label htmlFor="notifications" className="text-sm">
-                        Notifications
-                      </Label>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center justify-between mt-6 pt-4 border-t">
-                  <Link href={`/forms/${form.id}/responses`}>
-                    <Button variant="outline" className="transition-all duration-200 hover:scale-105">
-                      <ArrowLeft className="w-4 h-4 mr-2" />
-                      Retour aux réponses
-                    </Button>
-                  </Link>
-
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setStartDate("")
-                        setEndDate("")
-                        setTimeRange("30d")
-                      }}
-                      className="transition-all duration-200 hover:scale-105"
-                    >
-                      <Calendar className="w-4 h-4 mr-2" />
-                      Réinitialiser
-                    </Button>
-                    
-                    <Button
-                      onClick={handleRefresh}
-                      disabled={refreshing}
-                      className="transition-all duration-200 hover:scale-105"
-                    >
-                      <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-                      Appliquer les filtres
-                    </Button>
+            {/* Compteur total de réponses */}
+            <Card className="mb-6">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="text-4xl font-bold text-[#E40046] mb-2">{responses.length}</div>
+                    <div className="text-lg text-gray-600">Réponse{responses.length > 1 ? 's' : ''} reçue{responses.length > 1 ? 's' : ''}</div>
+                    {responses.length === 0 && (
+                      <div className="text-sm text-gray-500 mt-2">
+                        Aucune réponse reçue pour le moment
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardContent>
-              </Card>
-            </div>
+            </Card>
 
-            {/* Métriques en temps réel */}
-            <div>
-              <RealTimeMetrics 
-                responses={responses} 
-                serverStats={serverStats} 
-                timeRange={timeRange}
-                lastRefresh={lastRefresh}
-              />
-            </div>
+            {/* Onglets */}
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "overview" | "questions" | "individual")} className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="overview" className="flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4" />
+                  Vue d'ensemble
+                </TabsTrigger>
+                <TabsTrigger value="questions" className="flex items-center gap-2">
+                  <PieChart className="w-4 h-4" />
+                  Vue par question
+                </TabsTrigger>
+                <TabsTrigger value="individual" className="flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  Vue individuelle
+                </TabsTrigger>
+              </TabsList>
 
-            {/* Composant de statistiques avec données réelles */}
-            <div>
-              <FormStatsCharts form={form} responses={responses} serverStats={serverStats} />
+              {/* Vue d'ensemble */}
+              <TabsContent value="overview" className="mt-6">
+                {responses.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-12 text-center">
+                      <BarChart3 className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                      <h3 className="text-xl font-medium text-gray-600 mb-2">Aucune donnée disponible</h3>
+                      <p className="text-gray-500 mb-6">Les statistiques apparaîtront une fois que des réponses seront reçues</p>
+                      <Link href={`/f/${form.publicSlug || form.id}`} target="_blank">
+                        <Button className="bg-[#E40046] hover:bg-[#E40046]/80 text-white">
+                          Partager le formulaire
+                        </Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-6">
+                    {form.questions.map((question, index) => (
+                      <Card key={question.id}>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <span className="text-lg font-semibold">
+                              {index + 1}. {question.title}
+                            </span>
+                            <Badge variant="outline">{question.type}</Badge>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {renderQuestionChart(question, index)}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* Vue par question */}
+              <TabsContent value="questions" className="mt-6">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                  {/* Liste des questions */}
+                  <div className="lg:col-span-1">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">Questions</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-0">
+                        <div className="space-y-1">
+                          {form.questions.map((question, index) => (
+                            <button
+                              key={question.id}
+                              onClick={() => setSelectedQuestionIndex(index)}
+                              className={`w-full text-left p-3 hover:bg-gray-50 transition-colors ${
+                                selectedQuestionIndex === index ? 'bg-[#E40046]/10 border-r-2 border-[#E40046]' : ''
+                              }`}
+                            >
+                              <div className="text-sm font-medium text-gray-900">
+                                {index + 1}. {question.title}
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1">
+                                {question.type} • {analyzeQuestionResponses(question.id).totalResponses} réponses
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Détail de la question sélectionnée */}
+                  <div className="lg:col-span-3">
+                    {form.questions[selectedQuestionIndex] && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <span className="text-xl font-semibold">
+                              {selectedQuestionIndex + 1}. {form.questions[selectedQuestionIndex].title}
+                            </span>
+                            <Badge variant="outline">{form.questions[selectedQuestionIndex].type}</Badge>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {renderQuestionChart(form.questions[selectedQuestionIndex], selectedQuestionIndex)}
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+
+              {/* Vue individuelle */}
+              <TabsContent value="individual" className="mt-6">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                  {/* Liste des réponses */}
+                  <div className="lg:col-span-1">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">Réponses</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-0">
+                        <div className="space-y-1">
+                          {responses.map((response, index) => (
+                            <button
+                              key={response.id}
+                              onClick={() => setSelectedResponseIndex(index)}
+                              className={`w-full text-left p-3 hover:bg-gray-50 transition-colors ${
+                                selectedResponseIndex === index ? 'bg-[#E40046]/10 border-r-2 border-[#E40046]' : ''
+                              }`}
+                            >
+                              <div className="text-sm font-medium text-gray-900">
+                                Réponse #{index + 1}
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1">
+                                {response.submittedAt.toLocaleDateString('fr-FR')} à {response.submittedAt.toLocaleTimeString('fr-FR')}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Détail de la réponse sélectionnée */}
+                  <div className="lg:col-span-3">
+                    {responses[selectedResponseIndex] && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <FileText className="w-5 h-5" />
+                            <span>Réponse #{selectedResponseIndex + 1}</span>
+                            <Badge variant="outline">
+                              {responses[selectedResponseIndex].submittedAt.toLocaleDateString('fr-FR')}
+                            </Badge>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
+                            {form.questions.map((question, index) => (
+                              <div key={question.id} className="border-b pb-4 last:border-b-0">
+                                <h4 className="font-semibold text-gray-900 mb-2">
+                                  {index + 1}. {question.title}
+                                </h4>
+                                <div className="text-gray-700 bg-gray-50 p-3 rounded-lg">
+                                  {responses[selectedResponseIndex].answers[question.id] || 'Aucune réponse'}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+
+            {/* Bouton retour */}
+            <div className="mt-8 text-center">
+              <Link href={`/forms/${form.id}/responses`}>
+                <Button variant="outline">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Retour aux réponses
+                </Button>
+              </Link>
             </div>
           </div>
         </main>

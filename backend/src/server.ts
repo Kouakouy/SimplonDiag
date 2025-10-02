@@ -5,6 +5,7 @@ import morgan from 'morgan'
 import cookieParser from 'cookie-parser'
 
 import { router as apiRouter } from './setup/routes'
+import { initializeDemoUsers } from './scripts/initDemoUsers'
 
 const app = express()
 
@@ -21,9 +22,12 @@ app.get('/api/health', (_req, res) => {
 app.use('/api', apiRouter)
 
 const port = parseInt(process.env.PORT || '3001', 10)
-app.listen(port, () => {
+app.listen(port, async () => {
   // eslint-disable-next-line no-console
   console.log(`Backend listening on http://localhost:${port}`)
+  
+  // Initialiser les utilisateurs de démonstration
+  await initializeDemoUsers()
 })
 
 

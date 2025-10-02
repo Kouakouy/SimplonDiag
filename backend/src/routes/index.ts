@@ -1,6 +1,6 @@
 export { authRouter } from './auth'
 export { formsRouter } from './forms'
 export { publicRouter } from './public'
-export { usersRouter } from './users'
+export { default as usersRouter } from './users'
 
 

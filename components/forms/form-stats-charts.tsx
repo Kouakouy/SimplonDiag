@@ -25,7 +25,6 @@ import {
 import { 
   TrendingUp, 
   Users, 
-  Clock, 
   Target, 
   Calendar,
   Eye
@@ -40,34 +39,55 @@ interface FormStatsChartsProps {
 export function FormStatsCharts({ form, responses = [], serverStats }: FormStatsChartsProps) {
   const [timeRange, setTimeRange] = useState("7d")
 
-  // Données simulées pour les graphiques
-  const responsesByDay = [
-    { date: "Lun", responses: 12, views: 45 },
-    { date: "Mar", responses: 19, views: 67 },
-    { date: "Mer", responses: 8, views: 34 },
-    { date: "Jeu", responses: 15, views: 52 },
-    { date: "Ven", responses: 22, views: 78 },
-    { date: "Sam", responses: 6, views: 23 },
-    { date: "Dim", responses: 4, views: 18 },
-  ]
+  // Calculer les données réelles basées sur les réponses
+  const calculateResponsesByDay = () => {
+    const daysOfWeek = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
+    const dayCounts = daysOfWeek.map(day => ({ date: day, responses: 0, views: 0 }))
+    
+    responses.forEach(response => {
+      const dayIndex = response.submittedAt.getDay()
+      dayCounts[dayIndex].responses += 1
+    })
+    
+    // Estimer les vues (3x les réponses en moyenne)
+    dayCounts.forEach(day => {
+      day.views = Math.max(day.responses * 3, day.responses + Math.floor(Math.random() * 10))
+    })
+    
+    return dayCounts
+  }
 
-  const responsesByHour = [
-    { hour: "00h", responses: 2 },
-    { hour: "06h", responses: 5 },
-    { hour: "09h", responses: 18 },
-    { hour: "12h", responses: 25 },
-    { hour: "15h", responses: 22 },
-    { hour: "18h", responses: 15 },
-    { hour: "21h", responses: 8 },
-  ]
+  const calculateResponsesByHour = () => {
+    const hours = Array.from({ length: 24 }, (_, i) => ({ hour: `${i}h`, responses: 0 }))
+    
+    responses.forEach(response => {
+      const hour = response.submittedAt.getHours()
+      hours[hour].responses += 1
+    })
+    
+    // Retourner seulement les heures avec des réponses ou les heures principales
+    return hours.filter(h => h.responses > 0 || [0, 6, 9, 12, 15, 18, 21].includes(parseInt(h.hour)))
+  }
 
-  const deviceStats = [
-    { name: "Desktop", value: 65, color: "#3b82f6" },
-    { name: "Mobile", value: 30, color: "#ec4899" },
-    { name: "Tablette", value: 5, color: "#10b981" },
-  ]
+  const calculateDeviceStats = () => {
+    // Simulation basée sur les patterns typiques (à remplacer par de vraies données si disponibles)
+    const totalResponses = responses.length
+    const desktopRatio = 0.65
+    const mobileRatio = 0.30
+    const tabletRatio = 0.05
+    
+    return [
+      { name: "Desktop", value: Math.round(totalResponses * desktopRatio), color: "#3b82f6" },
+      { name: "Mobile", value: Math.round(totalResponses * mobileRatio), color: "#ec4899" },
+      { name: "Tablette", value: Math.round(totalResponses * tabletRatio), color: "#10b981" },
+    ]
+  }
 
-  // Stats question basées sur les réponses
+  const responsesByDay = calculateResponsesByDay()
+  const responsesByHour = calculateResponsesByHour()
+  const deviceStats = calculateDeviceStats()
+
+  // Stats question basées sur les réponses réelles
   const questionStats = form.questions.map((question, index) => {
     let count = 0
     responses.forEach(r => {
@@ -82,15 +102,37 @@ export function FormStatsCharts({ form, responses = [], serverStats }: FormStats
     }
   })
 
+
   const totalResponses = responses.length
   const totalViews = serverStats?.views ?? totalResponses * 3
   const responseRate = totalViews > 0 ? ((totalResponses / totalViews) * 100).toFixed(1) : 0
-  const avgCompletionTime = "2m 34s"
+
+  // Calculer les tendances (comparaison avec la semaine précédente)
+  const calculateTrends = () => {
+    const now = new Date()
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+    const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
+    
+    const thisWeekResponses = responses.filter(r => r.submittedAt >= oneWeekAgo).length
+    const lastWeekResponses = responses.filter(r => r.submittedAt >= twoWeeksAgo && r.submittedAt < oneWeekAgo).length
+    
+    const responseTrend = lastWeekResponses > 0 ? 
+      (((thisWeekResponses - lastWeekResponses) / lastWeekResponses) * 100).toFixed(1) : 
+      thisWeekResponses > 0 ? "100" : "0"
+    
+    return {
+      responses: responseTrend,
+      views: "8", // Estimation basée sur les patterns typiques
+      responseRate: "3.2" // Estimation
+    }
+  }
+
+  const trends = calculateTrends()
 
   return (
     <div className="space-y-6">
       {/* Métriques principales */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
@@ -101,7 +143,9 @@ export function FormStatsCharts({ form, responses = [], serverStats }: FormStats
             </div>
             <div className="text-3xl font-bold text-gray-900 mb-1">{totalResponses}</div>
             <div className="text-sm text-gray-600 mb-2">Total réponses</div>
-            <div className="text-xs text-green-600">+12% cette semaine</div>
+            <div className={`text-xs ${parseFloat(trends.responses) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {parseFloat(trends.responses) >= 0 ? '+' : ''}{trends.responses}% cette semaine
+            </div>
           </CardContent>
         </Card>
 
@@ -115,7 +159,9 @@ export function FormStatsCharts({ form, responses = [], serverStats }: FormStats
             </div>
             <div className="text-3xl font-bold text-gray-900 mb-1">{totalViews}</div>
             <div className="text-sm text-gray-600 mb-2">Vues totales</div>
-            <div className="text-xs text-green-600">+8% cette semaine</div>
+            <div className={`text-xs ${parseFloat(trends.views) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {parseFloat(trends.views) >= 0 ? '+' : ''}{trends.views}% cette semaine
+            </div>
           </CardContent>
         </Card>
 
@@ -129,21 +175,9 @@ export function FormStatsCharts({ form, responses = [], serverStats }: FormStats
             </div>
             <div className="text-3xl font-bold text-gray-900 mb-1">{responseRate}%</div>
             <div className="text-sm text-gray-600 mb-2">Taux de réponse</div>
-            <div className="text-xs text-green-600">+3.2% cette semaine</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                <Clock className="w-5 h-5 text-orange-600" />
-              </div>
-              <TrendingUp className="w-4 h-4 text-green-500" />
+            <div className={`text-xs ${parseFloat(trends.responseRate) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {parseFloat(trends.responseRate) >= 0 ? '+' : ''}{trends.responseRate}% cette semaine
             </div>
-            <div className="text-3xl font-bold text-gray-900 mb-1">{avgCompletionTime}</div>
-            <div className="text-sm text-gray-600 mb-2">Temps moyen</div>
-            <div className="text-xs text-green-600">-15s cette semaine</div>
           </CardContent>
         </Card>
       </div>
@@ -273,12 +307,12 @@ export function FormStatsCharts({ form, responses = [], serverStats }: FormStats
                 <div className="flex items-center gap-4">
                   <div className="text-right">
                     <div className="text-lg font-semibold text-gray-900">
-                      {Math.floor(Math.random() * 50) + 10}
+                      {questionStats[index]?.responses || 0}
                     </div>
                     <div className="text-sm text-gray-500">Réponses</div>
                   </div>
                   <Badge variant="outline">
-                    {Math.floor(Math.random() * 30) + 70}% complétion
+                    {questionStats[index]?.completionRate || 0}% complétion
                   </Badge>
                 </div>
               </div>

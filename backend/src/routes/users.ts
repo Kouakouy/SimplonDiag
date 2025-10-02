@@ -1,55 +1,28 @@
 import { Router } from 'express'
-import { getDb } from '../config/db'
-import { ObjectId } from 'mongodb'
+import { 
+  register, 
+  login, 
+  getCurrentUser, 
+  getAllUsers, 
+  createUser, 
+  updateUser, 
+  deleteUser 
+} from '../controllers/authController'
 import { requireAuth, requireRole } from '../middleware/auth'
 
-export const usersRouter = Router()
+const authRouter = Router()
 
-// Liste des utilisateurs du dashboard
-usersRouter.get('/', requireAuth, requireRole(['owner','admin']), async (_req, res) => {
-  try {
-    const db = await getDb()
-    const list = await db.collection('dashboard_users').find({}).sort({ created_at: -1 }).toArray()
-    return res.json(list.map(u => ({
-      id: u._id.toString(),
-      email: u.email,
-      name: u.name || null,
-      role: u.role || 'viewer',
-      created_at: u.created_at,
-    })))
-  } catch {
-    return res.status(500).json({ message: 'Server error' })
-  }
-})
+// Routes publiques
+authRouter.post('/register', register)
+authRouter.post('/login', login)
 
-// Création/invitation d'un utilisateur du dashboard
-usersRouter.post('/', requireAuth, requireRole(['owner','admin']), async (req, res) => {
-  const { email, name, role } = req.body || {}
-  if (!email || typeof email !== 'string') return res.status(400).json({ message: 'Invalid email' })
-  const normalizedRole = ['owner','admin','viewer'].includes(role) ? role : 'viewer'
-  try {
-    const db = await getDb()
-    const col = db.collection('dashboard_users')
-    const existing = await col.findOne({ email })
-    if (existing) return res.status(200).json({ id: existing._id.toString() })
-    const insert = await col.insertOne({ email, name: name ?? null, role: normalizedRole, created_at: new Date() })
-    return res.status(201).json({ id: insert.insertedId.toString() })
-  } catch {
-    return res.status(500).json({ message: 'Server error' })
-  }
-})
+// Routes protégées
+authRouter.get('/me', requireAuth, getCurrentUser)
 
-// Suppression d'un utilisateur
-usersRouter.delete('/:id', requireAuth, requireRole(['owner','admin']), async (req, res) => {
-  const { id } = req.params
-  if (!ObjectId.isValid(id)) return res.status(400).json({ message: 'Invalid id' })
-  try {
-    const db = await getDb()
-    await db.collection('dashboard_users').deleteOne({ _id: new ObjectId(id) })
-    return res.status(204).send()
-  } catch {
-    return res.status(500).json({ message: 'Server error' })
-  }
-})
+// Routes pour la gestion des utilisateurs (admin seulement)
+authRouter.get('/users', requireAuth, requireRole(['admin']), getAllUsers)
+authRouter.post('/users', requireAuth, requireRole(['admin']), createUser)
+authRouter.put('/users/:id', requireAuth, requireRole(['admin']), updateUser)
+authRouter.delete('/users/:id', requireAuth, requireRole(['admin']), deleteUser)
 
-
+export default authRouter

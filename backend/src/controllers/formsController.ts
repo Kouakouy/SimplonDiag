@@ -31,12 +31,27 @@ const formSchema = z.object({
   banner_image_url: z.string().url().optional(),
 })
 
-export const listForms = async (_req: AuthRequest, res: Response) => {
+export const listForms = async (req: AuthRequest, res: Response) => {
   try {
     const db = await getDb()
     const forms = db.collection('forms')
+    
+    // Construire le filtre selon le rôle
+    let filter = {}
+    
+    if (req.user?.role === 'admin') {
+      // Admin peut voir tous les formulaires
+      filter = {}
+    } else if (req.user?.role === 'observer') {
+      // Observateur peut voir tous les formulaires
+      filter = {}
+    } else if (req.user?.role === 'creator') {
+      // Créateur ne peut voir que ses propres formulaires
+      filter = { created_by: req.user.id }
+    }
+    
     const list = await forms
-      .find({})
+      .find(filter)
       .sort({ created_at: -1 })
       .toArray()
     return res.json(list)
@@ -66,6 +81,7 @@ export const createForm = async (req: AuthRequest, res: Response) => {
       .replace(/=+$/g, '')
     const insert = await forms.insertOne({
       user_id: null,
+      created_by: req.user?.id, // Ajouter le créateur
       title,
       description: description ?? null,
       is_public: is_public ?? true,
@@ -94,6 +110,12 @@ export const getForm = async (req: AuthRequest, res: Response) => {
     const forms = db.collection('forms')
     const form = await forms.findOne({ _id: new ObjectId(id) })
     if (!form) return res.status(404).json({ message: 'Not found' })
+    
+    // Vérifier les permissions
+    if (req.user?.role === 'creator' && form.created_by !== req.user.id) {
+      return res.status(403).json({ message: 'Forbidden' })
+    }
+    
     return res.json(form)
   } catch {
     return res.status(500).json({ message: 'Server error' })
@@ -108,6 +130,19 @@ export const updateForm = async (req: AuthRequest, res: Response) => {
   try {
     const db = await getDb()
     const forms = db.collection('forms')
+    
+    // Vérifier que le formulaire existe et les permissions
+    const form = await forms.findOne({ _id: new ObjectId(id) })
+    if (!form) return res.status(404).json({ message: 'Not found' })
+    
+    // Vérifier les permissions de modification
+    if (req.user?.role === 'observer') {
+      return res.status(403).json({ message: 'Observers cannot modify forms' })
+    }
+    if (req.user?.role === 'creator' && form.created_by !== req.user.id) {
+      return res.status(403).json({ message: 'Forbidden' })
+    }
+    
     await forms.updateOne(
       { _id: new ObjectId(id) },
       {
@@ -135,6 +170,20 @@ export const deleteForm = async (req: AuthRequest, res: Response) => {
   try {
     const db = await getDb()
     const forms = db.collection('forms')
+    
+    // Vérifier que le formulaire existe et les permissions
+    const form = await forms.findOne({ _id: new ObjectId(id) })
+    if (!form) return res.status(404).json({ message: 'Not found' })
+    
+    // Vérifier les permissions de suppression
+    if (req.user?.role === 'observer') {
+      return res.status(403).json({ message: 'Observers cannot delete forms' })
+    }
+    if (req.user?.role === 'creator') {
+      return res.status(403).json({ message: 'Creators cannot delete forms' })
+    }
+    // Seuls les admins peuvent supprimer
+    
     await forms.deleteOne({ _id: new ObjectId(id) })
     return res.status(204).send()
   } catch {
@@ -146,7 +195,18 @@ export const listResponses = async (req: AuthRequest, res: Response) => {
   const id = req.params.id
   try {
     const db = await getDb()
+    const forms = db.collection('forms')
     const responses = db.collection(`responses_${id}`)
+    
+    // Vérifier que le formulaire existe et les permissions
+    const form = await forms.findOne({ _id: new ObjectId(id) })
+    if (!form) return res.status(404).json({ message: 'Not found' })
+    
+    // Vérifier les permissions pour voir les réponses
+    if (req.user?.role === 'creator' && form.created_by !== req.user.id) {
+      return res.status(403).json({ message: 'Forbidden' })
+    }
+    
     const list = await responses
       .find({})
       .sort({ submitted_at: -1 })

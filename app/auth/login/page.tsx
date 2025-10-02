@@ -2,12 +2,18 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { useAuth } from "@/lib/contexts/AuthContext"
+import { Shield, Eye, PenTool } from "lucide-react"
 
 export default function LoginPage() {
+  const { login } = useAuth()
+  const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [submitting, setSubmitting] = useState(false)
@@ -34,9 +40,20 @@ export default function LoginPage() {
     e.preventDefault()
     if (!validate()) return
     setSubmitting(true)
-    // Intégration backend volontairement non branchée pour validation ultérieure
-    // Placeholder: garder la page statique pour l'instant
-    setTimeout(() => setSubmitting(false), 600)
+    
+    try {
+      await login(email, password)
+      router.push('/forms')
+    } catch (error) {
+      setErrors({ email: 'Identifiants invalides' })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const quickLogin = (userEmail: string) => {
+    setEmail(userEmail)
+    setPassword('password123')
   }
 
   return (
@@ -99,6 +116,76 @@ export default function LoginPage() {
               <Link href="/auth/forgot-password" className="text-blue-600 hover:underline text-sm">Mot de passe oublié ?</Link>
             </div>
           </form>
+        </CardContent>
+      </Card>
+
+      {/* Comptes de démonstration */}
+      <Card className="w-full max-w-xl shadow-sm mt-6">
+        <CardHeader>
+          <CardTitle className="text-center">Comptes de démonstration</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Shield className="w-5 h-5 text-red-600" />
+                <div>
+                  <div className="font-medium text-red-900">Administrateur</div>
+                  <div className="text-sm text-red-700">admin@simplon.com</div>
+                </div>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => quickLogin('admin@simplon.com')}
+                className="text-red-600 border-red-200 hover:bg-red-100"
+              >
+                Utiliser
+              </Button>
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Eye className="w-5 h-5 text-blue-600" />
+                <div>
+                  <div className="font-medium text-blue-900">Observateur</div>
+                  <div className="text-sm text-blue-700">observer@simplon.com</div>
+                </div>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => quickLogin('observer@simplon.com')}
+                className="text-blue-600 border-blue-200 hover:bg-blue-100"
+              >
+                Utiliser
+              </Button>
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <PenTool className="w-5 h-5 text-green-600" />
+                <div>
+                  <div className="font-medium text-green-900">Créateur</div>
+                  <div className="text-sm text-green-700">creator@simplon.com</div>
+                </div>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => quickLogin('creator@simplon.com')}
+                className="text-green-600 border-green-200 hover:bg-green-100"
+              >
+                Utiliser
+              </Button>
+            </div>
+          </div>
+          
+          <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+            <p className="text-xs text-gray-600 text-center">
+              <strong>Mot de passe pour tous les comptes :</strong> password123
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>
