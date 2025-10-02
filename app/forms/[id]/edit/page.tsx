@@ -6,13 +6,9 @@ import { useRouter, useParams } from "next/navigation"
 import type { Form, Question } from "@/types/form"
 import { Sidebar } from "@/components/layout/sidebar"
 import dynamic from "next/dynamic"
-const QuestionEditor = dynamic(() => import("@/components/forms/question-editor").then(m => m.QuestionEditor), { ssr: false })
 const FormHeaderSection = dynamic(() => import("@/components/forms/form-header-section").then(m => m.FormHeaderSection), { ssr: false })
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Plus, Save, Eye, ArrowLeft, Share } from "lucide-react"
 import { apiRequest } from "@/lib/api"
 import Link from "next/link"
@@ -67,39 +63,6 @@ export default function EditFormPage() {
     load()
   }, [formId])
 
-  // Ajouter une nouvelle question
-  const addQuestion = () => {
-    if (!form) return
-
-    const newQuestion: Question = {
-      id: `q${Date.now()}`,
-      categoryId: "short-text",
-      type: "text",
-      title: "Nouvelle question",
-      required: false,
-    }
-    setForm({
-      ...form,
-      questions: [...form.questions, newQuestion],
-    })
-  }
-
-  // Mettre à jour une question
-  const updateQuestion = (index: number, updatedQuestion: Question) => {
-    if (!form) return
-
-    const questions = [...form.questions]
-    questions[index] = updatedQuestion
-    setForm({ ...form, questions })
-  }
-
-  // Supprimer une question
-  const deleteQuestion = (index: number) => {
-    if (!form) return
-
-    const questions = form.questions.filter((_, i) => i !== index)
-    setForm({ ...form, questions })
-  }
 
   // Sauvegarder le formulaire
   const saveForm = async () => {
@@ -138,7 +101,7 @@ export default function EditFormPage() {
       })
 
       alert('Formulaire sauvegardé avec succès !')
-      router.push("/forms")
+      router.push(`/forms/${formId}/questions`)
     } catch (e: any) {
       // Afficher l'erreur détaillée renvoyée par lib/api.ts (comme dans create/page.tsx)
       alert(`Erreur lors de la sauvegarde: ${e.message}`)
@@ -226,8 +189,8 @@ export default function EditFormPage() {
                   ) : (
                     <>
                       <Save className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                      <span className="hidden sm:inline">Sauvegarder</span>
-                      <span className="sm:hidden">Sauvegarder</span>
+                      <span className="hidden sm:inline">Enregistrer et continuer</span>
+                      <span className="sm:hidden">Enregistrer</span>
                     </>
                   )}
                 </Button>
@@ -250,52 +213,43 @@ export default function EditFormPage() {
               onExpirationDateChange={(expirationDate) => setForm({ ...form, expirationDate })}
             />
 
-            {/* Questions */}
-            <div className="space-y-4 mb-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <h3 className="text-lg font-semibold">Questions ({form.questions.length})</h3>
-                <Button onClick={addQuestion} className="bg-[#E40046] hover:bg-[#E40046]/80 text-white w-full sm:w-auto">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Ajouter une question
-                </Button>
-              </div>
-
-              {form.questions.length === 0 ? (
-                <Card>
-                  <CardContent className="p-6 lg:p-12 text-center">
-                    <div className="text-gray-400 mb-4">
-                      <Plus className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-2" />
-                    </div>
-                    <h4 className="text-base sm:text-lg font-medium text-gray-600 mb-2">Aucune question</h4>
-                    <p className="text-sm sm:text-base text-gray-500 mb-4">Commencez par ajouter votre première question</p>
-                    <Button onClick={addQuestion} className="bg-[#E40046] hover:bg-[#E40046]/80 text-white w-full sm:w-auto">
+            {/* Information sur les questions */}
+            <Card className="mb-6">
+              <CardContent className="p-6 text-center">
+                <div className="text-gray-400 mb-4">
+                  <Plus className="w-12 h-12 mx-auto mb-2" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Gestion des questions</h3>
+                <p className="text-gray-600 mb-4">
+                  Les questions sont gérées séparément pour une meilleure organisation
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Link href={`/forms/${form.id}/questions`}>
+                    <Button className="bg-[#E40046] hover:bg-[#E40046]/80 text-white w-full sm:w-auto">
                       <Plus className="w-4 h-4 mr-2" />
-                      Ajouter une question
+                      Gérer les questions ({form.questions.length})
                     </Button>
-                  </CardContent>
-                </Card>
-              ) : (
-                form.questions.map((question, index) => (
-                  <QuestionEditor
-                    key={question.id}
-                    question={question}
-                    onUpdate={(updatedQuestion) => updateQuestion(index, updatedQuestion)}
-                    onDelete={() => deleteQuestion(index)}
-                  />
-                ))
-              )}
+                  </Link>
+                  <Link href={`/forms/${form.id}`}>
+                    <Button variant="outline" className="w-full sm:w-auto">
+                      <Eye className="w-4 h-4 mr-2" />
+                      Aperçu du formulaire
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Bouton d'enregistrement en bas */}
+            <div className="text-center mt-6">
+              <Button onClick={saveForm} size="lg" className="bg-[#E40046] hover:bg-[#E40046]/80 text-white w-full sm:w-auto">
+                <Save className="w-4 h-4 mr-2" />
+                Enregistrer et continuer
+              </Button>
+              <p className="text-xs lg:text-sm text-gray-500 mt-2">
+                Vous pourrez gérer les questions à l'étape suivante
+              </p>
             </div>
-
-            {/* Bouton d'ajout en bas */}
-            {form.questions.length > 0 && (
-              <div className="text-center">
-                <Button onClick={addQuestion} variant="outline" size="lg" className="w-full sm:w-auto">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Ajouter une question
-                </Button>
-              </div>
-            )}
-
             
           </div>
         </main>

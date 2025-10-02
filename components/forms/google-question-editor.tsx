@@ -5,7 +5,6 @@ import type { Question } from "@/types/form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent } from "@/components/ui/card"
 import { 
   Copy, 
@@ -33,7 +32,7 @@ const QUESTION_TYPES = [
   { value: "rating", label: "Échelle linéaire", icon: "📏" },
   { value: "number", label: "Avis", icon: "⭐" },
   { value: "date", label: "Date", icon: "📅" },
-  { value: "text", label: "Heure", icon: "🕐" }
+  { value: "time", label: "Heure", icon: "🕐" }
 ]
 
 export function GoogleQuestionEditor({ 
@@ -113,32 +112,20 @@ export function GoogleQuestionEditor({
                 className="flex-1 text-lg font-medium border-0 border-b-2 border-gray-200 rounded-none px-0 focus:border-[#E40046] focus:ring-0"
               />
               
-              <Select
+              <select
                 value={question.type}
-                onValueChange={(value) => updateQuestion({ 
-                  type: value as Question['type'],
+                onChange={(e) => updateQuestion({ 
+                  type: e.target.value as Question['type'],
                   options: hasOptions ? options : undefined
                 })}
+                className="w-48 h-10 px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#E40046] focus:border-transparent"
               >
-                <SelectTrigger className="w-48">
-                  <SelectValue>
-                    <div className="flex items-center gap-2">
-                      <span>{currentType.icon}</span>
-                      <span>{currentType.label}</span>
-                    </div>
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {QUESTION_TYPES.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      <div className="flex items-center gap-2">
-                        <span>{type.icon}</span>
-                        <span>{type.label}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                {QUESTION_TYPES.map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.icon} {type.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Description optionnelle */}
@@ -242,6 +229,11 @@ export function GoogleQuestionEditor({
                 {question.type === "date" && (
                   <div className="flex items-center gap-2 text-gray-400">
                     <span>jj/mm/aaaa</span>
+                  </div>
+                )}
+                {question.type === "time" && (
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <span>hh:mm</span>
                   </div>
                 )}
                 {question.type === "number" && (

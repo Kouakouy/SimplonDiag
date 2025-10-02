@@ -84,72 +84,126 @@ export default function FormOverviewPage() {
   const renderQuestion = (question: Question, index: number) => {
     const num = index + 1
     return (
-      <div key={question.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-        <div className="mb-3">
-          <h4 className="font-medium text-gray-900">
+      <div key={question.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 hover:shadow-md transition-shadow">
+        <div className="mb-4">
+          <h4 className="font-semibold text-gray-900 text-lg">
             {num}. {question.title}
             {question.required && <span className="text-red-500 ml-1">*</span>}
           </h4>
           {question.description && (
-            <p className="text-sm text-gray-600 mt-1">{question.description}</p>
+            <p className="text-sm text-gray-600 mt-2">{question.description}</p>
           )}
         </div>
+        
         {question.type === "text" && (
-          <input disabled placeholder={question.placeholder || "Votre réponse"} className="max-w-xl w-full p-2 border rounded-md bg-gray-50" />
+          <input 
+            placeholder={question.placeholder || "Votre réponse"} 
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E40046] focus:border-transparent transition-all" 
+          />
         )}
+        
         {question.type === "textarea" && (
-          <textarea disabled placeholder={question.placeholder || "Votre réponse"} rows={4} className="max-w-2xl w-full p-2 border rounded-md bg-gray-50" />
+          <textarea 
+            placeholder={question.placeholder || "Votre réponse"} 
+            rows={4} 
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E40046] focus:border-transparent transition-all resize-vertical" 
+          />
         )}
+        
         {question.type === "email" && (
-          <input type="email" disabled placeholder={question.placeholder || "exemple@email.com"} className="max-w-md w-full p-2 border rounded-md bg-gray-50" />
+          <input 
+            type="email" 
+            placeholder={question.placeholder || "exemple@email.com"} 
+            className="w-full max-w-md p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E40046] focus:border-transparent transition-all" 
+          />
         )}
+        
         {question.type === "number" && (
-          <input type="number" disabled placeholder="0" className="max-w-40 w-full p-2 border rounded-md bg-gray-50" />
+          <input 
+            type="number" 
+            placeholder="0" 
+            className="w-full max-w-40 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E40046] focus:border-transparent transition-all" 
+          />
         )}
+        
         {question.type === "date" && (
-          <input type="date" disabled className="max-w-48 w-full p-2 border rounded-md bg-gray-50" />
+          <input 
+            type="date" 
+            className="w-full max-w-48 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E40046] focus:border-transparent transition-all" 
+          />
         )}
+        
         {question.type === "radio" && (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {question.options?.map((option, optionIndex) => (
-              <label key={optionIndex} className="flex items-center gap-2 cursor-default">
-                <span className="w-4 h-4 rounded-full border border-gray-300 inline-flex items-center justify-center">
-                  <span className="w-2.5 h-2.5 rounded-full bg-gray-200"></span>
-                </span>
-                <span className="text-sm text-gray-700">{option}</span>
+              <label key={optionIndex} className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
+                <input 
+                  type="radio" 
+                  name={`question-${question.id}`}
+                  value={option}
+                  className="w-4 h-4 text-[#E40046] focus:ring-[#E40046] border-gray-300" 
+                />
+                <span className="text-gray-700">{option}</span>
               </label>
             ))}
           </div>
         )}
+        
         {question.type === "checkbox" && (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {question.options?.map((option, optionIndex) => (
-              <label key={optionIndex} className="flex items-center gap-2 cursor-default">
-                <span className="w-4 h-4 rounded border border-gray-300 inline-flex items-center justify-center bg-gray-100"></span>
-                <span className="text-sm text-gray-700">{option}</span>
+              <label key={optionIndex} className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
+                <input 
+                  type="checkbox" 
+                  value={option}
+                  className="w-4 h-4 text-[#E40046] focus:ring-[#E40046] border-gray-300 rounded" 
+                />
+                <span className="text-gray-700">{option}</span>
               </label>
             ))}
           </div>
         )}
+        
         {question.type === "select" && (
-          <select className="w-full max-w-xl p-2 border rounded-md bg-white" disabled>
-            <option>Sélectionnez une option</option>
+          <select className="w-full max-w-xl p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E40046] focus:border-transparent transition-all bg-white">
+            <option value="">Sélectionnez une option</option>
             {question.options?.map((option, optionIndex) => (
-              <option key={optionIndex}>{option}</option>
+              <option key={optionIndex} value={option}>{option}</option>
             ))}
           </select>
         )}
+        
         {question.type === "rating" && (
-          <div className="flex space-x-1">
+          <div className="flex space-x-2">
             {question.options?.map((_, starIndex) => (
-              <span key={starIndex} className="w-8 h-8 inline-flex items-center justify-center text-yellow-300">★</span>
+              <button 
+                key={starIndex} 
+                className="w-10 h-10 inline-flex items-center justify-center text-3xl text-gray-300 hover:text-yellow-400 transition-colors focus:outline-none focus:text-yellow-400"
+                type="button"
+              >
+                ★
+              </button>
             ))}
           </div>
         )}
+        
         {question.type === "file" && (
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50">
-            <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-500">Zone de dépôt de fichier</p>
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-gray-50 hover:bg-gray-100 transition-colors">
+            <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600 mb-2">Glissez-déposez vos fichiers ici</p>
+            <p className="text-sm text-gray-500">ou cliquez pour sélectionner</p>
+            <input 
+              type="file" 
+              className="hidden" 
+              id={`file-${question.id}`}
+              multiple={question.isMultipleChoice}
+            />
+            <label 
+              htmlFor={`file-${question.id}`}
+              className="inline-block mt-3 px-4 py-2 bg-[#E40046] text-white rounded-lg hover:bg-[#E40046]/80 transition-colors cursor-pointer"
+            >
+              Choisir des fichiers
+            </label>
           </div>
         )}
       </div>
@@ -243,49 +297,91 @@ export default function FormOverviewPage() {
               </div>
             )}
 
-            <div className="px-4 md:px-8 py-6">
-              <div className="mx-auto max-w-5xl space-y-6">
-                <div className="text-center border-b pb-6">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">{form.title || 'Nouveau formulaire'}</h2>
-                  {form.description && <p className="text-gray-600 mb-4">{form.description}</p>}
-                  <div className="flex justify-center gap-4 mt-4 flex-wrap">
-                    <Badge variant="outline" className="flex items-center gap-1">
-                      <FileText className="w-3 h-3" />
-                      {form.questions.length} question(s)
+            <div className="px-4 md:px-8 py-8">
+              <div className="mx-auto max-w-4xl">
+                {/* En-tête du formulaire */}
+                <div className="text-center border-b pb-8 mb-8">
+                  <h2 className="text-3xl font-bold text-gray-900 mb-3">{form.title || 'Nouveau formulaire'}</h2>
+                  {form.description && (
+                    <p className="text-lg text-gray-600 mb-6 max-w-2xl mx-auto">{form.description}</p>
+                  )}
+                  <div className="flex justify-center gap-4 mt-6 flex-wrap">
+                    <Badge variant="outline" className="flex items-center gap-2 px-3 py-1">
+                      <FileText className="w-4 h-4" />
+                      {form.questions.length} question{form.questions.length > 1 ? 's' : ''}
                     </Badge>
                     {form.maxResponses && (
-                      <Badge variant="outline" className="flex items-center gap-1">
-                        <Users className="w-3 h-3" />
+                      <Badge variant="outline" className="flex items-center gap-2 px-3 py-1">
+                        <Users className="w-4 h-4" />
                         Max: {form.maxResponses} réponses
                       </Badge>
                     )}
                     {form.expirationDate && (
-                      <Badge variant="outline" className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
+                      <Badge variant="outline" className="flex items-center gap-2 px-3 py-1">
+                        <Calendar className="w-4 h-4" />
                         Expire le: {form.expirationDate.toLocaleDateString('fr-FR')}
                       </Badge>
                     )}
+                    <Badge variant="outline" className="flex items-center gap-2 px-3 py-1">
+                      <Eye className="w-4 h-4" />
+                      Mode aperçu
+                    </Badge>
                   </div>
                 </div>
 
+                {/* Formulaire interactif */}
                 {form.questions.length > 0 ? (
-                  <div className="space-y-4">
+                  <div className="space-y-6">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                      <div className="flex items-center gap-2 text-blue-800">
+                        <Eye className="w-5 h-5" />
+                        <span className="font-medium">Mode aperçu interactif</span>
+                      </div>
+                      <p className="text-blue-700 text-sm mt-1">
+                        Vous pouvez tester tous les champs du formulaire. Les données ne seront pas sauvegardées.
+                      </p>
+                    </div>
+                    
                     {form.questions.map((q, i) => renderQuestion(q, i))}
+                    
+                    {/* Bouton de soumission simulé */}
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+                      <Button 
+                        size="lg" 
+                        className="bg-[#E40046] hover:bg-[#E40046]/80 text-white px-8 py-3"
+                        disabled
+                      >
+                        Soumettre le formulaire
+                      </Button>
+                      <p className="text-sm text-gray-500 mt-2">
+                        Bouton désactivé en mode aperçu
+                      </p>
+                    </div>
                   </div>
                 ) : (
-                  <div className="text-center py-12 text-gray-500">
-                    <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                    <p>Aucune question dans ce formulaire</p>
+                  <div className="text-center py-16 text-gray-500">
+                    <FileText className="w-16 h-16 mx-auto mb-6 text-gray-300" />
+                    <h3 className="text-xl font-medium text-gray-600 mb-2">Aucune question dans ce formulaire</h3>
+                    <p className="text-gray-500 mb-6">Commencez par ajouter des questions à votre formulaire</p>
+                    <Link href={`/forms/${form.id}/questions`}>
+                      <Button className="bg-[#E40046] hover:bg-[#E40046]/80 text-white">
+                        <Pencil className="w-4 h-4 mr-2" />
+                        Ajouter des questions
+                      </Button>
+                    </Link>
                   </div>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Action rapide: ouvrir la vue publique dans un nouvel onglet */}
-          <div className="text-center mt-4">
+          {/* Action rapide: ouvrir la vue publique */}
+          <div className="text-center mt-8">
             <Link href={shareUrl} target="_blank">
-              <Button variant="outline"><Eye className="w-4 h-4 mr-2" />Ouvrir la vue publique</Button>
+              <Button className="bg-[#E40046] hover:bg-[#E40046]/80 text-white px-6 py-3">
+                <Eye className="w-4 h-4 mr-2" />
+                Ouvrir la vue publique
+              </Button>
             </Link>
           </div>
         </main>

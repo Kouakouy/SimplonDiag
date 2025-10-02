@@ -132,15 +132,21 @@ export default function FormQuestionsPage() {
   const finishForm = async () => {
     if (!form) return
     
+    // Redirection immédiate
+    router.push(`/forms/${formId}`)
+    
+    // Sauvegarde en arrière-plan (sans attendre)
     const finalForm = {
       ...form,
       updatedAt: new Date()
     }
+    
     try {
       const isValidUrl = (u?: string) => {
         if (!u) return false
         try { new URL(u); return true } catch { return false }
       }
+      
       await apiRequest({ url: `/forms/${formId}`, method: 'PUT', body: {
         title: finalForm.title,
         description: finalForm.description,
@@ -151,10 +157,8 @@ export default function FormQuestionsPage() {
         banner_title: finalForm.bannerTitle,
         banner_image_url: isValidUrl(finalForm.bannerImageUrl) ? finalForm.bannerImageUrl : undefined,
       } })
-      router.push("/forms")
-    } catch (e) {
-      // eslint-disable-next-line no-alert
-      alert('Erreur de sauvegarde')
+    } catch (e: any) {
+      console.error('Erreur lors de la sauvegarde:', e)
     }
   }
 

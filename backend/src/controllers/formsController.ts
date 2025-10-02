@@ -9,7 +9,7 @@ import crypto from 'crypto'
 const questionSchema = z.object({
   id: z.string(),
   categoryId: z.string().optional(),
-  type: z.enum(['text','email','select','radio','checkbox','textarea','number','date','rating','file']),
+  type: z.enum(['text','email','select','radio','checkbox','textarea','number','date','time','rating','file']),
   title: z.string(),
   description: z.string().optional(),
   required: z.boolean(),

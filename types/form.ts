@@ -2,7 +2,7 @@
 export interface Question {
   id: string
   categoryId: string // ID de la catégorie de question
-  type: "text" | "email" | "select" | "radio" | "checkbox" | "textarea" | "number" | "date" | "rating" | "file"
+  type: "text" | "email" | "select" | "radio" | "checkbox" | "textarea" | "number" | "date" | "time" | "rating" | "file"
   title: string
   description?: string
   required: boolean

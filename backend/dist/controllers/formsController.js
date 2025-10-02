@@ -12,7 +12,7 @@ const crypto_1 = __importDefault(require("crypto"));
 const questionSchema = zod_1.z.object({
     id: zod_1.z.string(),
     categoryId: zod_1.z.string().optional(),
-    type: zod_1.z.enum(['text', 'email', 'select', 'radio', 'checkbox', 'textarea', 'number', 'date', 'rating', 'file']),
+    type: zod_1.z.enum(['text', 'email', 'select', 'radio', 'checkbox', 'textarea', 'number', 'date', 'time', 'rating', 'file']),
     title: zod_1.z.string(),
     description: zod_1.z.string().optional(),
     required: zod_1.z.boolean(),
