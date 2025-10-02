@@ -9,6 +9,8 @@ import {
   submitResponse,
   getStats,
   shareForm,
+  listAnalyses,
+  saveAnalysis,
 } from '../controllers'
 
 export const formsRouter = Router()
@@ -23,5 +25,7 @@ formsRouter.get('/:id/responses', listResponses)
 formsRouter.post('/:id/responses', submitResponse)
 formsRouter.get('/:id/stats', getStats)
 formsRouter.post('/:id/share', shareForm)
+formsRouter.get('/:id/analyses', listAnalyses)
+formsRouter.post('/:id/analyses', saveAnalysis)
 
 

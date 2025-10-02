@@ -233,4 +233,61 @@ export const shareForm = async (req: AuthRequest, res: Response) => {
   }
 }
 
+// Fonctions pour gérer les analyses IA
+export const listAnalyses = async (req: AuthRequest, res: Response) => {
+  const { id } = req.params
+  try {
+    const db = await getDb()
+    
+    // Vérifier que le formulaire existe
+    const form = await db.collection('forms').findOne({ _id: new ObjectId(id) })
+    if (!form) return res.status(404).json({ message: 'Form not found' })
+    
+    const analyses = await db.collection('form_analyses').find({ formId: id }).sort({ createdAt: -1 }).toArray()
+    return res.json(analyses)
+  } catch (error) {
+    console.error('Error listing analyses:', error)
+    return res.status(500).json({ message: 'Server error' })
+  }
+}
+
+export const saveAnalysis = async (req: AuthRequest, res: Response) => {
+  const { id } = req.params
+  
+  // Validation basique des données requises
+  if (!req.body || !req.body.summary) {
+    return res.status(400).json({ message: 'Analysis data is required' })
+  }
+  
+  try {
+    const db = await getDb()
+    
+    // Vérifier que le formulaire existe
+    const form = await db.collection('forms').findOne({ _id: new ObjectId(id) })
+    if (!form) return res.status(404).json({ message: 'Form not found' })
+    
+    // Préparer l'analyse à sauvegarder avec validation
+    const analysisData = {
+      ...req.body,
+      formId: id,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+    
+    // Insérer l'analyse dans la base de données
+    const result = await db.collection('form_analyses').insertOne(analysisData)
+    
+    // Ajouter l'ID généré à l'analyse
+    const savedAnalysis = {
+      ...analysisData,
+      _id: result.insertedId
+    }
+    
+    return res.status(201).json(savedAnalysis)
+  } catch (error) {
+    console.error('Error saving analysis:', error)
+    return res.status(500).json({ message: 'Server error' })
+  }
+}
+
 
