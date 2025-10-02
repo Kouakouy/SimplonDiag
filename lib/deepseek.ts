@@ -13,6 +13,7 @@ export interface DeepSeekAnalysisRequest {
     answers: Record<string, string | string[]>
     submittedAt: string
   }>
+  customPrompt?: string
 }
 
 export interface DeepSeekAnalysisResponse {
@@ -106,7 +107,7 @@ export class DeepSeekService {
   }
 
   private buildAnalysisPrompt(request: DeepSeekAnalysisRequest): string {
-    const { formTitle, formDescription, questions, responses } = request
+    const { formTitle, formDescription, questions, responses, customPrompt } = request
 
     // Analyser les réponses par question
     const questionAnalysis = questions.map(q => {
@@ -137,6 +138,11 @@ Tu es un expert en analyse de données de formulaires. Tu dois analyser les rép
 
 FORMULAIRE: "${formTitle}"
 DESCRIPTION: "${formDescription || 'Aucune description'}"
+
+${customPrompt ? `ANALYSE PERSONNALISÉE DEMANDÉE:
+"${customPrompt}"
+
+Concentre-toi spécifiquement sur cette demande dans ton analyse.` : ''}
 
 QUESTIONS ET RÉPONSES:
 ${JSON.stringify(questionAnalysis, null, 2)}

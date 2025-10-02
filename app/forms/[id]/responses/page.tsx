@@ -62,6 +62,10 @@ export default function ResponsesPage() {
   const analyzeMenuRef = useRef<HTMLDivElement>(null)
   const [showColumnSettings, setShowColumnSettings] = useState(false)
   const [visibleColumns, setVisibleColumns] = useState<string[]>([])
+  const [showPromptModal, setShowPromptModal] = useState(false)
+  const [customPrompt, setCustomPrompt] = useState("")
+  const [savedAnalyses, setSavedAnalyses] = useState<FormAnalysis[]>([])
+  const [showSavedAnalysesModal, setShowSavedAnalysesModal] = useState(false)
 
   // Fermer les menus quand on clique ailleurs
   useEffect(() => {
@@ -117,6 +121,14 @@ export default function ResponsesPage() {
           submittedAt: r.submitted_at ? new Date(r.submitted_at) : new Date(),
         }))
         setResponses(adaptedResponses)
+
+        // Charger les analyses sauvegardées
+        try {
+          const analyses = await apiRequest<any[]>({ url: `/forms/${formId}/analyses` })
+          setSavedAnalyses(analyses || [])
+        } catch {
+          // ignore si non disponible
+        }
 
         // Charger les stats backend si disponibles
         try {
@@ -603,6 +615,11 @@ export default function ResponsesPage() {
     printWindow.print()
   }
 
+  const openPromptModal = () => {
+    setShowPromptModal(true)
+    setShowAnalyzeMenu(false)
+  }
+
   const generateAIAnalysis = async () => {
     if (!form) {
       alert("Formulaire non trouvé")
@@ -615,7 +632,7 @@ export default function ResponsesPage() {
     }
     
     setIsAnalyzing(true)
-    setShowAnalyzeMenu(false)
+    setShowPromptModal(false)
     try {
       console.log("Début de l'analyse IA...", { formId: form.id, responsesCount: responses.length })
       
@@ -624,7 +641,8 @@ export default function ResponsesPage() {
         formId: form.id,
         includeCharts: true,
         includeRecommendations: true,
-        analysisDepth: 'detailed'
+        analysisDepth: 'detailed',
+        customPrompt: customPrompt || undefined
       })
 
       console.log("Résultat de l'analyse:", result)
@@ -645,12 +663,65 @@ export default function ResponsesPage() {
     }
   }
 
+  const saveAnalysis = async () => {
+    if (!aiAnalysis || !form) {
+      alert("Aucune analyse à sauvegarder")
+      return
+    }
+
+    try {
+      const analysisToSave = {
+        ...aiAnalysis,
+        formId: form.id,
+        formTitle: form.title,
+        createdAt: new Date().toISOString(),
+        customPrompt: customPrompt || null
+      }
+
+      const response = await apiRequest({
+        url: `/forms/${form.id}/analyses`,
+        method: 'POST',
+        body: analysisToSave
+      })
+
+      // Recharger les analyses sauvegardées
+      const analyses = await apiRequest<any[]>({ url: `/forms/${form.id}/analyses` })
+      setSavedAnalyses(analyses || [])
+      
+      alert("Analyse sauvegardée avec succès !")
+    } catch (error) {
+      console.error("Erreur lors de la sauvegarde:", error)
+      
+      // Gestion d'erreurs plus spécifique
+      let errorMessage = "Erreur inconnue"
+      if (error instanceof Error) {
+        if (error.message.includes("404")) {
+          errorMessage = "Formulaire non trouvé"
+        } else if (error.message.includes("400")) {
+          errorMessage = "Données d'analyse invalides"
+        } else if (error.message.includes("500")) {
+          errorMessage = "Erreur serveur - veuillez réessayer"
+        } else {
+          errorMessage = error.message
+        }
+      }
+      
+      alert(`Erreur lors de la sauvegarde: ${errorMessage}`)
+    }
+  }
+
+  const loadSavedAnalysis = (analysis: FormAnalysis) => {
+    setAiAnalysis(analysis)
+    setShowSavedAnalysesModal(false)
+    setActiveTab("analyze")
+  }
+
   const viewAnalysis = () => {
-    if (aiAnalysis) {
-      setShowAnalysisModal(true)
+    if (savedAnalyses.length > 0) {
+      setShowSavedAnalysesModal(true)
       setShowAnalyzeMenu(false)
     } else {
-      alert("Aucune analyse disponible. Veuillez d'abord générer une analyse.")
+      alert("Aucune analyse sauvegardée disponible. Veuillez d'abord générer et sauvegarder une analyse.")
     }
   }
 
@@ -1074,22 +1145,12 @@ export default function ResponsesPage() {
                     <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-white border border-gray-200 rounded-md shadow-lg z-10">
                       <div className="py-1">
                         <button
-                          onClick={generateAIAnalysis}
+                          onClick={openPromptModal}
                           className="flex items-center w-full px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-700 hover:bg-gray-100"
                         >
-                          {isAnalyzing ? (
-                            <>
-                              <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-gray-600 mr-2"></div>
-                              <span className="hidden sm:inline">Génération en cours...</span>
-                              <span className="sm:hidden">Génération...</span>
-                            </>
-                          ) : (
-                            <>
-                              <Brain className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                              <span className="hidden sm:inline">Générer l'analyse</span>
-                              <span className="sm:hidden">Générer</span>
-                            </>
-                          )}
+                          <Brain className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                          <span className="hidden sm:inline">Générer l'analyse</span>
+                          <span className="sm:hidden">Générer</span>
                         </button>
                         <button
                           onClick={viewAnalysis}
@@ -1516,19 +1577,42 @@ export default function ResponsesPage() {
                   <CardContent>
                     {isAnalyzing ? (
                       <div className="text-center py-12">
-                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#E40046] mx-auto mb-4"></div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Analyse en cours...</h3>
-                        <p className="text-gray-600 mb-4">
-                          DeepSeek analyse vos réponses. Cela peut prendre quelques secondes.
+                        <div className="relative mb-6">
+                          <div className="animate-spin rounded-full h-20 w-20 border-4 border-gray-200 border-t-[#E40046] mx-auto"></div>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <Brain className="w-8 h-8 text-[#E40046]" />
+                          </div>
+                        </div>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-3">🤖 Analyse en cours...</h3>
+                        <p className="text-lg text-gray-600 mb-6">
+                          DeepSeek analyse vos réponses avec intelligence artificielle
                         </p>
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
-                          <p className="text-sm text-blue-800">
-                            <strong>Étapes :</strong><br/>
-                            1. Analyse des données...<br/>
-                            2. Identification des tendances...<br/>
-                            3. Génération des insights...<br/>
-                            4. Création des graphiques...
-                          </p>
+                        <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-6 max-w-lg mx-auto">
+                          <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                            Étapes de l'analyse
+                          </h4>
+                          <div className="space-y-2 text-sm text-blue-800">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              <span>📊 Collecte et préparation des données</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+                              <span>🔍 Analyse des tendances et patterns</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                              <span>💡 Génération des insights et recommandations</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                              <span>📈 Création des graphiques et visualisations</span>
+                            </div>
+                          </div>
+                          <div className="mt-4 text-xs text-blue-600">
+                            ⏱️ Temps estimé : 10-30 secondes selon le nombre de réponses
+                          </div>
                         </div>
                       </div>
                     ) : !aiAnalysis ? (
@@ -1560,16 +1644,20 @@ export default function ResponsesPage() {
                               <X className="w-4 h-4 mr-2" />
                               Nouvelle analyse
                             </Button>
+                            <Button variant="default" onClick={saveAnalysis} className="bg-green-600 hover:bg-green-700">
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Enregistrer l'analyse
+                            </Button>
                             <Button variant="outline" onClick={() => {
                               const dataStr = JSON.stringify(aiAnalysis, null, 2)
                               const blob = new Blob([dataStr], { type: 'application/json' })
                               const link = document.createElement('a')
                               link.href = URL.createObjectURL(blob)
-                              link.download = 'analyse_ia.json'
+                              link.download = `analyse_${form?.title.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.json`
                               link.click()
                             }}>
                               <Download className="w-4 h-4 mr-2" />
-                              Exporter
+                              Exporter l'analyse
                             </Button>
                           </div>
                         </div>
@@ -1752,6 +1840,169 @@ export default function ResponsesPage() {
                         ))}
                       </div>
                     </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Modal pour saisir le prompt personnalisé */}
+            {showPromptModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg max-w-2xl w-full mx-4">
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <Brain className="w-5 h-5" />
+                        Générer une analyse personnalisée
+                      </h3>
+                      <Button variant="outline" onClick={() => setShowPromptModal(false)}>
+                        <X className="w-4 h-4 mr-2" />
+                        Fermer
+                      </Button>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="customPrompt" className="text-sm font-medium text-gray-700">
+                          Prompt personnalisé (optionnel)
+                        </Label>
+                        <textarea
+                          id="customPrompt"
+                          className="w-full mt-2 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#E40046] focus:border-transparent"
+                          rows={6}
+                          placeholder="Décrivez ce que vous souhaitez analyser spécifiquement dans les réponses. Par exemple: 'Analysez les tendances de satisfaction client' ou 'Identifiez les points d'amélioration les plus fréquents'..."
+                          value={customPrompt}
+                          onChange={(e) => setCustomPrompt(e.target.value)}
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Si vous ne spécifiez pas de prompt, l'IA effectuera une analyse générale des réponses.
+                        </p>
+                      </div>
+                      
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h4 className="font-semibold text-blue-900 mb-2">Informations sur l'analyse</h4>
+                        <div className="text-sm text-blue-800 space-y-1">
+                          <p>• Formulaire: <strong>{form?.title}</strong></p>
+                          <p>• Nombre de réponses: <strong>{responses.length}</strong></p>
+                          <p>• Type d'analyse: <strong>Détaillée avec graphiques et recommandations</strong></p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-end gap-3 mt-6">
+                      <Button variant="outline" onClick={() => setShowPromptModal(false)}>
+                        Annuler
+                      </Button>
+                      <Button 
+                        onClick={generateAIAnalysis}
+                        disabled={isAnalyzing}
+                        className="bg-[#E40046] hover:bg-[#C7003A]"
+                      >
+                        {isAnalyzing ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                            Génération en cours...
+                          </>
+                        ) : (
+                          <>
+                            <Brain className="w-4 h-4 mr-2" />
+                            Générer l'analyse
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Modal pour voir les analyses sauvegardées */}
+            {showSavedAnalysesModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <Brain className="w-5 h-5" />
+                        Analyses sauvegardées - {form?.title}
+                      </h3>
+                      <Button variant="outline" onClick={() => setShowSavedAnalysesModal(false)}>
+                        <X className="w-4 h-4 mr-2" />
+                        Fermer
+                      </Button>
+                    </div>
+                    
+                    {savedAnalyses.length === 0 ? (
+                      <div className="text-center py-12">
+                        <Brain className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                        <h4 className="text-lg font-medium text-gray-600 mb-2">Aucune analyse sauvegardée</h4>
+                        <p className="text-gray-500">
+                          Générez et sauvegardez une analyse pour la retrouver ici.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {savedAnalyses.map((analysis, index) => (
+                          <Card key={index} className="hover:shadow-md transition-shadow">
+                            <CardContent className="p-4">
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <h4 className="font-semibold text-gray-900">
+                                      Analyse #{index + 1}
+                                    </h4>
+                                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                                      Sauvegardée
+                                    </Badge>
+                                  </div>
+                                  <p className="text-sm text-gray-600 mb-2">
+                                    {analysis.summary.length > 150 
+                                      ? `${analysis.summary.substring(0, 150)}...` 
+                                      : analysis.summary
+                                    }
+                                  </p>
+                                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                                    <span>📊 {analysis.metadata.totalResponses} réponses</span>
+                                    <span>🎯 {Math.round(analysis.metadata.confidence * 100)}% confiance</span>
+                                    <span>📅 {new Date(analysis.createdAt || new Date()).toLocaleDateString("fr-FR")}</span>
+                                    {analysis.customPrompt && (
+                                      <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                        Prompt personnalisé
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => loadSavedAnalysis(analysis)}
+                                  >
+                                    <Eye className="w-4 h-4 mr-1" />
+                                    Charger
+                                  </Button>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => {
+                                      const dataStr = JSON.stringify(analysis, null, 2)
+                                      const blob = new Blob([dataStr], { type: 'application/json' })
+                                      const link = document.createElement('a')
+                                      link.href = URL.createObjectURL(blob)
+                                      link.download = `analyse_sauvegardee_${form?.title.replace(/[^a-zA-Z0-9]/g, '_')}_${index + 1}.json`
+                                      link.click()
+                                    }}
+                                  >
+                                    <Download className="w-4 h-4 mr-1" />
+                                    Exporter
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

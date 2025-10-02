@@ -18,6 +18,7 @@ export default function FormsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [formToDelete, setFormToDelete] = useState<string | null>(null)
   const [copiedLink, setCopiedLink] = useState<string | null>(null)
+  const [formStats, setFormStats] = useState<Record<string, { submissions: number; views: number }>>({})
 
   useEffect(() => {
     const load = async () => {
@@ -25,21 +26,46 @@ export default function FormsPage() {
         setLoading(true)
         setError(null)
         
-        // Charger les données en parallèle si possible
+        // Charger les formulaires
         const data = await apiRequest<any[]>({ url: "/forms" })
-        
-        // Optimiser le rendu en mettant à jour l'état immédiatement
         setForms(data || [])
+        
+        // Charger les statistiques pour chaque formulaire
+        const statsPromises = (data || []).map(async (form) => {
+          try {
+            const stats = await apiRequest<any>({ url: `/forms/${form._id || form.id}/stats` })
+            return {
+              formId: form._id || form.id,
+              stats: {
+                submissions: stats?.submissions || 0,
+                views: stats?.views || 0
+              }
+            }
+          } catch {
+            return {
+              formId: form._id || form.id,
+              stats: { submissions: 0, views: 0 }
+            }
+          }
+        })
+        
+        const statsResults = await Promise.all(statsPromises)
+        const statsMap = statsResults.reduce((acc, { formId, stats }) => {
+          acc[formId] = stats
+          return acc
+        }, {} as Record<string, { submissions: number; views: number }>)
+        
+        setFormStats(statsMap)
       } catch (e: any) {
         console.error('Erreur lors du chargement des formulaires:', e)
         setError(e.message || "Erreur de chargement")
-        setForms([]) // S'assurer qu'on a un tableau vide en cas d'erreur
+        setForms([])
+        setFormStats({})
       } finally {
         setLoading(false)
       }
     }
     
-    // Démarrer le chargement immédiatement
     load()
   }, [])
 
@@ -126,60 +152,19 @@ export default function FormsPage() {
 
           {/* États de chargement/erreur */}
           {loading ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Skeleton loaders pour simuler le contenu */}
-              {Array.from({ length: 4 }).map((_, index) => (
-                <Card key={index} className="animate-pulse">
-                  {/* Bannière skeleton */}
-                  <div className="h-32 bg-gray-200"></div>
-                  
-                  <CardContent className="p-6">
-                    {/* En-tête skeleton */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3 flex-1">
-                        <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
-                        <div className="flex-1">
-                          <div className="h-5 bg-gray-200 rounded w-3/4 mb-2"></div>
-                          <div className="h-3 bg-gray-200 rounded w-full mb-1"></div>
-                          <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {Array.from({ length: 3 }).map((_, i) => (
-                          <div key={i} className="w-8 h-8 bg-gray-200 rounded"></div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Informations skeleton */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="h-3 bg-gray-200 rounded w-1/3"></div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-gray-200 rounded-full"></div>
-                        <div className="h-3 bg-gray-200 rounded w-12"></div>
-                      </div>
-                    </div>
-
-                    {/* Lien de partage skeleton */}
-                    <div className="bg-gray-100 rounded-lg p-3 mb-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-3 h-3 bg-gray-200 rounded"></div>
-                        <div className="h-3 bg-gray-200 rounded w-20"></div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-6 bg-gray-200 rounded"></div>
-                        <div className="w-6 h-6 bg-gray-200 rounded"></div>
-                      </div>
-                    </div>
-
-                    {/* Actions skeleton */}
-                    <div className="flex gap-2">
-                      <div className="flex-1 h-8 bg-gray-200 rounded"></div>
-                      <div className="flex-1 h-8 bg-gray-200 rounded"></div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E40046] mx-auto mb-4"></div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Chargement des formulaires...</h3>
+                <p className="text-gray-600">Récupération de vos formulaires et statistiques</p>
+                <div className="mt-4 flex justify-center">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-[#E40046] rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-[#E40046] rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-[#E40046] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  </div>
+                </div>
+              </div>
             </div>
           ) : error ? (
             <Card>
@@ -292,6 +277,30 @@ export default function FormsPage() {
                         <div className="flex items-center gap-2">
                           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                           <span className="text-xs text-green-600 font-medium">Actif</span>
+                        </div>
+                      </div>
+
+                      {/* Statistiques */}
+                      <div className="flex items-center justify-between mb-4 p-3 bg-blue-50 rounded-lg">
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-1">
+                            <BarChart3 className="w-4 h-4 text-blue-600" />
+                            <span className="text-sm font-medium text-blue-900">
+                              {formStats[form._id || form.id]?.submissions || 0} soumission{(formStats[form._id || form.id]?.submissions || 0) > 1 ? 's' : ''}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Eye className="w-4 h-4 text-gray-600" />
+                            <span className="text-sm text-gray-700">
+                              {formStats[form._id || form.id]?.views || 0} vue{(formStats[form._id || form.id]?.views || 0) > 1 ? 's' : ''}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {formStats[form._id || form.id]?.submissions > 0 && formStats[form._id || form.id]?.views > 0 
+                            ? `${Math.round((formStats[form._id || form.id]?.submissions / formStats[form._id || form.id]?.views) * 100)}% taux de conversion`
+                            : 'Aucune donnée'
+                          }
                         </div>
                       </div>
 

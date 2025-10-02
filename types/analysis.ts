@@ -53,6 +53,9 @@ export interface FormAnalysis {
     confidence: number
   }
   rawData?: any // Données brutes de DeepSeek
+  createdAt?: string // Date de création pour les analyses sauvegardées
+  customPrompt?: string // Prompt personnalisé utilisé
+  formTitle?: string // Titre du formulaire pour les analyses sauvegardées
 }
 
 export interface AnalysisRequest {
@@ -60,6 +63,7 @@ export interface AnalysisRequest {
   includeCharts?: boolean
   includeRecommendations?: boolean
   analysisDepth?: 'basic' | 'detailed' | 'comprehensive'
+  customPrompt?: string // Prompt personnalisé pour l'analyse
 }
 
 export interface AnalysisResponse {

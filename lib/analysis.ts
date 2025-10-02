@@ -33,7 +33,8 @@ export class AnalysisService {
           id: r.id,
           answers: r.answers,
           submittedAt: r.submittedAt.toISOString()
-        }))
+        })),
+        customPrompt: options.customPrompt
       }
 
       // Appeler l'API DeepSeek
