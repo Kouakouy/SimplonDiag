@@ -5,6 +5,7 @@ import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import type { Form, Question } from "@/types/form"
 import { Sidebar } from "@/components/layout/sidebar"
+import { AuthGuard } from "@/components/auth/AuthGuard"
 import dynamic from "next/dynamic"
 const FormHeaderSection = dynamic(() => import("@/components/forms/form-header-section").then(m => m.FormHeaderSection), { ssr: false })
 import { Button } from "@/components/ui/button"
@@ -13,7 +14,7 @@ import { Plus, Save, Eye, ArrowLeft, Share } from "lucide-react"
 import { apiRequest } from "@/lib/api"
 import Link from "next/link"
 
-export default function EditFormPage() {
+function EditFormPageContent() {
   const router = useRouter()
   const params = useParams()
   const formId = params.id as string
@@ -255,5 +256,13 @@ export default function EditFormPage() {
         </main>
       </div>
     </div>
+  )
+}
+
+export default function EditFormPage() {
+  return (
+    <AuthGuard requiredRole="creator">
+      <EditFormPageContent />
+    </AuthGuard>
   )
 }

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { apiRequest } from "@/lib/api"
 import type { Form, Question } from "@/types/form"
 import { Sidebar } from "@/components/layout/sidebar"
+import { AuthGuard } from "@/components/auth/AuthGuard"
 import dynamic from "next/dynamic"
 const FormHeaderSection = dynamic(() => import("@/components/forms/form-header-section").then(m => m.FormHeaderSection), { ssr: false })
 import { Button } from "@/components/ui/button"
@@ -13,7 +14,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Save, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 
-export default function CreateFormPage() {
+function CreateFormPageContent() {
   const router = useRouter()
   const [form, setForm] = useState<Partial<Form>>({
     title: "",
@@ -167,5 +168,13 @@ export default function CreateFormPage() {
       </div>
 
     </div>
+  )
+}
+
+export default function CreateFormPage() {
+  return (
+    <AuthGuard requiredRole="creator">
+      <CreateFormPageContent />
+    </AuthGuard>
   )
 }

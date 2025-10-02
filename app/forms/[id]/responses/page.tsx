@@ -7,6 +7,7 @@ import { useState, useEffect, useRef } from "react"
 import { useParams } from "next/navigation"
 import type { Form, FormResponse } from "@/types/form"
 import { Sidebar } from "@/components/layout/sidebar"
+import { AuthGuard } from "@/components/auth/AuthGuard"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -44,7 +45,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { FormStatsCharts } from "@/components/forms/form-stats-charts"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-export default function ResponsesPage() {
+function ResponsesPageContent() {
   const params = useParams()
   const formId = params.id as string
   const [form, setForm] = useState<Form | null>(null)
@@ -2415,5 +2416,13 @@ export default function ResponsesPage() {
         </main>
       </div>
     </div>
+  )
+}
+
+export default function ResponsesPage() {
+  return (
+    <AuthGuard requiredRole="observer">
+      <ResponsesPageContent />
+    </AuthGuard>
   )
 }

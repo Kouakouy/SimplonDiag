@@ -26,27 +26,61 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const checkAuth = async () => {
       try {
         const token = localStorage.getItem('auth_token')
+        const savedUser = localStorage.getItem('user_data')
+        
         if (token) {
-          // Appel API pour récupérer les informations utilisateur
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/auth/me`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          })
-          
-          if (response.ok) {
-            const userData = await response.json()
-            setUser(userData)
-          } else {
-            // Si l'endpoint n'existe pas, essayer de deviner le rôle depuis le token ou utiliser un fallback
-            console.warn('Endpoint /auth/me non disponible au chargement')
-            localStorage.removeItem('auth_token')
+          // D'abord, essayer de récupérer les données utilisateur depuis le localStorage
+          if (savedUser) {
+            try {
+              const userData = JSON.parse(savedUser)
+              setUser(userData)
+              console.log('✅ Utilisateur restauré depuis localStorage:', userData)
+            } catch (parseError) {
+              console.warn('Erreur lors du parsing des données utilisateur:', parseError)
+            }
           }
+          
+          // Ensuite, essayer de vérifier avec l'API
+          try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/auth/me`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+            })
+            
+            if (response.ok) {
+              const userData = await response.json()
+              setUser(userData)
+              // Sauvegarder les données utilisateur dans localStorage
+              localStorage.setItem('user_data', JSON.stringify(userData))
+              console.log('✅ Utilisateur mis à jour depuis l\'API:', userData)
+            } else {
+              console.warn('⚠️ Endpoint /auth/me non disponible, utilisation des données sauvegardées')
+              // Si pas de données sauvegardées et pas d'API, nettoyer le token
+              if (!savedUser) {
+                localStorage.removeItem('auth_token')
+                setUser(null)
+              }
+            }
+          } catch (apiError) {
+            console.warn('⚠️ Erreur API /auth/me, utilisation des données sauvegardées:', apiError)
+            // Si pas de données sauvegardées et erreur API, nettoyer le token
+            if (!savedUser) {
+              localStorage.removeItem('auth_token')
+              setUser(null)
+            }
+          }
+        } else {
+          // Pas de token, nettoyer les données sauvegardées
+          localStorage.removeItem('user_data')
+          setUser(null)
         }
       } catch (error) {
         console.error('Erreur lors de la vérification de l\'authentification:', error)
         localStorage.removeItem('auth_token')
+        localStorage.removeItem('user_data')
+        setUser(null)
       } finally {
         setLoading(false)
       }
@@ -99,6 +133,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
           const userData = await userResponse.json()
           console.log('✅ Informations utilisateur récupérées:', userData)
           setUser(userData)
+          // Sauvegarder les données utilisateur dans localStorage
+          localStorage.setItem('user_data', JSON.stringify(userData))
         } else {
           const errorData = await userResponse.json()
           console.warn('⚠️ Erreur /auth/me:', errorData)
@@ -114,6 +150,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
             isActive: true,
           }
           setUser(mockUser)
+          // Sauvegarder les données mock dans localStorage
+          localStorage.setItem('user_data', JSON.stringify(mockUser))
         }
       } catch (userError) {
         console.warn('Erreur lors de la récupération des informations utilisateur, utilisation des données mock:', userError)
@@ -128,6 +166,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
           isActive: true,
         }
         setUser(mockUser)
+        // Sauvegarder les données mock dans localStorage
+        localStorage.setItem('user_data', JSON.stringify(mockUser))
       }
     } catch (error) {
       console.error('Erreur de connexion:', error)
@@ -139,11 +179,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const logout = () => {
     localStorage.removeItem('auth_token')
+    localStorage.removeItem('user_data')
     setUser(null)
   }
 
   const updateUser = (updatedUser: User) => {
     setUser(updatedUser)
+    // Synchroniser avec le localStorage
+    localStorage.setItem('user_data', JSON.stringify(updatedUser))
   }
 
   return (

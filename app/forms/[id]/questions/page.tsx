@@ -5,6 +5,7 @@ import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import type { Form, Question } from "@/types/form"
 import { Sidebar } from "@/components/layout/sidebar"
+import { AuthGuard } from "@/components/auth/AuthGuard"
 import { GoogleQuestionEditor } from "@/components/forms/google-question-editor"
 import { apiRequest } from "@/lib/api"
 import { FormPreview } from "@/components/forms/form-preview"
@@ -14,7 +15,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Plus, Save, Eye, ArrowLeft, Settings, Share2 } from "lucide-react"
 import Link from "next/link"
 
-export default function FormQuestionsPage() {
+function FormQuestionsPageContent() {
   const router = useRouter()
   const params = useParams()
   const formId = params.id as string
@@ -379,5 +380,13 @@ export default function FormQuestionsPage() {
       )}
 
     </div>
+  )
+}
+
+export default function FormQuestionsPage() {
+  return (
+    <AuthGuard requiredRole="creator">
+      <FormQuestionsPageContent />
+    </AuthGuard>
   )
 }
