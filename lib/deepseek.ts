@@ -1,4 +1,4 @@
-// Service pour l'API DeepSeek
+// Service pour l'API DeepSeek - Version optimisée pour l'analyse ciblée
 export interface DeepSeekAnalysisRequest {
   formTitle: string
   formDescription?: string
@@ -133,50 +133,52 @@ export class DeepSeekService {
       }
     })
 
-    return `
-Tu es un expert en analyse de données de formulaires. Tu dois analyser les réponses d'un formulaire et fournir des insights, tendances et recommandations basés sur les données collectées. Réponds UNIQUEMENT en JSON valide selon le format spécifié.
+    const formPurpose = this.inferFormPurpose(formTitle, formDescription)
+    
+    let prompt = `Tu es un expert en analyse de données de formulaires. Réponds UNIQUEMENT en JSON valide.
 
-FORMULAIRE: "${formTitle}"
-DESCRIPTION: "${formDescription || 'Aucune description'}"
+CONTEXTE DU FORMULAIRE:
+📋 TITRE: "${formTitle}"
+📝 DESCRIPTION: "${formDescription || 'Aucune description fournie'}"
+🎯 OBJECTIF: ${formPurpose}
 
-${customPrompt ? `ANALYSE PERSONNALISÉE DEMANDÉE:
+`
+
+    if (customPrompt) {
+      prompt += `ANALYSE PERSONNALISÉE DEMANDÉE:
 "${customPrompt}"
 
-Concentre-toi spécifiquement sur cette demande dans ton analyse.` : ''}
+Concentre-toi UNIQUEMENT sur cette demande. Analyse les données pour identifier les patterns qui répondent directement à cette question.
 
+`
+    }
+
+    prompt += `DONNÉES À ANALYSER:
 QUESTIONS ET RÉPONSES:
 ${JSON.stringify(questionAnalysis, null, 2)}
 
 RÉPONSES COMPLÈTES (${responses.length} réponses):
 ${JSON.stringify(responses.slice(0, 10), null, 2)}${responses.length > 10 ? '\n... (autres réponses similaires)' : ''}
 
-ANALYSE REQUISE:
-En tant qu'expert, analyse ces réponses comme si tu corrigeais un examen. Identifie:
-- Les bonnes réponses et les tendances positives
-- Les problèmes récurrents et les erreurs communes
-- Les incohérences dans les réponses
-- Les opportunités d'amélioration
-- Les recommandations concrètes pour améliorer le formulaire
-
 Fournis une analyse en JSON avec cette structure exacte :
 {
-  "summary": "Résumé exécutif de l'analyse en 2-3 phrases, comme un correcteur qui donne son verdict global",
+  "summary": "Résumé de l'analyse ${customPrompt ? 'ciblée répondant à la demande personnalisée' : 'des données du formulaire'}",
   "insights": [
-    "Insight 1: Correction positive - ce qui fonctionne bien dans les réponses",
-    "Insight 2: Problème identifié - erreur ou incohérence observée",
-    "Insight 3: Tendance remarquable - pattern intéressant dans les données"
+    "Insight 1: Analyse basée sur les données",
+    "Insight 2: Pattern ou tendance identifiée",
+    "Insight 3: Données significatives observées"
   ],
   "trends": [
     {
       "questionId": "id_question",
       "questionTitle": "Titre de la question",
-      "trend": "Description de la tendance observée avec évaluation (ex: '75% des répondants choisissent l'option A, ce qui indique...')",
+      "trend": "Description de la tendance observée avec évaluation quantitative",
       "confidence": 0.85
     }
   ],
   "recommendations": [
-    "Recommandation 1: Action concrète pour améliorer le formulaire basée sur l'analyse",
-    "Recommandation 2: Suggestion d'amélioration des questions ou du format"
+    "Recommandation 1: Action concrète basée sur l'analyse",
+    "Recommandation 2: Suggestion d'amélioration"
   ],
   "charts": [
     {
@@ -194,8 +196,49 @@ Fournis une analyse en JSON avec cette structure exacte :
   ]
 }
 
-IMPORTANT: Réponds UNIQUEMENT avec le JSON valide, sans texte supplémentaire. Sois précis et actionnable dans tes analyses.
-`
+IMPORTANT: Réponds UNIQUEMENT avec le JSON valide, sans texte supplémentaire.`
+
+    return prompt
+  }
+
+  // Méthode pour inférer l'objectif du formulaire
+  private inferFormPurpose(title: string, description?: string): string {
+    const text = `${title} ${description || ''}`.toLowerCase()
+    
+    // Détection basée sur les mots-clés
+    if (text.includes('satisfaction') || text.includes('client') || text.includes('service')) {
+      return 'mesurer la satisfaction client et améliorer l\'expérience utilisateur'
+    }
+    if (text.includes('feedback') || text.includes('avis') || text.includes('commentaire')) {
+      return 'collecter des retours et améliorer les produits/services'
+    }
+    if (text.includes('inscription') || text.includes('candidature') || text.includes('recrutement')) {
+      return 'recruter et évaluer des candidats'
+    }
+    if (text.includes('enquête') || text.includes('sondage') || text.includes('opinion')) {
+      return 'collecter des opinions et mesurer les tendances'
+    }
+    if (text.includes('évaluation') || text.includes('formation') || text.includes('apprentissage')) {
+      return 'évaluer les connaissances et compétences'
+    }
+    if (text.includes('événement') || text.includes('inscription') || text.includes('réservation')) {
+      return 'gérer les inscriptions et réservations d\'événements'
+    }
+    if (text.includes('contact') || text.includes('demande') || text.includes('information')) {
+      return 'collecter des demandes d\'information et contacts'
+    }
+    if (text.includes('commande') || text.includes('achat') || text.includes('produit')) {
+      return 'gérer les commandes et ventes'
+    }
+    if (text.includes('support') || text.includes('aide') || text.includes('problème')) {
+      return 'fournir un support technique et résoudre les problèmes'
+    }
+    if (text.includes('adhésion') || text.includes('membre') || text.includes('association')) {
+      return 'gérer les adhésions et membres'
+    }
+    
+    // Par défaut
+    return 'collecter des informations et données spécifiques'
   }
 
   // Méthode pour tester la connexion
