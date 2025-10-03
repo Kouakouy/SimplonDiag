@@ -18,6 +18,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { apiRequest } from "@/lib/api"
 import { FileText, CheckCircle, AlertCircle, Clock, Users } from "lucide-react"
 import { Inter } from "next/font/google"
+import { hourglass } from 'ldrs'
+
+// Enregistrer le composant hourglass
+hourglass.register()
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -154,7 +158,14 @@ export default function PublicFormPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E40046] mx-auto mb-4"></div>
+          <div className="mx-auto mb-4 flex justify-center">
+            <l-hourglass
+              size="60"
+              bg-opacity="0.1"
+              speed="1.75"
+              color="#E40046"
+            ></l-hourglass>
+          </div>
           <p className="text-gray-500">Chargement du formulaire...</p>
         </div>
       </div>
@@ -428,7 +439,7 @@ export default function PublicFormPage() {
                     >
                       {submitting ? (
                         <>
-                          <div className="animate-spin rounded-full h-3 w-3 lg:h-4 lg:w-4 border-b-2 border-white mr-1 lg:mr-2"></div>
+                          <l-hourglass size="12" bg-opacity="0.1" speed="1.75" color="white" className="mr-1 lg:mr-2"></l-hourglass>
                           <span className="hidden sm:inline">Envoi en cours...</span>
                           <span className="sm:hidden">Envoi...</span>
                         </>

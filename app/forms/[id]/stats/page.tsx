@@ -13,6 +13,10 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
+import { hourglass } from 'ldrs'
+
+// Enregistrer le composant hourglass
+hourglass.register()
 
 export default function FormStatsPage() {
   const params = useParams()
@@ -241,7 +245,14 @@ export default function FormStatsPage() {
         <Sidebar />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E40046] mx-auto mb-4"></div>
+            <div className="mx-auto mb-4 flex justify-center">
+              <l-hourglass
+                size="60"
+                bg-opacity="0.1"
+                speed="1.75"
+                color="#E40046"
+              ></l-hourglass>
+            </div>
             <p className="text-gray-600">Chargement des statistiques...</p>
           </div>
         </div>

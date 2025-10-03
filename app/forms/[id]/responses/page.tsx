@@ -44,11 +44,20 @@ import Link from "next/link"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { FormStatsCharts } from "@/components/forms/form-stats-charts"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { hourglass } from 'ldrs'
+import { useAuth } from "@/lib/contexts/AuthContext"
+
+// Enregistrer le composant hourglass
+hourglass.register()
 
 function ResponsesPageContent() {
+  const { user } = useAuth()
   const params = useParams()
   const formId = params.id as string
   const [form, setForm] = useState<Form | null>(null)
+  
+  // Vérifier si l'utilisateur est un observateur
+  const isObserver = user?.role === 'observer'
   const [responses, setResponses] = useState<FormResponse[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
@@ -1174,7 +1183,14 @@ function ResponsesPageContent() {
         <Sidebar />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E40046] mx-auto mb-4"></div>
+            <div className="mx-auto mb-4 flex justify-center">
+              <l-hourglass
+                size="60"
+                bg-opacity="0.1"
+                speed="1.75"
+                color="#E40046"
+              ></l-hourglass>
+            </div>
             <p className="text-gray-500">Chargement des réponses...</p>
           </div>
         </div>
@@ -1246,12 +1262,14 @@ function ResponsesPageContent() {
               </Link>
 
               <div className="flex flex-wrap items-center gap-1 lg:gap-2">
-                <Link href={`/forms/${form.id}/edit`}>
-                  <Button variant="outline" className="text-xs lg:text-sm">
-                    <Edit className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
-                    <span className="hidden sm:inline">Éditer</span>
-                  </Button>
-                </Link>
+                {!isObserver && (
+                  <Link href={`/forms/${form.id}/edit`}>
+                    <Button variant="outline" className="text-xs lg:text-sm">
+                      <Edit className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
+                      <span className="hidden sm:inline">Éditer</span>
+                    </Button>
+                  </Link>
+                )}
                 <Link href={`/forms/${form.id}/share`}>
                   <Button variant="outline" className="text-xs lg:text-sm">
                     <Share className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
@@ -1268,14 +1286,16 @@ function ResponsesPageContent() {
                   {showAnalyzeMenu && (
                     <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-white border border-gray-200 rounded-md shadow-lg z-10">
                       <div className="py-1">
-                        <button
-                          onClick={openPromptModal}
-                          className="flex items-center w-full px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          <Brain className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                          <span className="hidden sm:inline">Générer l'analyse</span>
-                          <span className="sm:hidden">Générer</span>
-                        </button>
+                        {!isObserver && (
+                          <button
+                            onClick={openPromptModal}
+                            className="flex items-center w-full px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <Brain className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                            <span className="hidden sm:inline">Générer l'analyse</span>
+                            <span className="sm:hidden">Générer</span>
+                          </button>
+                        )}
                         <button
                           onClick={viewAnalysis}
                           className="flex items-center w-full px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-700 hover:bg-gray-100"
@@ -1304,12 +1324,13 @@ function ResponsesPageContent() {
                     </div>
                   )}
                 </div>
-                <div className="relative" ref={exportMenuRef}>
-                  <Button variant="outline" onClick={() => setShowExportMenu(!showExportMenu)} className="text-xs lg:text-sm">
-                    <Upload className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
-                    <span className="hidden sm:inline">Exporter</span>
-                    <span className="sm:hidden">Export</span>
-                  </Button>
+                {!isObserver && (
+                  <div className="relative" ref={exportMenuRef}>
+                    <Button variant="outline" onClick={() => setShowExportMenu(!showExportMenu)} className="text-xs lg:text-sm">
+                      <Upload className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
+                      <span className="hidden sm:inline">Exporter</span>
+                      <span className="sm:hidden">Export</span>
+                    </Button>
                   
                   {showExportMenu && (
                     <div className="absolute right-0 mt-2 w-40 sm:w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
@@ -1350,7 +1371,8 @@ function ResponsesPageContent() {
                       </div>
                     </div>
                   )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1620,12 +1642,16 @@ function ResponsesPageContent() {
                                     <Button variant="ghost" size="sm" onClick={() => openResponseModal(response)} title="Voir la réponse">
                                       <Eye className="w-4 h-4" />
                                     </Button>
-                                    <Button variant="ghost" size="sm" onClick={() => exportSingleResponse(response)} title="Exporter la réponse">
-                                      <Download className="w-4 h-4" />
-                                    </Button>
-                                    <Button variant="ghost" size="sm" onClick={() => printSingleResponse(response)} title="Imprimer la réponse">
-                                      <Printer className="w-4 h-4" />
-                                    </Button>
+                                    {!isObserver && (
+                                      <>
+                                        <Button variant="ghost" size="sm" onClick={() => exportSingleResponse(response)} title="Exporter la réponse">
+                                          <Download className="w-4 h-4" />
+                                        </Button>
+                                        <Button variant="ghost" size="sm" onClick={() => printSingleResponse(response)} title="Imprimer la réponse">
+                                          <Printer className="w-4 h-4" />
+                                        </Button>
+                                      </>
+                                    )}
                                   </div>
                                 </td>
                               </tr>
@@ -1873,11 +1899,13 @@ function ResponsesPageContent() {
                   <CardContent>
                     {isAnalyzing ? (
                       <div className="text-center py-12">
-                        <div className="relative mb-6">
-                          <div className="animate-spin rounded-full h-20 w-20 border-4 border-gray-200 border-t-[#E40046] mx-auto"></div>
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <Brain className="w-8 h-8 text-[#E40046]" />
-                          </div>
+                        <div className="mx-auto mb-6 flex justify-center">
+                          <l-hourglass
+                            size="80"
+                            bg-opacity="0.1"
+                            speed="1.75"
+                            color="#E40046"
+                          ></l-hourglass>
                         </div>
                         <h3 className="text-2xl font-bold text-gray-900 mb-3">🤖 Analyse en cours...</h3>
                         <p className="text-lg text-gray-600 mb-6">

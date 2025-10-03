@@ -7,6 +7,23 @@ import "./globals.css"
 
 export const metadata: Metadata = {
   title: "Simplon Form",
+  description: "Plateforme de création et gestion de formulaires Simplon Africa",
+  icons: {
+    icon: [
+      { url: '/favicon/favicon.ico' },
+      { url: '/favicon/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/favicon/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+    other: [
+      {
+        rel: 'manifest',
+        url: '/favicon/site.webmanifest',
+      },
+    ],
+  },
 }
 
 export default function RootLayout({

@@ -6,7 +6,7 @@ import type { User } from '@/types/user'
 interface AuthContextType {
   user: User | null
   loading: boolean
-  login: (email: string, password: string) => Promise<void>
+  login: (email: string, password: string) => Promise<User>
   logout: () => void
   updateUser: (user: User) => void
 }
@@ -89,7 +89,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     checkAuth()
   }, [])
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<User> => {
     setLoading(true)
     try {
       console.log('🔐 Tentative de connexion avec:', email)
@@ -135,6 +135,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setUser(userData)
           // Sauvegarder les données utilisateur dans localStorage
           localStorage.setItem('user_data', JSON.stringify(userData))
+          return userData
         } else {
           const errorData = await userResponse.json()
           console.warn('⚠️ Erreur /auth/me:', errorData)
@@ -168,6 +169,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(mockUser)
         // Sauvegarder les données mock dans localStorage
         localStorage.setItem('user_data', JSON.stringify(mockUser))
+        return mockUser
       }
     } catch (error) {
       console.error('Erreur de connexion:', error)

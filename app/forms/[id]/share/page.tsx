@@ -10,10 +10,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { apiRequest } from "@/lib/api"
 import { ArrowLeft, Share, Copy, Mail, LinkIcon, CheckCircle, X, Send, Plus } from "lucide-react"
 import Link from "next/link"
+import { hourglass } from 'ldrs'
+import { useAuth } from "@/lib/contexts/AuthContext"
+import { usePermissions } from "@/lib/hooks/usePermissions"
+
+// Enregistrer le composant hourglass
+hourglass.register()
 
 export default function ShareFormPage() {
   const params = useParams()
   const formId = params.id as string
+  const { user } = useAuth()
+  const { canAccess } = usePermissions({ user })
   const [form, setForm] = useState<Form | null>(null)
   const [loading, setLoading] = useState(true)
   const [shareSettings, setShareSettings] = useState({
@@ -151,7 +159,14 @@ export default function ShareFormPage() {
         <Sidebar />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E40046] mx-auto mb-4"></div>
+            <div className="mx-auto mb-4 flex justify-center">
+              <l-hourglass
+                size="60"
+                bg-opacity="0.1"
+                speed="1.75"
+                color="#E40046"
+              ></l-hourglass>
+            </div>
             <p className="text-gray-500">Chargement...</p>
           </div>
         </div>
@@ -189,12 +204,14 @@ export default function ShareFormPage() {
           <div className="max-w-4xl mx-auto">
             {/* Actions en haut */}
             <div className="mb-6">
-              <Link href={`/forms/${formId}/questions`}>
-                <Button variant="outline" className="w-full sm:w-auto">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Retour aux questions
-                </Button>
-              </Link>
+              {canAccess('canShareForms') && (
+                <Link href={`/forms/${formId}/questions`}>
+                  <Button variant="outline" className="w-full sm:w-auto">
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Retour aux questions
+                  </Button>
+                </Link>
+              )}
 
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-500">{form.title}</span>
@@ -424,7 +441,7 @@ Cordialement"
                   >
                     {isSendingEmail ? (
                       <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        <l-hourglass size="16" bg-opacity="0.1" speed="1.75" color="white" className="mr-2"></l-hourglass>
                         Envoi en cours...
                       </>
                     ) : (

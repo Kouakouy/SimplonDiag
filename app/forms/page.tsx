@@ -7,10 +7,16 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { apiRequest } from "@/lib/api"
-import { FileText, Plus, Search, CheckCircle, Copy, Trash2, Share, Eye, BarChart3, Edit, Trash } from "lucide-react"
+import { FileText, Plus, Search, CheckCircle, Copy, Trash2, Share, Eye, BarChart3, Edit, Trash, Grid3X3, List } from "lucide-react"
+import { hourglass } from 'ldrs'
 import Link from "next/link"
+import { useAuth } from "@/lib/contexts/AuthContext"
+
+// Enregistrer le composant hourglass
+hourglass.register()
 
 export default function FormsPage() {
+  const { user } = useAuth()
   const [searchTerm, setSearchTerm] = useState("")
   const [forms, setForms] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -19,10 +25,16 @@ export default function FormsPage() {
   const [formToDelete, setFormToDelete] = useState<string | null>(null)
   const [copiedLink, setCopiedLink] = useState<string | null>(null)
   const [formStats, setFormStats] = useState<Record<string, { submissions: number; views: number }>>({})
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  
+  // Vérifier si l'utilisateur est un observateur
+  const isObserver = user?.role === 'observer'
+  // Vérifier si l'utilisateur est un créateur
+  const isCreator = user?.role === 'creator'
   
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
-  const formsPerPage = 9 // 3 lignes × 3 colonnes
+  const formsPerPage = viewMode === 'grid' ? 9 : 6 // 3 lignes × 3 colonnes pour grille, 6 pour liste
 
   useEffect(() => {
     const load = async () => {
@@ -83,15 +95,25 @@ export default function FormsPage() {
 
   // Optimiser le filtrage avec useMemo
   const filteredForms = useMemo(() => {
-    if (!searchTerm.trim()) return forms
+    let filtered = forms
     
-    const term = searchTerm.toLowerCase()
-    return forms.filter(
-      (form) =>
-        form.title?.toLowerCase().includes(term) ||
-        form.description?.toLowerCase().includes(term)
-    )
-  }, [forms, searchTerm])
+    // Si l'utilisateur est un créateur, ne montrer que ses propres formulaires
+    if (isCreator && user?.id) {
+      filtered = forms.filter(form => form.created_by === user.id)
+    }
+    
+    // Appliquer le filtre de recherche si nécessaire
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase()
+      filtered = filtered.filter(
+        (form) =>
+          form.title?.toLowerCase().includes(term) ||
+          form.description?.toLowerCase().includes(term)
+      )
+    }
+    
+    return filtered
+  }, [forms, searchTerm, isCreator, user?.id])
 
   // Pagination
   const totalPages = Math.ceil(filteredForms.length / formsPerPage)
@@ -145,7 +167,7 @@ export default function FormsPage() {
       <Sidebar />
 
       <div className="ml-0 lg:ml-64 flex flex-col min-h-screen">
-        <main className="flex-1 p-4 lg:p-6">
+        <main className="flex-1 p-3 sm:p-4 lg:p-6">
           {/* En-tête avec bouton de création */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 lg:mb-8 gap-4">
             <div>
@@ -160,8 +182,8 @@ export default function FormsPage() {
             </Link>
           </div>
 
-          {/* Barre de recherche */}
-          <div className="mb-6">
+          {/* Barre de recherche avec boutons de filtre alignés à droite */}
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="relative max-w-md w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
@@ -171,22 +193,44 @@ export default function FormsPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
+            {/* Bouton filtre d'affichage aligné à droite */}
+            <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-1 w-fit">
+              <Button
+                variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('grid')}
+                className={`h-8 px-2 sm:px-3 text-xs sm:text-sm ${viewMode === 'grid' ? 'bg-[#E40046] text-white hover:bg-[#E40046]/80' : 'hover:bg-gray-100'}`}
+              >
+                <Grid3X3 className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                <span className="hidden sm:inline">Grille</span>
+                <span className="sm:hidden">Grid</span>
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+                className={`h-8 px-2 sm:px-3 text-xs sm:text-sm ${viewMode === 'list' ? 'bg-[#E40046] text-white hover:bg-[#E40046]/80' : 'hover:bg-gray-100'}`}
+              >
+                <List className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                <span className="hidden sm:inline">Liste</span>
+                <span className="sm:hidden">List</span>
+              </Button>
+            </div>
           </div>
 
           {/* États de chargement/erreur */}
           {loading ? (
-            <div className="flex items-center justify-center py-12">
+            <div className="flex items-center justify-center min-h-[60vh]">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E40046] mx-auto mb-4"></div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Chargement des formulaires...</h3>
-                <p className="text-gray-600">Récupération de vos formulaires et statistiques</p>
-                <div className="mt-4 flex justify-center">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-[#E40046] rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-[#E40046] rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-[#E40046] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                  </div>
+                <div className="mx-auto mb-6 flex justify-center">
+                  <l-hourglass
+                    size="80"
+                    bg-opacity="0.1"
+                    speed="1.75"
+                    color="#E40046"
+                  ></l-hourglass>
                 </div>
+                <p className="text-gray-600">Patientez un instant, vos formulaires sont en cours de chargement</p>
               </div>
             </div>
           ) : error ? (
@@ -219,158 +263,258 @@ export default function FormsPage() {
             </Card>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              <div className={viewMode === 'grid' 
+                ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6" 
+                : "space-y-3 sm:space-y-4"
+              }>
                 {currentForms.map((form) => {
                 const shareUrl = getShareUrl(form)
                 
                 return (
-                  <Card key={form._id || form.id} className="hover:shadow-lg transition-all duration-200 hover:scale-[1.02] overflow-hidden group">
-                    {/* Bannière du formulaire */}
-                    {(form.banner_title || form.banner_image_url) ? (
-                      <div className="h-32 relative overflow-hidden">
-                        {form.banner_image_url ? (
-                          <div 
-                            className="w-full h-full bg-cover bg-center"
-                            style={{ backgroundImage: `url(${form.banner_image_url})` }}
-                          >
-                            <div className="absolute inset-0 bg-black/30"></div>
-                            {form.banner_title && (
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <h3 className="text-lg font-bold text-white drop-shadow-lg text-center px-4">{form.banner_title}</h3>
+                  <Card key={form._id || form.id} className={`hover:shadow-lg transition-all duration-200 overflow-hidden group ${
+                    viewMode === 'list' ? 'hover:scale-[1.01]' : 'hover:scale-[1.02]'
+                  }`}>
+                    {viewMode === 'grid' ? (
+                      <>
+                        {/* Bannière du formulaire */}
+                        {(form.banner_title || form.banner_image_url) ? (
+                          <div className="h-32 relative overflow-hidden">
+                            {form.banner_image_url ? (
+                              <div 
+                                className="w-full h-full bg-cover bg-center"
+                                style={{ backgroundImage: `url(${form.banner_image_url})` }}
+                              >
+                                <div className="absolute inset-0 bg-black/30"></div>
+                                {form.banner_title && (
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <h3 className="text-lg font-bold text-white drop-shadow-lg text-center px-4">{form.banner_title}</h3>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-r from-[#E40046] via-[#E40046]/80 to-rose-500 flex items-center justify-center">
+                                {form.banner_title && (
+                                  <h3 className="text-lg font-bold text-white drop-shadow-lg text-center px-4">{form.banner_title}</h3>
+                                )}
                               </div>
                             )}
                           </div>
                         ) : (
-                          <div className="w-full h-full bg-gradient-to-r from-[#E40046] via-[#E40046]/80 to-rose-500 flex items-center justify-center">
-                            {form.banner_title && (
-                              <h3 className="text-lg font-bold text-white drop-shadow-lg text-center px-4">{form.banner_title}</h3>
+                          <div className="h-24 bg-gradient-to-r from-gray-100 to-gray-200 flex items-center justify-center">
+                            <div className="text-center">
+                              <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                              <p className="text-sm text-gray-500">Aucune bannière</p>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : null}
+                    
+                    <CardContent className={viewMode === 'list' ? "p-3 sm:p-4" : "p-4 sm:p-6"}>
+                      {viewMode === 'list' ? (
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                          {/* Section principale avec icône et texte */}
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#E40046]/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-[#E40046]" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-semibold text-gray-900 text-base sm:text-lg mb-1 line-clamp-1">{form.title}</h4>
+                              <p className="text-sm text-gray-500 line-clamp-1">{form.description || "Aucune description"}</p>
+                            </div>
+                          </div>
+                          
+                          {/* Statistiques - responsive */}
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
+                            <div className="flex items-center gap-1">
+                              <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" />
+                              <span>{formStats[form._id || form.id]?.submissions || 0} réponse{(formStats[form._id || form.id]?.submissions || 0) > 1 ? 's' : ''}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
+                              <span>{formStats[form._id || form.id]?.views || 0} vue{(formStats[form._id || form.id]?.views || 0) > 1 ? 's' : ''}</span>
+                            </div>
+                            {form.created_at && (
+                              <span className="hidden sm:inline">Créé le {new Date(form.created_at).toLocaleDateString("fr-FR")}</span>
+                            )}
+                            {form.expiration_date && (
+                              <span className="hidden sm:inline">Expire le {new Date(form.expiration_date).toLocaleDateString("fr-FR")}</span>
                             )}
                           </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="h-24 bg-gradient-to-r from-gray-100 to-gray-200 flex items-center justify-center">
-                        <div className="text-center">
-                          <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                          <p className="text-sm text-gray-500">Aucune bannière</p>
-                        </div>
-                      </div>
-                    )}
-                    
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-3 flex-1">
-                          <div className="w-12 h-12 bg-[#E40046]/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <FileText className="w-6 h-6 text-[#E40046]" />
+                          
+                          {/* Dates sur mobile */}
+                          <div className="flex flex-wrap gap-2 text-xs text-gray-500 sm:hidden">
+                            {form.created_at && (
+                              <span>Créé le {new Date(form.created_at).toLocaleDateString("fr-FR")}</span>
+                            )}
+                            {form.expiration_date && (
+                              <span>Expire le {new Date(form.expiration_date).toLocaleDateString("fr-FR")}</span>
+                            )}
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-gray-900 text-lg mb-1 line-clamp-1">{form.title}</h4>
-                            <p className="text-sm text-gray-500 line-clamp-2">{form.description || "Aucune description"}</p>
+                          
+                          {/* Actions */}
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            {!isObserver && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-blue-600 hover:bg-blue-50" 
+                                title="Aperçu"
+                                onClick={() => window.open(`/f/${form._id || form.id}`, '_blank')}
+                              >
+                                <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
+                              </Button>
+                            )}
+                            <Link href={`/forms/${form._id || form.id}/responses`}>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-green-600 hover:bg-green-50" title="Résultats">
+                                <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" />
+                              </Button>
+                            </Link>
+                            {!isObserver && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-red-600 hover:bg-red-50"
+                                onClick={() => handleDelete(form._id || form.id)}
+                                title="Supprimer"
+                              >
+                                <Trash className="w-3 h-3 sm:w-4 sm:h-4" />
+                              </Button>
+                            )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Link href={`/forms/${form._id || form.id}`}>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50" title="Aperçu">
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                          </Link>
-                          <Link href={`/forms/${form._id || form.id}/responses`}>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-green-600 hover:bg-green-50" title="Résultats">
-                              <BarChart3 className="w-4 h-4" />
-                            </Button>
-                          </Link>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0 text-red-600 hover:bg-red-50"
-                            onClick={() => handleDelete(form._id || form.id)}
-                            title="Supprimer"
-                          >
-                            <Trash className="w-4 h-4" />
-                          </Button>
+                      ) : (
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-3 flex-1">
+                            <div className="w-12 h-12 bg-[#E40046]/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <FileText className="w-6 h-6 text-[#E40046]" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-semibold text-gray-900 text-lg mb-1 line-clamp-1">{form.title}</h4>
+                              <p className="text-sm text-gray-500 line-clamp-2">{form.description || "Aucune description"}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {!isObserver && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50" 
+                                title="Aperçu"
+                                onClick={() => window.open(`/f/${form._id || form.id}`, '_blank')}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                            )}
+                            <Link href={`/forms/${form._id || form.id}/responses`}>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-green-600 hover:bg-green-50" title="Résultats">
+                                <BarChart3 className="w-4 h-4" />
+                              </Button>
+                            </Link>
+                            {!isObserver && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 text-red-600 hover:bg-red-50"
+                                onClick={() => handleDelete(form._id || form.id)}
+                                title="Supprimer"
+                              >
+                                <Trash className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
-                      </div>
+                      )}
 
-                      {/* Informations et statut */}
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-4 text-xs text-gray-400">
-                          {form.created_at && (
-                            <span>Créé le {new Date(form.created_at).toLocaleDateString("fr-FR")}</span>
+                      {viewMode === 'grid' && (
+                        <>
+                          {/* Informations et statut */}
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-4 text-xs text-gray-400">
+                              {form.created_at && (
+                                <span>Créé le {new Date(form.created_at).toLocaleDateString("fr-FR")}</span>
+                              )}
+                              {form.expiration_date && (
+                                <span>Expire le {new Date(form.expiration_date).toLocaleDateString("fr-FR")}</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              <span className="text-xs text-green-600 font-medium">Actif</span>
+                            </div>
+                          </div>
+
+                          {/* Statistiques */}
+                          <div className="flex items-center justify-between mb-4 p-3 bg-blue-50 rounded-lg">
+                            <div className="flex items-center gap-4">
+                              <div className="flex items-center gap-1">
+                                <BarChart3 className="w-4 h-4 text-blue-600" />
+                                <span className="text-sm font-medium text-blue-900">
+                                  {formStats[form._id || form.id]?.submissions || 0} réponse{(formStats[form._id || form.id]?.submissions || 0) > 1 ? 's' : ''}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Eye className="w-4 h-4 text-gray-600" />
+                                <span className="text-sm text-gray-700">
+                                  {formStats[form._id || form.id]?.views || 0} vue{(formStats[form._id || form.id]?.views || 0) > 1 ? 's' : ''}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {formStats[form._id || form.id]?.submissions > 0 
+                                ? `${formStats[form._id || form.id]?.submissions} réponse${(formStats[form._id || form.id]?.submissions || 0) > 1 ? 's' : ''} reçue${(formStats[form._id || form.id]?.submissions || 0) > 1 ? 's' : ''}`
+                                : 'Aucune réponse'
+                              }
+                            </div>
+                          </div>
+
+                          {/* Lien de partage */}
+                          <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <CheckCircle className="w-3 h-3 text-green-600" />
+                              <span className="text-xs font-medium text-gray-700">Lien public</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input
+                                value={shareUrl}
+                                readOnly
+                                className="flex-1 px-2 py-1 border border-gray-200 rounded text-xs bg-white truncate"
+                              />
+                              <Button 
+                                onClick={() => copyToClipboard(shareUrl)} 
+                                size="sm" 
+                                variant="ghost"
+                                className="h-6 w-6 p-0 text-gray-600 hover:bg-gray-200"
+                              >
+                                <Copy className="w-3 h-3" />
+                              </Button>
+                            </div>
+                            {copiedLink === shareUrl && (
+                              <div className="mt-1 text-xs text-green-600 font-medium">
+                                ✓ Lien copié dans le presse-papiers !
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Actions principales */}
+                          {!isObserver && (
+                            <div className="flex gap-2">
+                              <Link href={`/forms/${form._id || form.id}/edit`} className="flex-1">
+                                <Button variant="outline" size="sm" className="w-full text-xs">
+                                  <Edit className="w-3 h-3 mr-1" />
+                                  Éditer
+                                </Button>
+                              </Link>
+                              <Link href={`/forms/${form._id || form.id}/share`} className="flex-1">
+                                <Button variant="outline" size="sm" className="w-full text-xs">
+                                  <Share className="w-3 h-3 mr-1" />
+                                  Partager
+                                </Button>
+                              </Link>
+                            </div>
                           )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span className="text-xs text-green-600 font-medium">Actif</span>
-                        </div>
-                      </div>
-
-                      {/* Statistiques */}
-                      <div className="flex items-center justify-between mb-4 p-3 bg-blue-50 rounded-lg">
-                        <div className="flex items-center gap-4">
-                          <div className="flex items-center gap-1">
-                            <BarChart3 className="w-4 h-4 text-blue-600" />
-                            <span className="text-sm font-medium text-blue-900">
-                              {formStats[form._id || form.id]?.submissions || 0} réponse{(formStats[form._id || form.id]?.submissions || 0) > 1 ? 's' : ''}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Eye className="w-4 h-4 text-gray-600" />
-                            <span className="text-sm text-gray-700">
-                              {formStats[form._id || form.id]?.views || 0} vue{(formStats[form._id || form.id]?.views || 0) > 1 ? 's' : ''}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {formStats[form._id || form.id]?.submissions > 0 
-                            ? `${formStats[form._id || form.id]?.submissions} réponse${(formStats[form._id || form.id]?.submissions || 0) > 1 ? 's' : ''} reçue${(formStats[form._id || form.id]?.submissions || 0) > 1 ? 's' : ''}`
-                            : 'Aucune réponse'
-                          }
-                        </div>
-                      </div>
-
-                      {/* Lien de partage */}
-                      <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <CheckCircle className="w-3 h-3 text-green-600" />
-                          <span className="text-xs font-medium text-gray-700">Lien public</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <input
-                            value={shareUrl}
-                            readOnly
-                            className="flex-1 px-2 py-1 border border-gray-200 rounded text-xs bg-white truncate"
-                          />
-                          <Button 
-                            onClick={() => copyToClipboard(shareUrl)} 
-                            size="sm" 
-                            variant="ghost"
-                            className="h-6 w-6 p-0 text-gray-600 hover:bg-gray-200"
-                          >
-                            <Copy className="w-3 h-3" />
-                          </Button>
-                        </div>
-                        {copiedLink === shareUrl && (
-                          <div className="mt-1 text-xs text-green-600 font-medium">
-                            ✓ Lien copié dans le presse-papiers !
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Actions principales */}
-                      <div className="flex gap-2">
-                        <Link href={`/forms/${form._id || form.id}/edit`} className="flex-1">
-                          <Button variant="outline" size="sm" className="w-full text-xs">
-                            <Edit className="w-3 h-3 mr-1" />
-                            Éditer
-                          </Button>
-                        </Link>
-                        <Link href={`/forms/${form._id || form.id}/share`} className="flex-1">
-                          <Button variant="outline" size="sm" className="w-full text-xs">
-                            <Share className="w-3 h-3 mr-1" />
-                            Partager
-                          </Button>
-                        </Link>
-                      </div>
+                        </>
+                      )}
                     </CardContent>
                   </Card>
                 )

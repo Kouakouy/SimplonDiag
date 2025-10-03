@@ -13,6 +13,10 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Plus, Save, Eye, ArrowLeft, Share } from "lucide-react"
 import { apiRequest } from "@/lib/api"
 import Link from "next/link"
+import { hourglass } from 'ldrs'
+
+// Enregistrer le composant hourglass
+hourglass.register()
 
 function EditFormPageContent() {
   const router = useRouter()
@@ -117,7 +121,14 @@ function EditFormPageContent() {
         <Sidebar />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E40046] mx-auto mb-4"></div>
+            <div className="mx-auto mb-4 flex justify-center">
+              <l-hourglass
+                size="60"
+                bg-opacity="0.1"
+                speed="1.75"
+                color="#E40046"
+              ></l-hourglass>
+            </div>
             <p className="text-gray-500">Chargement des informations du formulaire...</p>
             <p className="text-sm text-gray-400 mt-2">Récupération des données sauvegardées</p>
           </div>
@@ -170,7 +181,7 @@ function EditFormPageContent() {
                     <span className="hidden sm:inline">Partager</span>
                   </Button>
                 </Link>
-                <Link href={`/f/${form.publicSlug || form.id}`} target="_blank">
+                <Link href={`/f/${form.publicSlug || form.id}`}>
                   <Button variant="outline" className="w-full sm:w-auto text-xs sm:text-sm">
                     <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                     <span className="hidden sm:inline">Aperçu</span>

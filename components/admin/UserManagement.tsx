@@ -12,6 +12,11 @@ import { useAuth } from '@/lib/contexts/AuthContext'
 import { usePermissions } from '@/lib/hooks/usePermissions'
 import type { User, UserRole } from '@/types/user'
 import { ROLE_LABELS, ROLE_DESCRIPTIONS } from '@/types/user'
+import { hourglass } from 'ldrs'
+
+// Enregistrer le composant hourglass
+hourglass.register()
+
 import { 
   Users, 
   Plus, 
@@ -24,6 +29,61 @@ import {
   User as UserIcon,
   Calendar
 } from 'lucide-react'
+
+// Composant UserCard pour éviter la duplication
+interface UserCardProps {
+  user: User
+  currentUser: User | null
+  openEditForm: (user: User) => void
+  handleDeleteUser: (userId: string) => void
+}
+
+function UserCard({ user, currentUser, openEditForm, handleDeleteUser }: UserCardProps) {
+  return (
+    <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 hover:border-gray-300 transition-all duration-200">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-10 h-10 bg-[#E40046]/10 rounded-full flex items-center justify-center flex-shrink-0">
+          <UserIcon className="w-5 h-5 text-[#E40046]" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h4 className="font-medium text-gray-900 text-sm sm:text-base truncate">{user.name}</h4>
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+            <Mail className="w-3 h-3" />
+            <span className="truncate">{user.email}</span>
+          </div>
+        </div>
+      </div>
+      
+      <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
+        <Calendar className="w-3 h-3" />
+        <span>Créé le {new Date(user.createdAt).toLocaleDateString('fr-FR')}</span>
+      </div>
+      
+      <div className="flex justify-end gap-1">
+        <Button 
+          variant="ghost" 
+          size="sm"
+          onClick={() => openEditForm(user)}
+          title="Modifier"
+          className="h-7 w-7 sm:h-8 sm:w-8 p-0"
+        >
+          <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
+        </Button>
+        {user.id !== currentUser?.id && (
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => handleDeleteUser(user.id)}
+            title="Supprimer"
+            className="text-red-600 hover:text-red-700 h-7 w-7 sm:h-8 sm:w-8 p-0"
+          >
+            <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+          </Button>
+        )}
+      </div>
+    </div>
+  )
+}
 
 export function UserManagement() {
   const { user: currentUser } = useAuth()
@@ -220,16 +280,16 @@ export function UserManagement() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* En-tête */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Gestion des utilisateurs</h1>
-          <p className="text-gray-600 mt-1">Gérez les utilisateurs et leurs permissions</p>
+          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Gestion des utilisateurs</h1>
+          <p className="text-gray-600 mt-1 text-sm sm:text-base">Gérez les utilisateurs et leurs permissions</p>
         </div>
         <Button 
           onClick={() => setShowCreateForm(true)}
-          className="bg-[#E40046] hover:bg-[#E40046]/80 text-white"
+          className="bg-[#E40046] hover:bg-[#E40046]/80 text-white w-full sm:w-auto"
         >
           <Plus className="w-4 h-4 mr-2" />
           Nouvel utilisateur
@@ -239,36 +299,38 @@ export function UserManagement() {
       {/* Formulaire de création/édition */}
       {(showCreateForm || editingUser) && (
         <Card>
-          <CardHeader>
-            <CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base sm:text-lg">
               {editingUser ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur'}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <CardContent className="space-y-4 pt-0">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="name">Nom complet</Label>
+                <Label htmlFor="name" className="text-sm">Nom complet</Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="Nom de l'utilisateur"
+                  className="mt-1"
                 />
               </div>
               <div>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-sm">Email</Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="email@simplon.com"
+                  className="mt-1"
                 />
               </div>
               <div>
-                <Label htmlFor="role">Rôle</Label>
+                <Label htmlFor="role" className="text-sm">Rôle</Label>
                 <Select value={formData.role} onValueChange={(value: string) => setFormData({ ...formData, role: value as UserRole })}>
-                  <SelectTrigger>
+                  <SelectTrigger className="mt-1">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -279,7 +341,7 @@ export function UserManagement() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="password">
+                <Label htmlFor="password" className="text-sm">
                   {editingUser ? 'Nouveau mot de passe (optionnel)' : 'Mot de passe'}
                 </Label>
                 <Input
@@ -288,14 +350,15 @@ export function UserManagement() {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   placeholder="Mot de passe"
+                  className="mt-1"
                 />
               </div>
             </div>
             
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Button 
                 onClick={editingUser ? () => handleUpdateUser(editingUser.id) : handleCreateUser}
-                className="bg-[#E40046] hover:bg-[#E40046]/80 text-white"
+                className="bg-[#E40046] hover:bg-[#E40046]/80 text-white w-full sm:w-auto"
               >
                 {editingUser ? 'Mettre à jour' : 'Créer'}
               </Button>
@@ -306,6 +369,7 @@ export function UserManagement() {
                   setEditingUser(null)
                   resetForm()
                 }}
+                className="w-full sm:w-auto"
               >
                 Annuler
               </Button>
@@ -316,69 +380,107 @@ export function UserManagement() {
 
       {/* Liste des utilisateurs */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5" />
-            Utilisateurs ({users.length})
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Users className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="text-sm sm:text-base">Utilisateurs ({users.length})</span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0">
           {loading ? (
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E40046] mx-auto mb-4"></div>
-              <p className="text-gray-500">Chargement des utilisateurs...</p>
+              <div className="mx-auto mb-4 flex justify-center">
+                <l-hourglass
+                  size="40"
+                  bg-opacity="0.1"
+                  speed="1.75"
+                  color="#E40046"
+                ></l-hourglass>
+              </div>
+              <p className="text-gray-500 text-sm">Chargement des utilisateurs...</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {users.map((user) => (
-                <div key={user.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-[#E40046]/10 rounded-full flex items-center justify-center">
-                      <UserIcon className="w-5 h-5 text-[#E40046]" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900">{user.name}</h4>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Mail className="w-3 h-3" />
-                        <span>{user.email}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
-                        <Calendar className="w-3 h-3" />
-                        <span>Créé le {new Date(user.createdAt).toLocaleDateString('fr-FR')}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <Badge className={`${getRoleColor(user.role)} flex items-center gap-1`}>
-                      {getRoleIcon(user.role)}
-                      {ROLE_LABELS[user.role]}
+            <div className="space-y-6">
+              {/* Section Administrateurs */}
+              {users.filter(user => user.role === 'admin').length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 pb-2 border-b border-red-200">
+                    <Shield className="w-5 h-5 text-red-600" />
+                    <h3 className="text-lg font-semibold text-red-900">Administrateurs</h3>
+                    <Badge className="bg-red-100 text-red-800">
+                      {users.filter(user => user.role === 'admin').length}
                     </Badge>
-                    
-                    <div className="flex gap-1">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => openEditForm(user)}
-                        title="Modifier"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      {user.id !== currentUser?.id && (
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleDeleteUser(user.id)}
-                          title="Supprimer"
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                    {users.filter(user => user.role === 'admin').map((user) => (
+                      <UserCard 
+                        key={user.id} 
+                        user={user} 
+                        currentUser={currentUser}
+                        openEditForm={openEditForm}
+                        handleDeleteUser={handleDeleteUser}
+                      />
+                    ))}
                   </div>
                 </div>
-              ))}
+              )}
+
+              {/* Section Créateurs */}
+              {users.filter(user => user.role === 'creator').length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 pb-2 border-b border-green-200">
+                    <PenTool className="w-5 h-5 text-green-600" />
+                    <h3 className="text-lg font-semibold text-green-900">Créateurs</h3>
+                    <Badge className="bg-green-100 text-green-800">
+                      {users.filter(user => user.role === 'creator').length}
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                    {users.filter(user => user.role === 'creator').map((user) => (
+                      <UserCard 
+                        key={user.id} 
+                        user={user} 
+                        currentUser={currentUser}
+                        openEditForm={openEditForm}
+                        handleDeleteUser={handleDeleteUser}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Section Observateurs */}
+              {users.filter(user => user.role === 'observer').length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 pb-2 border-b border-blue-200">
+                    <Eye className="w-5 h-5 text-blue-600" />
+                    <h3 className="text-lg font-semibold text-blue-900">Observateurs</h3>
+                    <Badge className="bg-blue-100 text-blue-800">
+                      {users.filter(user => user.role === 'observer').length}
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                    {users.filter(user => user.role === 'observer').map((user) => (
+                      <UserCard 
+                        key={user.id} 
+                        user={user} 
+                        currentUser={currentUser}
+                        openEditForm={openEditForm}
+                        handleDeleteUser={handleDeleteUser}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Message si aucun utilisateur */}
+              {users.length === 0 && (
+                <div className="text-center py-8">
+                  <Users className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                  <h3 className="text-lg font-medium text-gray-600 mb-2">Aucun utilisateur trouvé</h3>
+                  <p className="text-gray-500">Commencez par créer votre premier utilisateur.</p>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
@@ -386,33 +488,35 @@ export function UserManagement() {
 
       {/* Informations sur les rôles */}
       <Card>
-        <CardHeader>
-          <CardTitle>Informations sur les rôles</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base sm:text-lg">
+            <span className="text-sm sm:text-base">Informations sur les rôles</span>
+          </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 bg-red-50 rounded-lg">
+        <CardContent className="pt-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            <div className="p-3 sm:p-4 bg-red-50 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
-                <Shield className="w-5 h-5 text-red-600" />
-                <h4 className="font-semibold text-red-900">Administrateur</h4>
+                <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
+                <h4 className="font-semibold text-red-900 text-sm sm:text-base">Administrateur</h4>
               </div>
-              <p className="text-sm text-red-800">{ROLE_DESCRIPTIONS.admin}</p>
+              <p className="text-xs sm:text-sm text-red-800">{ROLE_DESCRIPTIONS.admin}</p>
             </div>
             
-            <div className="p-4 bg-blue-50 rounded-lg">
+            <div className="p-3 sm:p-4 bg-blue-50 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
-                <Eye className="w-5 h-5 text-blue-600" />
-                <h4 className="font-semibold text-blue-900">Observateur</h4>
+                <Eye className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                <h4 className="font-semibold text-blue-900 text-sm sm:text-base">Observateur</h4>
               </div>
-              <p className="text-sm text-blue-800">{ROLE_DESCRIPTIONS.observer}</p>
+              <p className="text-xs sm:text-sm text-blue-800">{ROLE_DESCRIPTIONS.observer}</p>
             </div>
             
-            <div className="p-4 bg-green-50 rounded-lg">
+            <div className="p-3 sm:p-4 bg-green-50 rounded-lg sm:col-span-2 lg:col-span-1">
               <div className="flex items-center gap-2 mb-2">
-                <PenTool className="w-5 h-5 text-green-600" />
-                <h4 className="font-semibold text-green-900">Créateur</h4>
+                <PenTool className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+                <h4 className="font-semibold text-green-900 text-sm sm:text-base">Créateur</h4>
               </div>
-              <p className="text-sm text-green-800">{ROLE_DESCRIPTIONS.creator}</p>
+              <p className="text-xs sm:text-sm text-green-800">{ROLE_DESCRIPTIONS.creator}</p>
             </div>
           </div>
         </CardContent>
@@ -420,32 +524,32 @@ export function UserManagement() {
 
       {/* Modal de confirmation de suppression */}
       {userToDelete && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4">
           <Card className="w-full max-w-lg mx-auto shadow-2xl border-0 bg-white/95 backdrop-blur-md">
-            <CardHeader className="text-center pb-4">
-              <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <Trash2 className="w-10 h-10 text-white" />
+            <CardHeader className="text-center pb-3 sm:pb-4">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg">
+                <Trash2 className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
               </div>
-              <CardTitle className="text-xl font-bold text-gray-800">
+              <CardTitle className="text-lg sm:text-xl font-bold text-gray-800">
                 Confirmer la suppression
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4 sm:space-y-6">
               <div className="text-center">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4">
                   Êtes-vous sûr de vouloir supprimer cet utilisateur ?
                 </h3>
                 
                 {/* Carte utilisateur avec design amélioré */}
-                <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-xl border border-gray-200 shadow-sm">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-[#E40046] to-[#C70039] rounded-full flex items-center justify-center shadow-md">
-                      <UserIcon className="w-7 h-7 text-white" />
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 sm:p-6 rounded-xl border border-gray-200 shadow-sm">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-[#E40046] to-[#C70039] rounded-full flex items-center justify-center shadow-md flex-shrink-0">
+                      <UserIcon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                     </div>
-                    <div className="text-left flex-1">
-                      <div className="font-semibold text-gray-900 text-lg">{userToDelete.name}</div>
-                      <div className="text-gray-600 mb-2">{userToDelete.email}</div>
-                      <Badge className={`${getRoleColor(userToDelete.role)} flex items-center gap-1 w-fit shadow-sm`}>
+                    <div className="text-left flex-1 min-w-0">
+                      <div className="font-semibold text-gray-900 text-base sm:text-lg truncate">{userToDelete.name}</div>
+                      <div className="text-gray-600 mb-2 text-sm sm:text-base truncate">{userToDelete.email}</div>
+                      <Badge className={`${getRoleColor(userToDelete.role)} flex items-center gap-1 w-fit shadow-sm text-xs`}>
                         {getRoleIcon(userToDelete.role)}
                         {ROLE_LABELS[userToDelete.role]}
                       </Badge>
@@ -453,22 +557,22 @@ export function UserManagement() {
                   </div>
                 </div>
                 
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-4">
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 sm:p-4 mt-3 sm:mt-4">
                   <div className="flex items-center gap-2 text-amber-800">
-                    <div className="w-5 h-5 bg-amber-200 rounded-full flex items-center justify-center">
+                    <div className="w-4 h-4 sm:w-5 sm:h-5 bg-amber-200 rounded-full flex items-center justify-center flex-shrink-0">
                       <span className="text-xs font-bold">!</span>
                     </div>
-                    <p className="text-sm font-medium">
+                    <p className="text-xs sm:text-sm font-medium">
                       Cette action est irréversible. L'utilisateur sera définitivement supprimé.
                     </p>
                   </div>
                 </div>
               </div>
               
-              <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <Button 
                   onClick={confirmDeleteUser}
-                  className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-3 shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-2 sm:py-3 shadow-lg hover:shadow-xl transition-all duration-200 text-sm sm:text-base"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
                   Supprimer définitivement
@@ -476,7 +580,7 @@ export function UserManagement() {
                 <Button 
                   onClick={cancelDeleteUser}
                   variant="outline"
-                  className="flex-1 border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 font-semibold py-3 transition-all duration-200"
+                  className="flex-1 border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 font-semibold py-2 sm:py-3 transition-all duration-200 text-sm sm:text-base"
                 >
                   Annuler
                 </Button>

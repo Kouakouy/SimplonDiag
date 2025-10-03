@@ -1,20 +1,28 @@
 "use client"
 
 // Composant sidebar réutilisable
-import { FileText, Home, LogOut, Settings, Users as UsersIcon, Shield, Eye, PenTool } from "lucide-react"
+import { FileText, Home, LogOut, Settings, Users as UsersIcon, Shield, Eye, PenTool, Menu, X } from "lucide-react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/lib/contexts/AuthContext"
 import { usePermissions } from "@/lib/hooks/usePermissions"
 import { ROLE_LABELS } from "@/types/user"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { useState, useEffect } from "react"
 
 export function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
   const { user, logout } = useAuth()
   const { canAccess } = usePermissions({ user })
+  const [isOpen, setIsOpen] = useState(false)
+
+  // Fermer le drawer quand on change de page
+  useEffect(() => {
+    setIsOpen(false)
+  }, [pathname])
 
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -43,27 +51,68 @@ export function Sidebar() {
   }
 
   const menuItems = [
-    { icon: Home, label: "Tableau de bord", href: "/", permission: null },
-    { icon: FileText, label: "Mes formulaires", href: "/forms", permission: null },
-    { icon: Settings, label: "Paramètres", href: "/settings", permission: null },
-    { icon: UsersIcon, label: "Utilisateurs", href: "/settings/users", permission: 'canManageUsers' },
-  ].filter(item => !item.permission || canAccess(item.permission as any))
+    { icon: Home, label: "Tableau de bord", href: "/", permission: null, restrictedRoles: ['observer', 'creator'] },
+    { icon: FileText, label: "Mes formulaires", href: "/forms", permission: null, restrictedRoles: [] },
+    { icon: Settings, label: "Paramètres", href: "/settings", permission: null, restrictedRoles: ['observer'] },
+    { icon: UsersIcon, label: "Utilisateurs", href: "/settings/users", permission: 'canManageUsers', restrictedRoles: [] },
+  ].filter(item => {
+    // Vérifier les permissions spécifiques
+    if (item.permission && !canAccess(item.permission as any)) return false
+    // Vérifier les rôles restreints
+    if (user && item.restrictedRoles?.includes(user.role)) return false
+    return true
+  })
 
   return (
-    <div className="w-64 bg-[#E40046] text-white flex flex-col fixed left-0 top-0 h-full z-10">
-      <div className="p-6">
-        <div className="flex items-center gap-2">
-          <FileText className="w-6 h-6" />
-          <h1 className="text-xl font-semibold">Simplon Form</h1>
+    <>
+      {/* Bouton hamburger pour mobile */}
+      <button
+        onClick={() => setIsOpen(true)}
+        className="lg:hidden fixed top-4 right-4 z-50 p-2 bg-[#E40046] text-white rounded-lg shadow-lg"
+      >
+        <Menu className="w-6 h-6" />
+      </button>
+
+      {/* Overlay pour mobile */}
+      {isOpen && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div className={cn(
+        "w-64 bg-[#E40046] text-white flex flex-col fixed right-0 top-0 h-full z-50 transition-transform duration-300 ease-in-out",
+        "lg:translate-x-0 lg:left-0 lg:right-auto",
+        isOpen ? "translate-x-0" : "translate-x-full"
+      )}>
+        {/* Header avec bouton X pour mobile */}
+        <div className="p-6 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <FileText className="w-6 h-6" />
+            <h1 className="text-xl font-semibold">Simplon Form</h1>
+          </div>
+          <button
+            onClick={() => setIsOpen(false)}
+            className="lg:hidden p-1 hover:bg-white/20 rounded"
+          >
+            <X className="w-6 h-6" />
+          </button>
         </div>
-      </div>
 
       <nav className="flex-1 px-4 space-y-2">
         {menuItems.map((item) => {
           const Icon = item.icon
           // Améliorer la détection de la page active pour les sous-pages
           const isActive = pathname === item.href || 
-            (item.href !== "/" && pathname.startsWith(item.href))
+            (item.href !== "/" && pathname.startsWith(item.href) && 
+             // Éviter les conflits : si on est sur une sous-page, ne pas activer le parent
+             !menuItems.some(otherItem => 
+               otherItem.href !== item.href && 
+               otherItem.href.startsWith(item.href) && 
+               pathname.startsWith(otherItem.href)
+             ))
 
           return (
             <Link
@@ -90,7 +139,7 @@ export function Sidebar() {
       </nav>
 
       {/* Section utilisateur */}
-      {user ? (
+      {user && (
         <div className="p-4 space-y-3">
           {/* Informations utilisateur */}
           <div className="bg-white/10 rounded-lg p-3">
@@ -118,22 +167,18 @@ export function Sidebar() {
           {/* Bouton déconnexion */}
           <Button 
             variant="ghost" 
-            onClick={logout}
+            onClick={() => {
+              logout()
+              router.push('/auth/login')
+            }}
             className="w-full justify-start text-pink-200 hover:text-white hover:bg-pink-700"
           >
             <LogOut className="w-4 h-4 mr-2" />
             Déconnexion
           </Button>
         </div>
-      ) : (
-        <div className="p-4">
-          <Link href="/auth/login" className="block">
-            <Button className="w-full bg-white text-[#E40046] hover:bg-white/90">
-              Se connecter
-            </Button>
-          </Link>
-        </div>
       )}
-    </div>
+      </div>
+    </>
   )
 }

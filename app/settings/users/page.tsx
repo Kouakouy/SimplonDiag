@@ -9,7 +9,7 @@ export default function UsersPage() {
       <Sidebar />
       
       <div className="ml-0 lg:ml-64 flex flex-col min-h-screen">
-        <main className="flex-1 p-4 lg:p-6 overflow-y-auto">
+        <main className="flex-1 p-3 sm:p-4 lg:p-6 overflow-y-auto">
           <UserManagement />
         </main>
       </div>

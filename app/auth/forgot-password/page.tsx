@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { apiRequest } from "@/lib/api"
+import Squares from "@/components/ui/Squares"
+import Image from "next/image"
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
@@ -37,12 +39,35 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-10">
-      <Card className="w-full max-w-xl shadow-sm">
-        <CardHeader className="text-center space-y-2">
-          <CardTitle className="text-3xl font-bold text-gray-900">Mot de passe oublié</CardTitle>
-          <p className="text-gray-600">Entrez votre adresse email pour recevoir un lien de réinitialisation.</p>
-        </CardHeader>
+    <div className="min-h-screen relative flex items-center justify-center px-4 py-10 bg-[#E40046]">
+      {/* Arrière-plan animé */}
+      <div className="absolute inset-0 z-0">
+        <Squares 
+          speed={0.3} 
+          squareSize={50}
+          direction='diagonal'
+          borderColor='rgba(255, 255, 255, 0.3)'
+          hoverFillColor='rgba(255, 255, 255, 0.1)'
+        />
+      </div>
+      
+      {/* Contenu de la page */}
+      <div className="relative z-10 w-full flex justify-center">
+        <Card className="w-full max-w-xl shadow-lg bg-white">
+          <CardHeader className="text-center space-y-2">
+            {/* Logo Simplon Africa */}
+            <div className="flex items-center justify-center mb-4">
+              <Image
+                src="/images/SimplonAfrica.jpg"
+                alt="Simplon Africa"
+                width={200}
+                height={80}
+                className="object-contain"
+              />
+            </div>
+            <CardTitle className="text-3xl font-bold text-gray-900">Mot de passe oublié</CardTitle>
+            <p className="text-gray-600">Entrez votre adresse email pour recevoir un lien de réinitialisation.</p>
+          </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
@@ -71,7 +96,8 @@ export default function ForgotPasswordPage() {
             </div>
           </form>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   )
 }

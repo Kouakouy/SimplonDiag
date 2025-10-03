@@ -10,6 +10,10 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { apiRequest } from "@/lib/api"
 import { Eye, Pencil, BarChart2, Lock, Trash2, FileText, Image as ImageIcon, Users, Calendar, AlertCircle } from "lucide-react"
+import { hourglass } from 'ldrs'
+
+// Enregistrer le composant hourglass
+hourglass.register()
 
 export default function FormOverviewPage() {
   const params = useParams()
@@ -216,7 +220,14 @@ export default function FormOverviewPage() {
         <Sidebar />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E40046] mx-auto mb-4"></div>
+            <div className="mx-auto mb-4 flex justify-center">
+              <l-hourglass
+                size="60"
+                bg-opacity="0.1"
+                speed="1.75"
+                color="#E40046"
+              ></l-hourglass>
+            </div>
             <p className="text-gray-500">Chargement du formulaire...</p>
           </div>
         </div>
