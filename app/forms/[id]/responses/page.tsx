@@ -44,6 +44,7 @@ import Link from "next/link"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { FormStatsCharts } from "@/components/forms/form-stats-charts"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Toast, useToast } from "@/components/ui/toast"
 import { hourglass } from 'ldrs'
 import { useAuth } from "@/lib/contexts/AuthContext"
 
@@ -52,6 +53,7 @@ hourglass.register()
 
 function ResponsesPageContent() {
   const { user } = useAuth()
+  const { success, error: showError, warning, info, toasts, removeToast } = useToast()
   const params = useParams()
   const formId = params.id as string
   const [form, setForm] = useState<Form | null>(null)
@@ -637,12 +639,12 @@ function ResponsesPageContent() {
 
   const generateAIAnalysis = async () => {
     if (!form) {
-      alert("Formulaire non trouvé")
+      showError("Erreur", "Formulaire non trouvé")
       return
     }
     
     if (responses.length === 0) {
-      alert("Aucune réponse disponible pour l'analyse. Veuillez d'abord collecter des réponses.")
+      warning("Aucune réponse", "Aucune réponse disponible pour l'analyse. Veuillez d'abord collecter des réponses.")
       return
     }
     
@@ -666,13 +668,21 @@ function ResponsesPageContent() {
         setAiAnalysis(result.analysis)
         // Basculer automatiquement vers l'onglet d'analyse pour voir les résultats
         setActiveTab("analyze")
-        alert("Analyse générée avec succès !")
+        success("Analyse générée", "L'analyse IA a été générée avec succès !")
+        
+        // Scroll vers la section d'analyse après un court délai
+        setTimeout(() => {
+          const analyzeSection = document.querySelector('[data-section="analyze"]')
+          if (analyzeSection) {
+            analyzeSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }
+        }, 500)
       } else {
         throw new Error(result.error || 'Erreur lors de l\'analyse')
       }
-    } catch (error) {
-      console.error("Erreur lors de l'analyse IA:", error)
-      alert(`Erreur lors de l'analyse: ${error instanceof Error ? error.message : 'Erreur inconnue'}`)
+    } catch (err) {
+      console.error("Erreur lors de l'analyse IA:", err)
+      showError("Erreur d'analyse", err instanceof Error ? err.message : 'Erreur inconnue')
     } finally {
       setIsAnalyzing(false)
     }
@@ -680,7 +690,7 @@ function ResponsesPageContent() {
 
   const saveAnalysis = async () => {
     if (!aiAnalysis || !form) {
-      alert("Aucune analyse à sauvegarder")
+      warning("Aucune analyse", "Aucune analyse à sauvegarder")
       return
     }
 
@@ -703,25 +713,25 @@ function ResponsesPageContent() {
       const analyses = await apiRequest<any[]>({ url: `/forms/${form.id}/analyses` })
       setSavedAnalyses(analyses || [])
       
-      alert("Analyse sauvegardée avec succès !")
-    } catch (error) {
-      console.error("Erreur lors de la sauvegarde:", error)
+      success("Analyse sauvegardée", "L'analyse a été sauvegardée avec succès !")
+    } catch (err) {
+      console.error("Erreur lors de la sauvegarde:", err)
       
       // Gestion d'erreurs plus spécifique
       let errorMessage = "Erreur inconnue"
-      if (error instanceof Error) {
-        if (error.message.includes("404")) {
+      if (err instanceof Error) {
+        if (err.message.includes("404")) {
           errorMessage = "Formulaire non trouvé"
-        } else if (error.message.includes("400")) {
+        } else if (err.message.includes("400")) {
           errorMessage = "Données d'analyse invalides"
-        } else if (error.message.includes("500")) {
+        } else if (err.message.includes("500")) {
           errorMessage = "Erreur serveur - veuillez réessayer"
         } else {
-          errorMessage = error.message
+          errorMessage = err.message
         }
       }
       
-      alert(`Erreur lors de la sauvegarde: ${errorMessage}`)
+      showError("Erreur de sauvegarde", errorMessage)
     }
   }
 
@@ -736,7 +746,7 @@ function ResponsesPageContent() {
       setShowSavedAnalysesModal(true)
       setShowAnalyzeMenu(false)
     } else {
-      alert("Aucune analyse sauvegardée disponible. Veuillez d'abord générer et sauvegarder une analyse.")
+      info("Aucune analyse", "Aucune analyse sauvegardée disponible. Veuillez d'abord générer et sauvegarder une analyse.")
     }
   }
 
@@ -870,7 +880,7 @@ function ResponsesPageContent() {
         }
       }, 100)
     } else {
-      alert("Aucune analyse disponible. Veuillez d'abord générer une analyse.")
+      info("Aucune analyse", "Aucune analyse disponible. Veuillez d'abord générer une analyse.")
     }
   }
 
@@ -886,7 +896,7 @@ function ResponsesPageContent() {
         }
       }, 100)
     } else {
-      alert("Aucune analyse disponible. Veuillez d'abord générer une analyse.")
+      info("Aucune analyse", "Aucune analyse disponible. Veuillez d'abord générer une analyse.")
     }
   }
 
@@ -940,6 +950,357 @@ function ResponsesPageContent() {
     link.href = URL.createObjectURL(blob)
     link.download = `${form.title}_reponses.xls`
     link.click()
+  }
+
+  const exportAnalysisToPDF = () => {
+    if (!aiAnalysis || !form) {
+      warning("Aucune analyse", "Aucune analyse à exporter")
+      return
+    }
+
+    // Template HTML optimisé pour l'export PDF de l'analyse
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${form.title} - Analyse IA PDF</title>
+        <style>
+          @page {
+            margin: 0.5in;
+            size: A4;
+          }
+          
+          * {
+            box-sizing: border-box;
+          }
+          
+          body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            line-height: 1.6;
+            font-size: 12px;
+            background: white;
+          }
+          
+          .header {
+            background: #E40046;
+            color: white;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+          }
+          
+          .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+          }
+          
+          .logo {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #E40046;
+            font-size: 18px;
+          }
+          
+          .company-info h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+          }
+          
+          .company-info p {
+            margin: 5px 0 0 0;
+            font-size: 14px;
+            opacity: 0.9;
+          }
+          
+          .report-info {
+            text-align: right;
+          }
+          
+          .report-info .date {
+            font-size: 14px;
+            opacity: 0.9;
+          }
+          
+          .report-info .count {
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 5px;
+          }
+          
+          .form-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #E40046;
+            margin-bottom: 20px;
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #E40046;
+          }
+          
+          .section {
+            margin-bottom: 30px;
+            page-break-inside: avoid;
+          }
+          
+          .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #E40046;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #E40046;
+          }
+          
+          .summary-box {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+          }
+          
+          .insights-box {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+          }
+          
+          .recommendations-box {
+            background: #f3e5f5;
+            border: 1px solid #9c27b0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+          }
+          
+          .insight-item, .recommendation-item {
+            margin-bottom: 15px;
+            padding-left: 20px;
+            position: relative;
+          }
+          
+          .insight-item::before, .recommendation-item::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #E40046;
+            font-weight: bold;
+            font-size: 16px;
+          }
+          
+          .insight-title, .recommendation-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+          }
+          
+          .insight-description, .recommendation-description {
+            color: #666;
+            font-size: 11px;
+          }
+          
+          .chart-section {
+            margin-bottom: 25px;
+            page-break-inside: avoid;
+          }
+          
+          .chart-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+          }
+          
+          .chart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+          }
+          
+          .chart-item:last-child {
+            border-bottom: none;
+          }
+          
+          .chart-label {
+            flex: 1;
+            font-size: 11px;
+          }
+          
+          .chart-bar {
+            flex: 2;
+            height: 20px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            margin: 0 10px;
+            position: relative;
+            overflow: hidden;
+          }
+          
+          .chart-fill {
+            height: 100%;
+            background: #E40046;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+          }
+          
+          .chart-value {
+            font-size: 11px;
+            font-weight: bold;
+            color: #333;
+            min-width: 40px;
+            text-align: right;
+          }
+          
+          .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #E40046;
+            text-align: center;
+            color: #666;
+            font-size: 10px;
+          }
+          
+          @media print {
+            .header {
+              background: #E40046 !important;
+              -webkit-print-color-adjust: exact;
+              color-adjust: exact;
+            }
+            
+            body {
+              -webkit-print-color-adjust: exact;
+              color-adjust: exact;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="logo-section">
+            <div class="logo">S</div>
+            <div class="company-info">
+              <h1>Simplon Africa</h1>
+              <p>Plateforme de Formulaires - Analyse IA</p>
+            </div>
+          </div>
+          <div class="report-info">
+            <div class="date">Généré le ${new Date().toLocaleString("fr-FR")}</div>
+            <div class="count">${aiAnalysis.metadata.totalResponses} réponses analysées</div>
+          </div>
+        </div>
+        
+        <div class="form-title">🧠 Analyse IA - ${form.title}</div>
+        
+        <div class="section">
+          <div class="section-title">📊 Résumé Exécutif</div>
+          <div class="summary-box">
+            <p>${aiAnalysis.summary}</p>
+            <div style="margin-top: 10px; font-size: 11px; color: #666;">
+              Confiance: ${Math.round(aiAnalysis.metadata.confidence * 100)}% • 
+              ${aiAnalysis.metadata.totalResponses} réponses analysées
+            </div>
+          </div>
+        </div>
+        
+        <div class="section">
+          <div class="section-title">Insights Clés</div>
+          <div class="insights-box">
+            ${aiAnalysis.insights.map(insight => `
+              <div class="insight-item">
+                <div class="insight-title">${insight.title}</div>
+                <div class="insight-description">${insight.description}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        
+        ${aiAnalysis.recommendations.length > 0 ? `
+        <div class="section">
+          <div class="section-title">Recommandations</div>
+          <div class="recommendations-box">
+            ${aiAnalysis.recommendations.map(rec => `
+              <div class="recommendation-item">
+                <div class="recommendation-title">${rec.title}</div>
+                <div class="recommendation-description">${rec.description}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        ` : ''}
+        
+        <div class="section">
+          <div class="section-title">Analyses par Question</div>
+          ${aiAnalysis.charts.map(chart => `
+            <div class="chart-section">
+              <div class="chart-title">${chart.questionTitle} (${chart.type})</div>
+              ${chart.data.map(item => `
+                <div class="chart-item">
+                  <div class="chart-label">${item.label}</div>
+                  <div class="chart-bar">
+                    <div class="chart-fill" style="width: ${item.percentage}%; background-color: ${item.color || '#E40046'};"></div>
+                  </div>
+                  <div class="chart-value">${item.value} (${item.percentage.toFixed(1)}%)</div>
+                </div>
+              `).join('')}
+            </div>
+          `).join('')}
+        </div>
+        
+        <div class="footer">
+          <p>Généré le ${new Date().toLocaleString("fr-FR")} par Simplon Form Platform</p>
+          <p>© ${new Date().getFullYear()} Simplon Africa - Tous droits réservés</p>
+        </div>
+      </body>
+      </html>
+    `
+
+    // Ouvrir une nouvelle fenêtre pour l'impression PDF
+    const printWindow = window.open('', '_blank')
+    if (printWindow) {
+      printWindow.document.write(htmlContent)
+      printWindow.document.close()
+      
+      // Attendre que le contenu soit chargé puis déclencher l'impression
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.focus()
+          printWindow.print()
+          
+          // Fermer la fenêtre après l'impression
+          printWindow.onafterprint = () => {
+            printWindow.close()
+          }
+        }, 500)
+      }
+    } else {
+      // Fallback si les popups sont bloqués
+      showError("Erreur d'export", "Les popups sont bloqués. Veuillez autoriser les popups pour cette page et réessayer.")
+    }
   }
 
   const exportToPDF = () => {
@@ -1173,7 +1534,7 @@ function ResponsesPageContent() {
       }
     } else {
       // Fallback si les popups sont bloqués
-      alert('Les popups sont bloqués. Veuillez autoriser les popups pour cette page et réessayer.')
+      showError("Erreur d'export", "Les popups sont bloqués. Veuillez autoriser les popups pour cette page et réessayer.")
     }
   }
 
@@ -1888,7 +2249,7 @@ function ResponsesPageContent() {
             )}
 
             {activeTab === "analyze" && (
-              <div className="space-y-6">
+              <div className="space-y-6" data-section="analyze">
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -1907,9 +2268,9 @@ function ResponsesPageContent() {
                             color="#E40046"
                           ></l-hourglass>
                         </div>
-                        <h3 className="text-2xl font-bold text-gray-900 mb-3">🤖 Analyse en cours...</h3>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-3">Analyse en cours...</h3>
                         <p className="text-lg text-gray-600 mb-6">
-                          DeepSeek analyse vos réponses avec intelligence artificielle
+                          L'IA analyse vos réponses avec intelligence artificielle
                         </p>
                         <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-6 max-w-lg mx-auto">
                           <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
@@ -1919,24 +2280,22 @@ function ResponsesPageContent() {
                           <div className="space-y-2 text-sm text-blue-800">
                             <div className="flex items-center gap-2">
                               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                              <span>📊 Collecte et préparation des données</span>
+                              <span>Collecte et préparation des données</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
-                              <span>🔍 Analyse des tendances et patterns</span>
+                              <span>Analyse des tendances et patterns</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-                              <span>💡 Génération des insights et recommandations</span>
+                              <span>Génération des insights et recommandations</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-                              <span>📈 Création des graphiques et visualisations</span>
+                              <span>Création des graphiques et visualisations</span>
                             </div>
                           </div>
-                          <div className="mt-4 text-xs text-blue-600">
-                            ⏱️ Temps estimé : 10-30 secondes selon le nombre de réponses
-                          </div>
+                        
                         </div>
                       </div>
                     ) : !aiAnalysis ? (
@@ -1972,16 +2331,9 @@ function ResponsesPageContent() {
                               <CheckCircle className="w-4 h-4 mr-2" />
                               Enregistrer l'analyse
                             </Button>
-                            <Button variant="outline" onClick={() => {
-                              const dataStr = JSON.stringify(aiAnalysis, null, 2)
-                              const blob = new Blob([dataStr], { type: 'application/json' })
-                              const link = document.createElement('a')
-                              link.href = URL.createObjectURL(blob)
-                              link.download = `analyse_${form?.title.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.json`
-                              link.click()
-                            }}>
+                            <Button variant="outline" onClick={exportAnalysisToPDF}>
                               <Download className="w-4 h-4 mr-2" />
-                              Exporter l'analyse
+                              Exporter l'analyse (PDF)
                             </Button>
                           </div>
                         </div>
@@ -2443,6 +2795,19 @@ function ResponsesPageContent() {
           </div>
         </main>
       </div>
+      
+      {/* Toasts */}
+      {toasts.map((toast) => (
+        <Toast
+          key={toast.id}
+          id={toast.id}
+          type={toast.type}
+          title={toast.title}
+          message={toast.message}
+          duration={toast.duration}
+          onClose={removeToast}
+        />
+      ))}
     </div>
   )
 }

@@ -360,7 +360,7 @@ export default function FormsPage() {
                                 size="sm" 
                                 className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-blue-600 hover:bg-blue-50" 
                                 title="Aperçu"
-                                onClick={() => window.open(`/f/${form._id || form.id}`, '_blank')}
+                                onClick={() => window.open(`/forms/${form._id || form.id}`)}
                               >
                                 <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
                               </Button>

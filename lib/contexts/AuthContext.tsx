@@ -153,6 +153,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setUser(mockUser)
           // Sauvegarder les données mock dans localStorage
           localStorage.setItem('user_data', JSON.stringify(mockUser))
+          return mockUser
         }
       } catch (userError) {
         console.warn('Erreur lors de la récupération des informations utilisateur, utilisation des données mock:', userError)

@@ -51,10 +51,10 @@ export function Sidebar() {
   }
 
   const menuItems = [
-    { icon: Home, label: "Tableau de bord", href: "/", permission: null, restrictedRoles: ['observer', 'creator'] },
-    { icon: FileText, label: "Mes formulaires", href: "/forms", permission: null, restrictedRoles: [] },
-    { icon: Settings, label: "Paramètres", href: "/settings", permission: null, restrictedRoles: ['observer'] },
-    { icon: UsersIcon, label: "Utilisateurs", href: "/settings/users", permission: 'canManageUsers', restrictedRoles: [] },
+    { icon: Home, label: "Tableau de bord", href: "/", permission: null, restrictedRoles: ['observer', 'creator'] as string[] },
+    { icon: FileText, label: "Mes formulaires", href: "/forms", permission: null, restrictedRoles: [] as string[] },
+    { icon: Settings, label: "Paramètres", href: "/settings", permission: null, restrictedRoles: ['observer'] as string[] },
+    { icon: UsersIcon, label: "Utilisateurs", href: "/settings/users", permission: 'canManageUsers', restrictedRoles: [] as string[] },
   ].filter(item => {
     // Vérifier les permissions spécifiques
     if (item.permission && !canAccess(item.permission as any)) return false
