@@ -14,8 +14,10 @@ import type { User, UserRole } from '@/types/user'
 import { ROLE_LABELS, ROLE_DESCRIPTIONS } from '@/types/user'
 import { hourglass } from 'ldrs'
 
-// Enregistrer le composant hourglass
-hourglass.register()
+// Enregistrer le composant hourglass seulement côté client
+if (typeof window !== 'undefined') {
+  hourglass.register()
+}
 
 import { 
   Users, 
