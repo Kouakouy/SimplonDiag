@@ -12,8 +12,11 @@ import { hourglass } from 'ldrs'
 import Link from "next/link"
 import { useAuth } from "@/lib/contexts/AuthContext"
 
-// Enregistrer le composant hourglass
-hourglass.register()
+
+// Enregistrer le composant hourglass seulement côté client
+if (typeof window !== 'undefined') {
+  hourglass.register()
+}
 
 export default function FormsPage() {
   const { user } = useAuth()
