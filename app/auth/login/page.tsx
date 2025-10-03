@@ -132,34 +132,31 @@ export default function LoginPage() {
       <div className="relative z-10 w-full flex justify-center">
         <Card 
           ref={cardRef}
-          className="w-full max-w-md shadow-2xl bg-white/95 backdrop-blur-sm border-0 rounded-3xl overflow-hidden"
+          className="w-full max-w-lg shadow-2xl bg-white backdrop-blur-sm border-0 rounded-3xl overflow-hidden"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          {/* Header avec gradient */}
-          <CardHeader className="text-center space-y-4 pb-8 bg-gradient-to-r from-[#E40046] to-[#FF6B8A] text-white relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-[#E40046]/90 to-[#FF6B8A]/90"></div>
-            <div className="relative z-10">
-              <div className="flex items-center justify-center mb-4">
-                <div className="relative">
-                  <Image
-                    src="/images/SimplonAfrica.jpg"
-                    alt="Simplon Africa"
-                    width={180}
-                    height={70}
-                    className="object-contain filter brightness-0 invert"
-                  />
-                  <div className="absolute -top-2 -right-2">
-                    <Sparkles className="w-6 h-6 text-yellow-300 animate-pulse" />
-                  </div>
+          {/* Header blanc */}
+          <CardHeader className="text-center space-y-3 pb-4 bg-white border-b border-gray-100">
+            <div className="flex items-center justify-center mb-2">
+              <div className="relative">
+                <Image
+                  src="/images/SimplonAfrica.jpg"
+                  alt="Simplon Africa"
+                  width={180}
+                  height={70}
+                  className="object-contain"
+                />
+                <div className="absolute -top-2 -right-2">
+                  <Sparkles className="w-5 h-5 text-[#E40046] animate-pulse" />
                 </div>
               </div>
-              <CardTitle className="text-2xl font-bold mb-2">Connexion</CardTitle>
-              <p className="text-white/90 text-sm font-medium">SIMPLON FORM</p>
             </div>
+            <CardTitle className="text-xl font-bold mb-1 text-gray-900">Connexion</CardTitle>
+            <p className="text-gray-600 text-sm font-medium">SIMPLON FORM</p>
           </CardHeader>
 
-          <CardContent className="p-8">
+          <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Email Field */}
               <div className="space-y-2">
