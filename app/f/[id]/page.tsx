@@ -342,6 +342,29 @@ export default function PublicFormPage() {
                     />
                   )}
 
+                  {/* Champ date */}
+                  {question.type === "date" && (
+                    <Input
+                      id={question.id}
+                      type="date"
+                      value={(answers[question.id] as string) || ""}
+                      onChange={(e) => handleInputChange(question.id, e.target.value)}
+                      className={errors[question.id] ? "border-red-500" : ""}
+                    />
+                  )}
+
+                  {/* Champ nombre */}
+                  {question.type === "number" && (
+                    <Input
+                      id={question.id}
+                      type="number"
+                      value={(answers[question.id] as string) || ""}
+                      onChange={(e) => handleInputChange(question.id, e.target.value)}
+                      placeholder={question.placeholder || "0"}
+                      className={errors[question.id] ? "border-red-500" : ""}
+                    />
+                  )}
+
                   {/* Liste déroulante */}
                   {question.type === "select" && (
                     <Select
@@ -404,6 +427,54 @@ export default function PublicFormPage() {
                     </div>
                   )}
 
+                  {/* Champ évaluation (rating) */}
+                  {question.type === "rating" && (
+                    <div className={`space-y-2 ${errors[question.id] ? "border border-red-500 rounded-lg p-3" : ""}`}>
+                      <div className="flex space-x-2">
+                        {question.options?.map((_, starIndex) => (
+                          <button
+                            key={starIndex}
+                            type="button"
+                            className={`w-10 h-10 inline-flex items-center justify-center text-3xl transition-colors focus:outline-none ${
+                              ((answers[question.id] as string) || "").includes((starIndex + 1).toString())
+                                ? "text-yellow-400"
+                                : "text-gray-300 hover:text-yellow-400"
+                            }`}
+                            onClick={() => handleInputChange(question.id, (starIndex + 1).toString())}
+                          >
+                            ★
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Champ fichier */}
+                  {question.type === "file" && (
+                    <div className={`border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-gray-50 hover:bg-gray-100 transition-colors ${errors[question.id] ? "border-red-500" : ""}`}>
+                      <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-600 mb-2">Glissez-déposez vos fichiers ici</p>
+                      <p className="text-sm text-gray-500">ou cliquez pour sélectionner</p>
+                      <input 
+                        type="file" 
+                        className="hidden" 
+                        id={`file-${question.id}`}
+                        multiple={question.isMultipleChoice}
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files || [])
+                          const fileNames = files.map(file => file.name)
+                          handleInputChange(question.id, fileNames)
+                        }}
+                      />
+                      <label 
+                        htmlFor={`file-${question.id}`}
+                        className="inline-block mt-3 px-4 py-2 bg-[#E40046] text-white rounded-lg hover:bg-[#E40046]/80 transition-colors cursor-pointer"
+                      >
+                        Choisir des fichiers
+                      </label>
+                    </div>
+                  )}
+
                   {/* Message d'erreur */}
                   {errors[question.id] && (
                     <Alert variant="destructive">
@@ -439,7 +510,9 @@ export default function PublicFormPage() {
                     >
                       {submitting ? (
                         <>
-                          <l-hourglass size="12" bg-opacity="0.1" speed="1.75" color="white" className="mr-1 lg:mr-2"></l-hourglass>
+                          <div className="mr-1 lg:mr-2">
+                            <l-hourglass size="12" bg-opacity="0.1" speed="1.75" color="white"></l-hourglass>
+                          </div>
                           <span className="hidden sm:inline">Envoi en cours...</span>
                           <span className="sm:hidden">Envoi...</span>
                         </>

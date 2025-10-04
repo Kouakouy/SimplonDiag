@@ -404,7 +404,7 @@ export default function FormsPage() {
                                 size="sm" 
                                 className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50" 
                                 title="Aperçu"
-                                onClick={() => window.open(`/f/${form._id || form.id}`, '_blank')}
+                                onClick={() => window.open(`/forms/${form._id || form.id}`)}
                               >
                                 <Eye className="w-4 h-4" />
                               </Button>
