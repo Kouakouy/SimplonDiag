@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { apiRequest } from '@/lib/api'
 import { useAuth } from '@/lib/contexts/AuthContext'
 import { usePermissions } from '@/lib/hooks/usePermissions'
+import { useToast, Toast } from '@/components/ui/toast'
 import type { User, UserRole } from '@/types/user'
 import { ROLE_LABELS, ROLE_DESCRIPTIONS } from '@/types/user'
 import { hourglass } from 'ldrs'
@@ -90,6 +91,7 @@ function UserCard({ user, currentUser, openEditForm, handleDeleteUser }: UserCar
 export function UserManagement() {
   const { user: currentUser } = useAuth()
   const { canAccess } = usePermissions({ user: currentUser })
+  const { toasts, success, error: showError, removeToast } = useToast()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
@@ -153,13 +155,14 @@ export function UserManagement() {
         await loadUsers() // Recharger la liste
         setShowCreateForm(false)
         resetForm()
+        success('Succès', 'Utilisateur créé avec succès')
       } else {
         const errorData = await response.json()
-        alert(`Erreur: ${errorData.message}`)
+        showError('Erreur', errorData.message || 'Erreur lors de la création de l\'utilisateur')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la création de l\'utilisateur:', error)
-      alert('Erreur lors de la création de l\'utilisateur')
+      showError('Erreur', 'Erreur lors de la création de l\'utilisateur')
     }
   }
 
@@ -180,13 +183,14 @@ export function UserManagement() {
         await loadUsers() // Recharger la liste
         setEditingUser(null)
         resetForm()
+        success('Succès', 'Utilisateur mis à jour avec succès')
       } else {
         const errorData = await response.json()
-        alert(`Erreur: ${errorData.message}`)
+        showError('Erreur', errorData.message || 'Erreur lors de la mise à jour de l\'utilisateur')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la mise à jour de l\'utilisateur:', error)
-      alert('Erreur lors de la mise à jour de l\'utilisateur')
+      showError('Erreur', 'Erreur lors de la mise à jour de l\'utilisateur')
     }
   }
 
@@ -214,13 +218,14 @@ export function UserManagement() {
         setHasLoaded(false) // Réinitialiser le flag
         await loadUsers() // Recharger la liste
         setUserToDelete(null) // Fermer le modal
+        success('Succès', 'Utilisateur supprimé avec succès')
       } else {
         const errorData = await response.json()
-        alert(`Erreur: ${errorData.message}`)
+        showError('Erreur', errorData.message || 'Erreur lors de la suppression de l\'utilisateur')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la suppression de l\'utilisateur:', error)
-      alert('Erreur lors de la suppression de l\'utilisateur')
+      showError('Erreur', 'Erreur lors de la suppression de l\'utilisateur')
     }
   }
 
@@ -354,6 +359,19 @@ export function UserManagement() {
                   placeholder="Mot de passe"
                   className="mt-1"
                 />
+                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                  <p className="text-xs text-blue-700 font-medium mb-1">Exigences du mot de passe :</p>
+                  <ul className="text-xs text-blue-600 space-y-0.5">
+                    <li className="flex items-center gap-1">
+                      <span className="w-1 h-1 bg-blue-500 rounded-full"></span>
+                      Minimum 6 caractères
+                    </li>
+                    <li className="flex items-center gap-1">
+                      <span className="w-1 h-1 bg-blue-500 rounded-full"></span>
+                      Lettres et chiffres recommandés
+                    </li>
+                  </ul>
+                </div>
               </div>
             </div>
             
@@ -591,6 +609,18 @@ export function UserManagement() {
           </Card>
         </div>
       )}
+
+      {/* Toasts */}
+      {toasts.map((toast) => (
+        <Toast
+          key={toast.id}
+          id={toast.id}
+          type={toast.type}
+          title={toast.title}
+          message={toast.message}
+          duration={toast.duration}
+        />
+      ))}
     </div>
   )
 }

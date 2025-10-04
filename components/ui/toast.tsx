@@ -9,20 +9,22 @@ interface ToastProps {
   title: string
   message?: string
   duration?: number
-  onClose: (id: string) => void
 }
 
-export function Toast({ id, type, title, message, duration = 5000, onClose }: ToastProps) {
+export function Toast({ id, type, title, message, duration = 5000 }: ToastProps) {
   const [isVisible, setIsVisible] = useState(true)
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(false)
-      setTimeout(() => onClose(id), 300) // Attendre l'animation de sortie
+      setTimeout(() => {
+        // Dispatch un événement personnalisé pour notifier la fermeture
+        window.dispatchEvent(new CustomEvent('toast-close', { detail: { id } }))
+      }, 300) // Attendre l'animation de sortie
     }, duration)
 
     return () => clearTimeout(timer)
-  }, [id, duration, onClose])
+  }, [id, duration])
 
   const getIcon = () => {
     switch (type) {
@@ -68,7 +70,10 @@ export function Toast({ id, type, title, message, duration = 5000, onClose }: To
           <button
             onClick={() => {
               setIsVisible(false)
-              setTimeout(() => onClose(id), 300)
+              setTimeout(() => {
+                // Dispatch un événement personnalisé pour notifier la fermeture
+                window.dispatchEvent(new CustomEvent('toast-close', { detail: { id } }))
+              }, 300)
             }}
             className="text-gray-400 hover:text-gray-600 transition-colors"
           >
@@ -98,6 +103,20 @@ export function useToast() {
   const removeToast = (id: string) => {
     setToasts(prev => prev.filter(toast => toast.id !== id))
   }
+
+  // Écouter les événements de fermeture de toast
+  useEffect(() => {
+    const handleToastClose = (event: CustomEvent) => {
+      const { id } = event.detail
+      removeToast(id)
+    }
+
+    window.addEventListener('toast-close', handleToastClose as EventListener)
+    
+    return () => {
+      window.removeEventListener('toast-close', handleToastClose as EventListener)
+    }
+  }, [])
 
   const success = (title: string, message?: string) => {
     addToast({ type: 'success', title, message })
