@@ -38,8 +38,7 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState({
     profile: {
       name: "",
-      email: "",
-      company: ""
+      email: ""
     },
     password: {
       currentPassword: "",
@@ -55,8 +54,7 @@ export default function SettingsPage() {
         ...prev,
         profile: {
           name: user.name || "",
-          email: user.email || "",
-          company: "Simplon Form" // Valeur par défaut
+          email: user.email || ""
         }
       }))
     }
@@ -259,15 +257,6 @@ export default function SettingsPage() {
                           className="mt-1"
                         />
                       </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="company" className="text-sm">Entreprise</Label>
-                      <Input
-                        id="company"
-                        value={settings.profile.company}
-                        onChange={(e) => updateSetting("profile", "company", e.target.value)}
-                        className="mt-1"
-                      />
                     </div>
                   </CardContent>
                 </Card>
