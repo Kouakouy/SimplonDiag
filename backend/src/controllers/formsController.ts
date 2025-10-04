@@ -80,7 +80,7 @@ export const createForm = async (req: AuthRequest, res: Response) => {
       .replace(/\//g, '_')
       .replace(/=+$/g, '')
     const insert = await forms.insertOne({
-      user_id: null,
+      user_id: req.user?.id, // Corriger : utiliser l'ID de l'utilisateur connecté
       created_by: req.user?.id, // Ajouter le créateur
       title,
       description: description ?? null,
@@ -346,6 +346,56 @@ export const saveAnalysis = async (req: AuthRequest, res: Response) => {
     return res.status(201).json(savedAnalysis)
   } catch (error) {
     console.error('Error saving analysis:', error)
+    return res.status(500).json({ message: 'Server error' })
+  }
+}
+
+// Endpoint pour corriger les formulaires existants avec created_by null
+export const fixOrphanForms = async (req: AuthRequest, res: Response) => {
+  try {
+    // Seuls les admins peuvent exécuter cette action
+    if (req.user?.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' })
+    }
+    
+    const db = await getDb()
+    const forms = db.collection('forms')
+    
+    // Trouver tous les formulaires avec created_by null
+    const orphanForms = await forms.find({ created_by: null }).toArray()
+    
+    if (orphanForms.length === 0) {
+      return res.json({ 
+        message: 'No orphan forms found', 
+        count: 0,
+        forms: []
+      })
+    }
+    
+    // Assigner tous les formulaires orphelins à l'utilisateur admin actuel
+    const result = await forms.updateMany(
+      { created_by: null },
+      { 
+        $set: { 
+          created_by: req.user.id,
+          user_id: req.user.id,
+          updated_at: new Date()
+        } 
+      }
+    )
+    
+    return res.json({
+      message: `Fixed ${result.modifiedCount} orphan forms`,
+      count: result.modifiedCount,
+      forms: orphanForms.map(form => ({
+        id: form._id,
+        title: form.title,
+        created_at: form.created_at
+      }))
+    })
+    
+  } catch (error) {
+    console.error('Error fixing orphan forms:', error)
     return res.status(500).json({ message: 'Server error' })
   }
 }

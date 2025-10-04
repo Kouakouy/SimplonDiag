@@ -11,21 +11,26 @@ import {
   shareForm,
   listAnalyses,
   saveAnalysis,
+  fixOrphanForms,
 } from '../controllers'
+import { requireAuth } from '../middleware/auth'
 
 export const formsRouter = Router()
 
-// Auth temporarily disabled to allow running without auth setup
-formsRouter.get('/', listForms)
-formsRouter.post('/', createForm)
-formsRouter.get('/:id', getForm)
-formsRouter.put('/:id', updateForm)
-formsRouter.delete('/:id', deleteForm)
-formsRouter.get('/:id/responses', listResponses)
-formsRouter.post('/:id/responses', submitResponse)
-formsRouter.get('/:id/stats', getStats)
-formsRouter.post('/:id/share', shareForm)
-formsRouter.get('/:id/analyses', listAnalyses)
-formsRouter.post('/:id/analyses', saveAnalysis)
+// Routes protégées par authentification
+formsRouter.get('/', requireAuth, listForms)
+formsRouter.post('/', requireAuth, createForm)
+formsRouter.get('/:id', requireAuth, getForm)
+formsRouter.put('/:id', requireAuth, updateForm)
+formsRouter.delete('/:id', requireAuth, deleteForm)
+formsRouter.get('/:id/responses', requireAuth, listResponses)
+formsRouter.post('/:id/responses', submitResponse) // Pas d'auth pour les réponses publiques
+formsRouter.get('/:id/stats', requireAuth, getStats)
+formsRouter.post('/:id/share', requireAuth, shareForm)
+formsRouter.get('/:id/analyses', requireAuth, listAnalyses)
+formsRouter.post('/:id/analyses', requireAuth, saveAnalysis)
+
+// Route spéciale pour corriger les formulaires orphelins (admin seulement)
+formsRouter.post('/fix-orphans', requireAuth, fixOrphanForms)
 
 
