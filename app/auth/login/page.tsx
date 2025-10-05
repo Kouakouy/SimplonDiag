@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/contexts/AuthContext"
 import { hourglass } from "ldrs"
-import Squares from "@/components/ui/Squares"
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Sparkles, Shield, Zap } from "lucide-react"
 import Image from "next/image"
 
@@ -105,56 +104,60 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center px-4 py-10 overflow-hidden">
-      {/* Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#E40046] via-[#FF6B8A] to-[#FF8E9B]"></div>
+    <div className="min-h-screen relative flex items-center justify-center">
+      {/* Image de fond avec flou */}
+      <Image
+        src="/images/fond.png"
+        alt="Background"
+        fill
+        className="object-cover blur-sm"
+        priority
+      />
       
-      {/* Animated Background */}
-      <div className="absolute inset-0 z-0">
-        <Squares 
-          speed={0.2} 
-          squareSize={60}
-          direction="diagonal"
-          borderColor="rgba(255, 255, 255, 0.15)"
-          hoverFillColor="rgba(255, 255, 255, 0.05)"
-        />
-      </div>
-
-      {/* Floating Elements */}
-      <div className="absolute inset-0 z-0 overflow-hidden">
-        <div className="absolute top-20 left-10 w-20 h-20 bg-white/10 rounded-full blur-xl animate-pulse"></div>
-        <div className="absolute top-40 right-20 w-32 h-32 bg-white/5 rounded-full blur-2xl animate-pulse delay-1000"></div>
-        <div className="absolute bottom-20 left-1/4 w-24 h-24 bg-white/8 rounded-full blur-xl animate-pulse delay-2000"></div>
-        <div className="absolute bottom-40 right-1/3 w-16 h-16 bg-white/12 rounded-full blur-lg animate-pulse delay-500"></div>
-      </div>
+      {/* Overlay pour améliorer la lisibilité */}
+      <div className="absolute inset-0 bg-black/30"></div>
       
-      {/* Main Content */}
-      <div className="relative z-10 w-full flex justify-center">
-        <Card 
-          ref={cardRef}
-          className="w-full max-w-lg shadow-2xl bg-white backdrop-blur-sm border-0 rounded-3xl overflow-hidden"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-        >
-          {/* Header blanc */}
-          <CardHeader className="text-center space-y-3 pb-4 bg-white border-b border-gray-100">
-            <div className="flex items-center justify-center mb-2">
-              <div className="relative">
-                <Image
-                  src="/images/SimplonAfrica.jpg"
-                  alt="Simplon Africa"
-                  width={180}
-                  height={70}
-                  className="object-contain"
-                />
-                <div className="absolute -top-2 -right-2">
-                  <Sparkles className="w-5 h-5 text-[#E40046] animate-pulse" />
-                </div>
+      {/* Main Content - Layout en 2 colonnes */}
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-8 py-10">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          
+          {/* Colonne Gauche - Logo et Texte */}
+          <div className="text-white space-y-6 flex flex-col items-center lg:items-start text-center lg:text-left">
+            <div className="relative">
+              <Image
+                src="/images/logo2.png"
+                alt="Simplon Africa"
+                width={300}
+                height={120}
+                className="object-contain drop-shadow-2xl"
+              />
+            </div>
+            
+            <div className="space-y-4">
+              <h1 className="text-3xl lg:text-4xl font-bold drop-shadow-lg">
+                La plateforme collaborative<br />
+                d'apprentissage en pédagogie active
+              </h1>
+              
+              <div className="inline-block bg-[#E40046] text-white px-6 py-2 rounded-full text-sm font-semibold shadow-lg">
+                Powered by Simplon Africa
               </div>
             </div>
-            <CardTitle className="text-xl font-bold mb-1 text-gray-900">Connexion</CardTitle>
-            <p className="text-gray-600 text-sm font-medium">SIMPLON FORM</p>
-          </CardHeader>
+          </div>
+
+          {/* Colonne Droite - Formulaire */}
+          <Card 
+            ref={cardRef}
+            className="w-full shadow-2xl drop-shadow-2xl bg-white border-0 rounded-3xl overflow-hidden"
+            style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+          >
+            {/* Header */}
+            <CardHeader className="text-center space-y-3 pb-4 bg-white border-b border-gray-100">
+              <CardTitle className="text-2xl font-bold text-gray-900">Connexion</CardTitle>
+              <p className="text-gray-600 text-sm font-medium">SIMPLON FORM</p>
+            </CardHeader>
 
           <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -289,6 +292,8 @@ export default function LoginPage() {
             </form>
           </CardContent>
         </Card>
+
+        </div>
       </div>
     </div>
   )

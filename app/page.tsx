@@ -1,15 +1,165 @@
 "use client"
 
-import { FileText, Plus, BarChart3, Users, Eye, TrendingUp } from "lucide-react"
+import { FileText, Plus, BarChart3, Users, Eye, TrendingUp, ArrowRight, CheckCircle, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Sidebar } from "@/components/layout/sidebar"
-import { AuthGuard } from "@/components/auth/AuthGuard"
 import { useEffect, useState } from "react"
 import { apiRequest } from "@/lib/api"
 import Link from "next/link"
+import { useAuth } from "@/lib/contexts/AuthContext"
+import Image from "next/image"
+import { useRouter } from "next/navigation"
 
-export default function Dashboard() {
+export default function HomePage() {
+  const { user, loading: authLoading } = useAuth()
+  const router = useRouter()
+
+  // Si l'utilisateur n'est pas connecté, afficher la landing page
+  if (!authLoading && !user) {
+    return <LandingPage />
+  }
+
+  // Si l'utilisateur est connecté, afficher le dashboard
+  if (user) {
+    return <Dashboard />
+  }
+
+  // Pendant le chargement
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E40046]"></div>
+    </div>
+  )
+}
+
+function LandingPage() {
+  const router = useRouter()
+
+  return (
+    <div className="min-h-screen relative flex items-center justify-center">
+      {/* Image de fond avec flou */}
+      <Image
+        src="/images/fond.png"
+        alt="Background"
+        fill
+        className="object-cover blur-sm"
+        priority
+      />
+      
+      {/* Overlay pour améliorer la lisibilité */}
+      <div className="absolute inset-0 bg-black/30"></div>
+      
+      {/* Main Content - Layout en 2 colonnes */}
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-8 py-10">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          
+          {/* Colonne Gauche - Logo et Texte */}
+          <div className="text-white space-y-6 flex flex-col items-center lg:items-start text-center lg:text-left">
+            <div className="relative">
+              <Image
+                src="/images/logo2.png"
+                alt="Simplon Africa"
+                width={300}
+                height={120}
+                className="object-contain drop-shadow-2xl"
+              />
+            </div>
+            
+            <div className="space-y-4">
+              <h1 className="text-3xl lg:text-5xl font-bold drop-shadow-lg">
+                La plateforme collaborative<br />
+                d'apprentissage en pédagogie active
+              </h1>
+              
+              <p className="text-lg lg:text-xl text-white/90 drop-shadow-md">
+                Créez, partagez et analysez vos formulaires pédagogiques en toute simplicité
+              </p>
+              
+              <div className="inline-block bg-[#E40046] text-white px-6 py-2 rounded-full text-sm font-semibold shadow-lg">
+                Powered by Simplon Africa
+              </div>
+            </div>
+          </div>
+
+          {/* Colonne Droite - Carte de bienvenue */}
+          <Card className="w-full shadow-2xl drop-shadow-2xl bg-white border-0 rounded-3xl overflow-hidden" style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
+            <CardHeader className="text-center space-y-3 pb-4 bg-white border-b border-gray-100">
+              <div className="flex items-center justify-center">
+                <Sparkles className="w-8 h-8 text-[#E40046]" />
+              </div>
+              <CardTitle className="text-2xl font-bold text-gray-900">Bienvenue sur SIMPLON FORM</CardTitle>
+              <p className="text-gray-600 text-sm">
+                Transformez votre manière de créer et gérer vos formulaires pédagogiques
+              </p>
+            </CardHeader>
+            
+            <CardContent className="p-6">
+              <div className="space-y-6">
+                {/* Fonctionnalités */}
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Création intuitive</h3>
+                      <p className="text-sm text-gray-600">Concevez des formulaires personnalisés en quelques clics</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Analyses avancées</h3>
+                      <p className="text-sm text-gray-600">Visualisez et exportez vos données facilement</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Partage simplifié</h3>
+                      <p className="text-sm text-gray-600">Diffusez vos formulaires en un clic</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Collaboration en temps réel</h3>
+                      <p className="text-sm text-gray-600">Travaillez en équipe sur vos projets</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bouton Se connecter */}
+                <Button 
+                  onClick={() => router.push('/auth/login')}
+                  className="w-full h-12 rounded-xl text-base font-semibold transition-all duration-300 bg-gradient-to-r from-[#E40046] to-[#FF6B8A] hover:from-[#D4003E] hover:to-[#FF5A7A] shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <span>Se connecter</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </div>
+                </Button>
+
+                {/* Texte info */}
+                <div className="text-center pt-4 border-t border-gray-100">
+                  <p className="text-sm text-gray-600">
+                    Vous n'avez pas encore de compte ?<br />
+                    <span className="text-[#E40046] font-medium">Contactez l'Administrateur pour obtenir vos identifiants</span>
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Dashboard() {
   const [forms, setForms] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -20,6 +170,7 @@ export default function Dashboard() {
     createdThisWeek: 0,
     responseRate: 0,
   })
+  const { user } = useAuth()
 
   useEffect(() => {
     const load = async () => {
@@ -68,9 +219,8 @@ export default function Dashboard() {
   }, [])
 
   return (
-    <AuthGuard>
-      <div className="bg-gray-50 min-h-screen">
-        <Sidebar />
+    <div className="bg-gray-50 min-h-screen">
+      <Sidebar />
 
         {/* Contenu principal */}
         <div className="ml-0 lg:ml-64 flex flex-col min-h-screen">
@@ -308,7 +458,6 @@ export default function Dashboard() {
           </div>
           </main>
         </div>
-      </div>
-    </AuthGuard>
+    </div>
   )
 }
