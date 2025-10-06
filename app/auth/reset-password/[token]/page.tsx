@@ -77,8 +77,8 @@ export default function ResetPasswordPage() {
             
             <div className="space-y-4">
               <h1 className="text-3xl lg:text-4xl font-bold drop-shadow-lg">
-                La plateforme collaborative<br />
-                d'apprentissage en pédagogie active
+                Plateforme de diagnostic de profil<br />
+                pour un programme de formation plus adaptée
               </h1>
               
               <div className="inline-block bg-[#E40046] text-white px-6 py-2 rounded-full text-sm font-semibold shadow-lg">

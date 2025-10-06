@@ -10,7 +10,7 @@ export const EmailTemplates = {
     `,
   }),
   weeklyReport: (stats: any) => ({
-    subject: 'Rapport hebdomadaire - Simplon Form',
+    subject: 'Rapport hebdomadaire - Simplon Diag',
     html: `
       <h2>Rapport hebdomadaire</h2>
       <p>Formulaires créés: ${stats.formsCreated}</p>

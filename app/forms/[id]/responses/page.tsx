@@ -2,6 +2,22 @@
 
 import { Label } from "@/components/ui/label"
 
+// Fonction utilitaire pour convertir l'image en base64
+const getLogoBase64 = async (): Promise<string> => {
+  try {
+    const response = await fetch('/images/logo2.png')
+    const blob = await response.blob()
+    return new Promise((resolve) => {
+      const reader = new FileReader()
+      reader.onloadend = () => resolve(reader.result as string)
+      reader.readAsDataURL(blob)
+    })
+  } catch (error) {
+    console.error('Erreur lors du chargement du logo:', error)
+    return ''
+  }
+}
+
 // Page de visualisation des réponses du formulaire
 import { useState, useEffect, useRef } from "react"
 import { useParams } from "next/navigation"
@@ -433,16 +449,22 @@ function ResponsesPageContent() {
           }
           
           .logo {
-            width: 50px;
-            height: 50px;
+            width: 125px;
+            height: 40px;
             background: white;
-            border-radius: 8px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
             color: #E40046;
-            font-size: 18px;
+            font-size: 16px;
+          }
+          
+          .logo img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
           }
           
           .company-info h1 {
@@ -569,10 +591,9 @@ function ResponsesPageContent() {
           <div class="header-content">
             <div class="logo-section">
               <div class="logo">
-                <img src="https://s10.aconvert.com/convert/p3r68-cdx67/auyhc-1st4f.jpg" alt="Simplon Logo" style="height:40px;vertical-align:middle;" />
+                <img src="/images/logo2.png" alt="Simplon Logo" style="height:40px;vertical-align:middle;" />
               </div>
               <div class="company-info">
-                <h1>Simplon</h1>
                 <p>Plateforme de Formulaires</p>
               </div>
             </div>
@@ -588,14 +609,6 @@ function ResponsesPageContent() {
           
           <div class="info-card">
             <div class="info-grid">
-              <div class="info-item">
-                <div class="info-label">Nom du répondant</div>
-                <div class="info-value">${response.respondentName}</div>
-              </div>
-              <div class="info-item">
-                <div class="info-label">Email</div>
-                <div class="info-value">${response.respondentEmail}</div>
-              </div>
               <div class="info-item">
                 <div class="info-label">Date de soumission</div>
                 <div class="info-value">${response.submittedAt.toLocaleString("fr-FR")}</div>
@@ -619,7 +632,7 @@ function ResponsesPageContent() {
         </div>
         
         <div class="footer">
-          <p>Généré le ${new Date().toLocaleString("fr-FR")} par Simplon Form Platform</p>
+          <p>Généré le ${new Date().toLocaleString("fr-FR")} par Simplon Diag Platform</p>
           <p>© ${new Date().getFullYear()} Simplon - Tous droits réservés</p>
         </div>
       </body>
@@ -952,11 +965,14 @@ function ResponsesPageContent() {
     link.click()
   }
 
-  const exportAnalysisToPDF = () => {
+  const exportAnalysisToPDF = async () => {
     if (!aiAnalysis || !form) {
       warning("Aucune analyse", "Aucune analyse à exporter")
       return
     }
+
+    // Charger le logo en base64
+    const logoBase64 = await getLogoBase64()
 
     // Template HTML optimisé pour l'export PDF de l'analyse
     const htmlContent = `
@@ -1004,16 +1020,20 @@ function ResponsesPageContent() {
           }
           
           .logo {
-            width: 50px;
-            height: 50px;
+            width: 45px;
+            height: 30px;
             background: white;
-            border-radius: 8px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
-            color: #E40046;
-            font-size: 18px;
+            padding: 3px;
+          }
+          
+          .logo img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
           }
           
           .company-info h1 {
@@ -1202,9 +1222,8 @@ function ResponsesPageContent() {
       <body>
         <div class="header">
           <div class="logo-section">
-            <div class="logo">S</div>
+            <div class="logo">${logoBase64 ? `<img src="${logoBase64}" alt="Simplon Diag" />` : '<div style="font-weight: bold; color: #E40046; font-size: 18px;">S</div>'}</div>
             <div class="company-info">
-              <h1>Simplon Africa</h1>
               <p>Plateforme de Formulaires - Analyse IA</p>
             </div>
           </div>
@@ -1214,10 +1233,10 @@ function ResponsesPageContent() {
           </div>
         </div>
         
-        <div class="form-title">🧠 Analyse IA - ${form.title}</div>
+        <div class="form-title">Analyse IA - ${form.title}</div>
         
         <div class="section">
-          <div class="section-title">📊 Résumé Exécutif</div>
+          <div class="section-title">Résumé Exécutif</div>
           <div class="summary-box">
             <p>${aiAnalysis.summary}</p>
             <div style="margin-top: 10px; font-size: 11px; color: #666;">
@@ -1272,7 +1291,7 @@ function ResponsesPageContent() {
         </div>
         
         <div class="footer">
-          <p>Généré le ${new Date().toLocaleString("fr-FR")} par Simplon Form Platform</p>
+          <p>Généré le ${new Date().toLocaleString("fr-FR")} par Simplon Diag Platform</p>
           <p>© ${new Date().getFullYear()} Simplon Africa - Tous droits réservés</p>
         </div>
       </body>
@@ -1363,7 +1382,7 @@ function ResponsesPageContent() {
           }
           
           .logo {
-            width: 40px;
+            width: 125px;
             height: 40px;
             background: white;
             border-radius: 6px;
@@ -1479,9 +1498,10 @@ function ResponsesPageContent() {
       <body>
         <div class="header">
           <div class="logo-section">
-            <div class="logo">S</div>
+            <div class="logo">
+              <img src="/images/logo2.png" alt="Simplon Logo" style="height:40px;vertical-align:middle;" />
+            </div>
             <div class="company-info">
-              <h1>Simplon Africa</h1>
               <p>Plateforme de Formulaires</p>
             </div>
           </div>
@@ -1507,7 +1527,7 @@ function ResponsesPageContent() {
         </table>
         
         <div class="footer">
-          <p>Généré le ${new Date().toLocaleString("fr-FR")} par Simplon Form Platform</p>
+          <p>Généré le ${new Date().toLocaleString("fr-FR")} par Simplon Diag Platform</p>
           <p>© ${new Date().getFullYear()} Simplon Africa - Tous droits réservés</p>
         </div>
       </body>
@@ -2331,7 +2351,7 @@ function ResponsesPageContent() {
                               <CheckCircle className="w-4 h-4 mr-2" />
                               Enregistrer l'analyse
                             </Button>
-                            <Button variant="outline" onClick={exportAnalysisToPDF}>
+                            <Button variant="outline" onClick={async () => await exportAnalysisToPDF()}>
                               <Download className="w-4 h-4 mr-2" />
                               Exporter l'analyse (PDF)
                             </Button>

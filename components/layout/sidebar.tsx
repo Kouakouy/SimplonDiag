@@ -91,7 +91,7 @@ export function Sidebar() {
         <div className="p-6 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FileText className="w-6 h-6" />
-            <h1 className="text-xl font-semibold">Simplon Form</h1>
+            <h1 className="text-xl font-semibold">Simplon Diag</h1>
           </div>
           <button
             onClick={() => setIsOpen(false)}

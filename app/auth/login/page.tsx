@@ -110,7 +110,7 @@ export default function LoginPage() {
         src="/images/fond.png"
         alt="Background"
         fill
-        className="object-cover blur-sm"
+        className="object-cover opacity-30"
         priority
       />
       
@@ -126,7 +126,7 @@ export default function LoginPage() {
             <div className="relative">
               <Image
                 src="/images/logo2.png"
-                alt="Simplon Africa"
+                alt="Simplon Diag"
                 width={300}
                 height={120}
                 className="object-contain drop-shadow-2xl"
@@ -134,9 +134,9 @@ export default function LoginPage() {
             </div>
             
             <div className="space-y-4">
-              <h1 className="text-3xl lg:text-4xl font-bold drop-shadow-lg">
-                La plateforme collaborative<br />
-                d'apprentissage en pédagogie active
+              <h1 className="text-3xl text-[#113744] lg:text-4xl font-bold drop-shadow-lg">
+                Plateforme de diagnostic de profil<br />
+                pour un programme de formation plus adaptée
               </h1>
               
               <div className="inline-block bg-[#E40046] text-white px-6 py-2 rounded-full text-sm font-semibold shadow-lg">
@@ -154,9 +154,8 @@ export default function LoginPage() {
             onMouseLeave={() => setIsHovered(false)}
           >
             {/* Header */}
-            <CardHeader className="text-center space-y-3 pb-4 bg-white border-b border-gray-100">
+            <CardHeader className="text-center space-y-3 pb-0">
               <CardTitle className="text-2xl font-bold text-gray-900">Connexion</CardTitle>
-              <p className="text-gray-600 text-sm font-medium">SIMPLON FORM</p>
             </CardHeader>
 
           <CardContent className="p-6">
@@ -165,7 +164,7 @@ export default function LoginPage() {
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium text-gray-700 flex items-center gap-2">
                   <Mail className="w-4 h-4" />
-                  Email
+                  Adresse email
                 </Label>
                 <div className="relative">
                   <Input

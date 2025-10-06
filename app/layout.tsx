@@ -6,7 +6,7 @@ import { AuthProvider } from "@/lib/contexts/AuthContext"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "Simplon Form",
+  title: "Simplon Diag",
   description: "Plateforme de création et gestion de formulaires Simplon Africa",
   icons: {
     icon: [
