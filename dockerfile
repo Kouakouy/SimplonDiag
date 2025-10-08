@@ -29,7 +29,7 @@ RUN npm ci --omit=dev
 # Copier les fichiers build depuis l'étape builder
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/next.config.js ./
+COPY --from=builder /app/next.config.mjs ./
 COPY --from=builder /app/node_modules ./node_modules
 
 # Définir la variable d'environnement
