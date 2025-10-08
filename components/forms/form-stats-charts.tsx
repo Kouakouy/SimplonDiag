@@ -149,37 +149,6 @@ export function FormStatsCharts({ form, responses = [], serverStats }: FormStats
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Eye className="w-5 h-5 text-blue-600" />
-              </div>
-              <TrendingUp className="w-4 h-4 text-green-500" />
-            </div>
-            <div className="text-3xl font-bold text-gray-900 mb-1">{totalViews}</div>
-            <div className="text-sm text-gray-600 mb-2">Vues totales</div>
-            <div className={`text-xs ${parseFloat(trends.views) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {parseFloat(trends.views) >= 0 ? '+' : ''}{trends.views}% cette semaine
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <Target className="w-5 h-5 text-green-600" />
-              </div>
-              <TrendingUp className="w-4 h-4 text-green-500" />
-            </div>
-            <div className="text-3xl font-bold text-gray-900 mb-1">{responseRate}%</div>
-            <div className="text-sm text-gray-600 mb-2">Taux de réponse</div>
-            <div className={`text-xs ${parseFloat(trends.responseRate) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {parseFloat(trends.responseRate) >= 0 ? '+' : ''}{trends.responseRate}% cette semaine
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Contrôles */}
@@ -198,91 +167,6 @@ export function FormStatsCharts({ form, responses = [], serverStats }: FormStats
           </Select>
         </div>
 
-      </div>
-
-      {/* Graphiques */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Réponses par jour */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Réponses par jour</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={responsesByDay}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="responses" stroke="#ec4899" strokeWidth={2} name="Réponses" />
-                <Line type="monotone" dataKey="views" stroke="#3b82f6" strokeWidth={2} name="Vues" />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Réponses par heure */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Réponses par heure</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={responsesByHour}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="hour" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="responses" fill="#10b981" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Répartition par appareil */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Répartition par appareil</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={deviceStats}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                >
-                  {deviceStats.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Performance des questions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Performance des questions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={questionStats}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="question" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="responses" fill="#f59e0b" name="Réponses" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Détails des questions */}

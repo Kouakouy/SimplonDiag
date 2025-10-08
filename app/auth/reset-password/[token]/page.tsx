@@ -46,18 +46,24 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center">
-      {/* Image de fond avec flou */}
+    <div className="min-h-screen relative flex items-center justify-center bg-white">
+      {/* Images de fond dupliquées avec opacité réduite */}
       <Image
         src="/images/BackgroundFade.png"
         alt="Background"
-        fill
-        className="object-cover blur-sm"
+        width={800}
+        height={600}
+        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 object-cover opacity-20"
         priority
       />
-      
-      {/* Overlay pour améliorer la lisibilité */}
-      <div className="absolute inset-0 bg-black/30"></div>
+      <Image
+        src="/images/BackgroundFade.png"
+        alt="Background Duplicate"
+        width={700}
+        height={525}
+        className="absolute top-1/2 left-1/2 transform -translate-x-1/3 -translate-y-1/3 object-cover opacity-15"
+        priority
+      />
       
       {/* Main Content - Layout en 2 colonnes */}
       <div className="relative z-10 w-full max-w-7xl mx-auto px-8 py-10">

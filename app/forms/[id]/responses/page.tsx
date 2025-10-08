@@ -59,6 +59,7 @@ import {
 import Link from "next/link"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { FormStatsCharts } from "@/components/forms/form-stats-charts"
+import { FormCharts } from '@/components/charts/FormChartsWrapper'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Toast, useToast } from "@/components/ui/toast"
 import { hourglass } from 'ldrs'
@@ -707,6 +708,9 @@ function ResponsesPageContent() {
         } else if (err.message.includes('Service IA non configuré')) {
           errorTitle = "Service IA non configuré"
           errorMessage = "Le service d'analyse IA n'est pas configuré, contactez l'administrateur"
+        } else if (err.message.includes('Crédits insuffisants')) {
+          errorTitle = "Crédits insuffisants"
+          errorMessage = "Les crédits pour l'analyse IA sont épuisés, contactez l'administrateur"
         } else if (err.message.includes('Service IA temporairement indisponible')) {
           errorTitle = "Service IA indisponible"
           errorMessage = "Le service d'analyse IA est temporairement indisponible, essayez plus tard"
@@ -805,55 +809,7 @@ function ResponsesPageContent() {
     }
   }
 
-  // Fonction pour générer un graphique à barres
-  const renderBarChart = (questionId: string, questionTitle: string) => {
-    const analysis = analyzeQuestionResponses(questionId)
-    const maxCount = Math.max(...Object.values(analysis.responseCounts))
-    
-    return (
-      <div className="space-y-3">
-        {Object.entries(analysis.responseCounts).map(([response, count]) => (
-          <div key={response} className="flex items-center gap-3">
-            <div className="w-32 text-sm text-gray-600 truncate">{response}</div>
-            <div className="flex-1 bg-gray-200 rounded-full h-6 relative">
-              <div 
-                className="bg-[#E40046] h-6 rounded-full flex items-center justify-end pr-2"
-                style={{ width: `${(count / maxCount) * 100}%` }}
-              >
-                <span className="text-white text-xs font-medium">{count}</span>
-              </div>
-            </div>
-            <div className="w-12 text-sm text-gray-600 text-right">
-              {((count / analysis.totalResponses) * 100).toFixed(1)}%
-            </div>
-          </div>
-        ))}
-      </div>
-    )
-  }
-
-  // Fonction pour générer un graphique circulaire
-  const renderPieChart = (questionId: string, questionTitle: string) => {
-    const analysis = analyzeQuestionResponses(questionId)
-    const colors = ['#E40046', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8']
-    
-    return (
-      <div className="flex flex-wrap gap-4">
-        {Object.entries(analysis.responseCounts).map(([response, count], index) => (
-          <div key={response} className="flex items-center gap-2">
-            <div 
-              className="w-4 h-4 rounded-full"
-              style={{ backgroundColor: colors[index % colors.length] }}
-            />
-            <span className="text-sm text-gray-600">{response}</span>
-            <span className="text-sm font-medium text-gray-800">({count})</span>
-          </div>
-        ))}
-      </div>
-    )
-  }
-
-  // Fonction pour générer un tableau de texte
+  // Fonction pour générer un tableau de texte (pour les questions ouvertes)
   const renderTextTable = (questionId: string, questionTitle: string) => {
     const questionResponses = responses.map(r => r.answers[questionId]).filter(Boolean)
     
@@ -869,6 +825,7 @@ function ResponsesPageContent() {
     )
   }
 
+
   // Fonction pour déterminer le type de graphique selon le type de question
   const renderQuestionChart = (question: any, index: number) => {
     const analysis = analyzeQuestionResponses(question.id)
@@ -882,23 +839,23 @@ function ResponsesPageContent() {
       )
     }
 
-    switch (question.type) {
-      case 'radio':
-      case 'select':
-        return renderPieChart(question.id, question.title)
-      case 'checkbox':
-        return renderBarChart(question.id, question.title)
-      case 'rating':
-        return renderBarChart(question.id, question.title)
-      case 'text':
-      case 'textarea':
-      case 'email':
-      case 'number':
-      case 'date':
-        return renderTextTable(question.id, question.title)
-      default:
-        return renderBarChart(question.id, question.title)
+    // Pour les questions ouvertes, on garde le tableau de texte
+    if (['text', 'textarea', 'email', 'number', 'date'].includes(question.type)) {
+      return renderTextTable(question.id, question.title)
     }
+
+    // Pour les autres types, on utilise Chart.js avec la logique appropriée :
+    // - Histogrammes (barres) pour checkboxes et ratings
+    // - Graphiques en disque (circulaires) pour radios, selects et booléens
+    return (
+      <FormCharts
+        questionId={question.id}
+        questionTitle={question.title}
+        questionType={question.type}
+        responseCounts={analysis.responseCounts}
+        totalResponses={analysis.totalResponses}
+      />
+    )
   }
 
   const showTableResults = () => {
@@ -2069,40 +2026,18 @@ function ResponsesPageContent() {
 
             {activeTab === "resume" && (
                 <div className="grid gap-6">
-                  {form.questions.map((question) => (
+                  {form.questions.map((question, index) => (
                     <Card key={question.id}>
                       <CardHeader>
-                        <CardTitle className="text-base">{question.title}</CardTitle>
-                        <p className="text-sm text-gray-500">Type: {question.type}</p>
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <span className="text-lg font-semibold">
+                            {index + 1}. {question.title}
+                          </span>
+                          <Badge variant="outline">{question.type}</Badge>
+                        </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        {question.type === "radio" || question.type === "select" ? (
-                          <div className="space-y-2">
-                            {question.options?.map((option) => {
-                              const count = responses.filter((r) => r.answers[question.id] === option).length
-                              const percentage = responses.length > 0 ? (count / responses.length) * 100 : 0
-
-                              return (
-                                <div key={option} className="flex items-center justify-between">
-                                  <span className="text-sm">{option}</span>
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-32 bg-gray-200 rounded-full h-2">
-                                      <div
-                                        className="bg-[#E40046] h-2 rounded-full text-white"
-                                        style={{ width: `${percentage}%` }}
-                                      ></div>
-                                    </div>
-                                    <span className="text-sm text-gray-600 w-12 text-right">
-                                      {count} ({percentage.toFixed(0)}%)
-                                    </span>
-                                  </div>
-                                </div>
-                              )
-                            })}
-                          </div>
-                        ) : (
-                          <div className="text-sm text-gray-600">{responses.length} réponse(s) collectée(s)</div>
-                        )}
+                        {renderQuestionChart(question, index)}
                       </CardContent>
                     </Card>
                   ))}
