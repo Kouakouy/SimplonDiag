@@ -58,9 +58,27 @@ export class AnalysisService {
           }
     } catch (error) {
       console.error('Erreur lors de l\'analyse:', error)
+      
+      // Gestion spécifique des erreurs d'IA
+      let errorMessage = 'Erreur inconnue lors de l\'analyse'
+      
+      if (error instanceof Error) {
+        if (error.message.includes('Impossible d\'utiliser la fonction IA')) {
+          errorMessage = 'Impossible d\'utiliser la fonction IA pour le moment, essayez plus tard'
+        } else if (error.message.includes('API key DeepSeek non configurée')) {
+          errorMessage = 'Service IA non configuré, contactez l\'administrateur'
+        } else if (error.message.includes('Clé API DeepSeek invalide')) {
+          errorMessage = 'Service IA temporairement indisponible, essayez plus tard'
+        } else if (error.message.includes('Service IA temporairement indisponible')) {
+          errorMessage = 'Service IA temporairement indisponible, essayez plus tard'
+        } else {
+          errorMessage = error.message
+        }
+      }
+      
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Erreur inconnue lors de l\'analyse',
+        error: errorMessage,
         processingTime: Date.now() - startTime
       }
     }

@@ -9,7 +9,13 @@ import { initializeDemoUsers } from './scripts/initDemoUsers'
 
 const app = express()
 
-app.use(cors({ origin: process.env.CORS_ORIGIN || '*', credentials: true }))
+app.use(cors({ 
+  origin: true, 
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range']
+}))
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ limit: '10mb', extended: true }))
 app.use(cookieParser())

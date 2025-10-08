@@ -49,7 +49,7 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen relative flex items-center justify-center">
       {/* Image de fond avec flou */}
       <Image
-        src="/images/fond.png"
+        src="/images/BackgroundFade.png"
         alt="Background"
         fill
         className="object-cover blur-sm"
@@ -76,7 +76,7 @@ export default function ResetPasswordPage() {
             </div>
             
             <div className="space-y-4">
-              <h1 className="text-3xl lg:text-4xl font-bold drop-shadow-lg">
+              <h1 className="text-xl lg:text-4xl font-bold drop-shadow-lg">
                 Plateforme de diagnostic de profil<br />
                 pour un programme de formation plus adaptée
               </h1>

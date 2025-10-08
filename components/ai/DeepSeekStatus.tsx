@@ -23,11 +23,22 @@ export function DeepSeekStatus() {
       const isConnected = await analysisService.testConnection()
       setStatus(isConnected ? 'connected' : 'error')
       if (!isConnected) {
-        setError('Impossible de se connecter à l\'API DeepSeek')
+        setError('Impossible d\'utiliser la fonction IA pour le moment, essayez plus tard')
       }
     } catch (err) {
       setStatus('error')
-      setError(err instanceof Error ? err.message : 'Erreur de connexion')
+      const errorMessage = err instanceof Error ? err.message : 'Erreur de connexion'
+      
+      // Messages d'erreur plus conviviaux
+      if (errorMessage.includes('Impossible d\'utiliser la fonction IA')) {
+        setError('Impossible d\'utiliser la fonction IA pour le moment, essayez plus tard')
+      } else if (errorMessage.includes('API key DeepSeek non configurée')) {
+        setError('Service IA non configuré, contactez l\'administrateur')
+      } else if (errorMessage.includes('Clé API DeepSeek invalide')) {
+        setError('Service IA temporairement indisponible, essayez plus tard')
+      } else {
+        setError(errorMessage)
+      }
     }
   }
 

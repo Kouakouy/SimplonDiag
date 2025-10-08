@@ -695,7 +695,27 @@ function ResponsesPageContent() {
       }
     } catch (err) {
       console.error("Erreur lors de l'analyse IA:", err)
-      showError("Erreur d'analyse", err instanceof Error ? err.message : 'Erreur inconnue')
+      
+      // Messages d'erreur plus conviviaux
+      let errorTitle = "Erreur d'analyse"
+      let errorMessage = 'Erreur inconnue'
+      
+      if (err instanceof Error) {
+        if (err.message.includes('Impossible d\'utiliser la fonction IA')) {
+          errorTitle = "Service IA indisponible"
+          errorMessage = "Impossible d'utiliser la fonction IA pour le moment, essayez plus tard"
+        } else if (err.message.includes('Service IA non configuré')) {
+          errorTitle = "Service IA non configuré"
+          errorMessage = "Le service d'analyse IA n'est pas configuré, contactez l'administrateur"
+        } else if (err.message.includes('Service IA temporairement indisponible')) {
+          errorTitle = "Service IA indisponible"
+          errorMessage = "Le service d'analyse IA est temporairement indisponible, essayez plus tard"
+        } else {
+          errorMessage = err.message
+        }
+      }
+      
+      showError(errorTitle, errorMessage)
     } finally {
       setIsAnalyzing(false)
     }

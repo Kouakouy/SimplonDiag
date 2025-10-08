@@ -40,7 +40,7 @@ function LandingPage() {
     <div className="min-h-screen relative flex items-center justify-center">
       {/* Image de fond avec flou */}
       <Image
-        src="/images/fond.png"
+        src="/images/BackgroundFade.png"
         alt="Background"
         fill
         className="object-cover opacity-30"
@@ -67,14 +67,10 @@ function LandingPage() {
             </div>
             
             <div className="space-y-4">
-              <h1 className="text-3xl text-[#113744] lg:text-5xl font-bold drop-shadow-lg">
-                Plateforme de diagnostic de profil<br />
+              <h1 className="text-xl text-[#113744] lg:text-5xl font-bold drop-shadow-lg">
+                Plateforme de diagnostic de profil
                 pour un programme de formation plus adaptée
               </h1>
-              
-              <p className="text-lg lg:text-xl text-[#113744]/90 drop-shadow-md">
-                Créez, partagez et analysez vos formulaires pédagogiques en toute simplicité
-              </p>
               
               <div className="inline-block bg-[#E40046] text-white px-6 py-2 rounded-full text-sm font-semibold shadow-lg">
                 Powered by Simplon Africa

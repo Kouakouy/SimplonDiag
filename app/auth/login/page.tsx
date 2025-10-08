@@ -107,7 +107,7 @@ export default function LoginPage() {
     <div className="min-h-screen relative flex items-center justify-center">
       {/* Image de fond avec flou */}
       <Image
-        src="/images/fond.png"
+        src="/images/BackgroundFade.png"
         alt="Background"
         fill
         className="object-cover opacity-30"
@@ -134,8 +134,8 @@ export default function LoginPage() {
             </div>
             
             <div className="space-y-4">
-              <h1 className="text-3xl text-[#113744] lg:text-4xl font-bold drop-shadow-lg">
-                Plateforme de diagnostic de profil<br />
+              <h1 className="text-1xl text-[#113744] lg:text-4xl font-bold drop-shadow-lg">
+                Plateforme de diagnostic de profil
                 pour un programme de formation plus adaptée
               </h1>
               

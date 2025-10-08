@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen relative flex items-center justify-center">
       {/* Image de fond avec flou */}
       <Image
-        src="/images/fond.png"
+        src="/images/BackgroundFade.png"
         alt="Background"
         fill
         className="object-cover opacity-30"

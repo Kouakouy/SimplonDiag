@@ -41,14 +41,22 @@ export interface DeepSeekAnalysisResponse {
 export class DeepSeekService {
   private apiKey: string
   private baseUrl = 'https://api.deepseek.com/v1'
+  private maxTokens: number
 
-  constructor(apiKey?: string) {
+  constructor(apiKey?: string, maxTokens: number = 4000) {
     this.apiKey = apiKey || process.env.NEXT_PUBLIC_DEEPSEEK_API_KEY || ''
+    this.maxTokens = maxTokens
   }
 
   async analyzeFormData(request: DeepSeekAnalysisRequest): Promise<DeepSeekAnalysisResponse> {
     if (!this.apiKey) {
       throw new Error('API key DeepSeek non configurée')
+    }
+
+    // Vérifier la disponibilité de l'API avant de commencer
+    const isAvailable = await this.checkAvailability()
+    if (!isAvailable) {
+      throw new Error('Impossible d\'utiliser la fonction IA pour le moment, essayez plus tard')
     }
 
     // Préparer les données pour l'analyse
@@ -74,12 +82,23 @@ export class DeepSeekService {
             }
           ],
           temperature: 0.3,
-          max_tokens: 2000
+          max_tokens: this.maxTokens
         })
       })
 
       if (!response.ok) {
-        throw new Error(`Erreur API DeepSeek: ${response.status} ${response.statusText}`)
+        // Gestion spécifique des erreurs HTTP
+        if (response.status === 401) {
+          throw new Error('Clé API DeepSeek invalide ou expirée')
+        } else if (response.status === 429) {
+          throw new Error('Impossible d\'utiliser la fonction IA pour le moment, essayez plus tard')
+        } else if (response.status === 503) {
+          throw new Error('Service IA temporairement indisponible, essayez plus tard')
+        } else if (response.status >= 500) {
+          throw new Error('Service IA temporairement indisponible, essayez plus tard')
+        } else {
+          throw new Error(`Erreur API DeepSeek: ${response.status} ${response.statusText}`)
+        }
       }
 
       const data = await response.json()
@@ -102,6 +121,13 @@ export class DeepSeekService {
       }
     } catch (error) {
       console.error('Erreur lors de l\'analyse DeepSeek:', error)
+      
+      // Gestion des erreurs réseau
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Impossible d\'utiliser la fonction IA pour le moment, essayez plus tard')
+      }
+      
+      // Relancer l'erreur avec le message approprié
       throw error
     }
   }
@@ -135,68 +161,34 @@ export class DeepSeekService {
 
     const formPurpose = this.inferFormPurpose(formTitle, formDescription)
     
-    let prompt = `Tu es un expert en analyse de données de formulaires. Réponds UNIQUEMENT en JSON valide.
+    let prompt = `Analyse ce formulaire et réponds en JSON:
 
-CONTEXTE DU FORMULAIRE:
-📋 TITRE: "${formTitle}"
-📝 DESCRIPTION: "${formDescription || 'Aucune description fournie'}"
-🎯 OBJECTIF: ${formPurpose}
+TITRE: "${formTitle}"
+DESCRIPTION: "${formDescription || 'Aucune'}"
+OBJECTIF: ${formPurpose}
 
 `
 
     if (customPrompt) {
-      prompt += `ANALYSE PERSONNALISÉE DEMANDÉE:
-"${customPrompt}"
-
-Concentre-toi UNIQUEMENT sur cette demande. Analyse les données pour identifier les patterns qui répondent directement à cette question.
+      prompt += `DEMANDE: "${customPrompt}"
 
 `
     }
 
-    prompt += `DONNÉES À ANALYSER:
-QUESTIONS ET RÉPONSES:
-${JSON.stringify(questionAnalysis, null, 2)}
+    prompt += `DONNÉES:
+${JSON.stringify(questionAnalysis)}
 
-RÉPONSES COMPLÈTES (${responses.length} réponses):
-${JSON.stringify(responses.slice(0, 10), null, 2)}${responses.length > 10 ? '\n... (autres réponses similaires)' : ''}
+RÉPONSES (${responses.length}):
+${JSON.stringify(responses.slice(0, 5))}${responses.length > 5 ? '\n...' : ''}
 
-Fournis une analyse en JSON avec cette structure exacte :
+Réponds en JSON:
 {
-  "summary": "Résumé de l'analyse ${customPrompt ? 'ciblée répondant à la demande personnalisée' : 'des données du formulaire'}",
-  "insights": [
-    "Insight 1: Analyse basée sur les données",
-    "Insight 2: Pattern ou tendance identifiée",
-    "Insight 3: Données significatives observées"
-  ],
-  "trends": [
-    {
-      "questionId": "id_question",
-      "questionTitle": "Titre de la question",
-      "trend": "Description de la tendance observée avec évaluation quantitative",
-      "confidence": 0.85
-    }
-  ],
-  "recommendations": [
-    "Recommandation 1: Action concrète basée sur l'analyse",
-    "Recommandation 2: Suggestion d'amélioration"
-  ],
-  "charts": [
-    {
-      "questionId": "id_question",
-      "questionTitle": "Titre de la question",
-      "type": "bar|pie|line",
-      "data": [
-        {
-          "label": "Option 1",
-          "value": 15,
-          "percentage": 60.0
-        }
-      ]
-    }
-  ]
-}
-
-IMPORTANT: Réponds UNIQUEMENT avec le JSON valide, sans texte supplémentaire.`
+  "summary": "Résumé",
+  "insights": ["Insight 1", "Insight 2"],
+  "trends": [{"questionId": "id", "questionTitle": "titre", "trend": "description", "confidence": 0.8}],
+  "recommendations": ["Rec 1", "Rec 2"],
+  "charts": [{"questionId": "id", "questionTitle": "titre", "type": "bar", "data": [{"label": "option", "value": 10, "percentage": 50}]}]
+}`
 
     return prompt
   }
@@ -241,18 +233,26 @@ IMPORTANT: Réponds UNIQUEMENT avec le JSON valide, sans texte supplémentaire.`
     return 'collecter des informations et données spécifiques'
   }
 
-  // Méthode pour tester la connexion
-  async testConnection(): Promise<boolean> {
+  // Méthode pour vérifier la disponibilité de l'API
+  private async checkAvailability(): Promise<boolean> {
     try {
       const response = await fetch(`${this.baseUrl}/models`, {
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,
-        }
+        },
+        // Timeout de 5 secondes pour éviter d'attendre trop longtemps
+        signal: AbortSignal.timeout(5000)
       })
       return response.ok
-    } catch {
+    } catch (error) {
+      console.warn('Vérification de disponibilité DeepSeek échouée:', error)
       return false
     }
+  }
+
+  // Méthode pour tester la connexion (publique)
+  async testConnection(): Promise<boolean> {
+    return this.checkAvailability()
   }
 }
 
