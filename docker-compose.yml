@@ -5,6 +5,8 @@ services:
     build: .
     container_name: nextjs
     restart: unless-stopped
+    ports:
+      - "3008:3008" 
     expose:
-      - "3008:3008"
+      - "3008"
   
