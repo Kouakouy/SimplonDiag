@@ -70,8 +70,8 @@ export default function ForgotPasswordPage() {
             
             <div className="space-y-4">
               <h1 className="text-3xl text-[#113744] lg:text-4xl font-bold drop-shadow-lg">
-                Plateforme de diagnostic de profil<br />
-                pour un programme de formation plus adaptée
+                Plateforme de diagnostic de profil
+                pour un programme de <br /> formation plus adaptée
               </h1>
               
               <div className="inline-block bg-[#E40046] text-white px-6 py-2 rounded-full text-sm font-semibold shadow-lg">

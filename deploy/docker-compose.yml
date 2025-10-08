@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.frontend
+    container_name: simplonform-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=https://api.votre-domaine.com/api
+      - NEXT_PUBLIC_APP_URL=https://votre-domaine.com
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - simplonform-network
+
+  backend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.backend
+    container_name: simplonform-backend
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - MONGODB_URI=${MONGODB_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - SMTP_FROM=${SMTP_FROM}
+      - APP_URL=https://votre-domaine.com
+      - CORS_ORIGIN=https://votre-domaine.com
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - simplonform-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: simplonform-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - frontend
+      - backend
+    restart: unless-stopped
+    networks:
+      - simplonform-network
+
+networks:
+  simplonform-network:
+    driver: bridge
+
+volumes:
+  logs:

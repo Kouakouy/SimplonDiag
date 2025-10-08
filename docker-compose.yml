@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  nextjs:
+    build: ./nextjs
+    container_name: nextjs
+    restart: unless-stopped
+    expose:
+      - "3008"
+  

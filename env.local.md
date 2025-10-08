@@ -1,0 +1,2 @@
+NEXT_PUBLIC_API_URL=https://back-form-oirj.onrender.com/api
+NEXT_PUBLIC_DEEPSEEK_API_KEY=sk-8f1866bf03344acfa0ab4a40ba22b0bf

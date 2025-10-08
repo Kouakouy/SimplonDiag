@@ -1,0 +1,51 @@
+# Dockerfile pour le backend Node.js/Express
+FROM node:18-alpine AS base
+
+# Installer les dépendances de build
+FROM base AS deps
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+# Copier les fichiers de dépendances
+COPY backend/package.json backend/package-lock.json* ./
+RUN npm ci --only=production
+
+# Build TypeScript
+FROM base AS builder
+WORKDIR /app
+COPY backend/package.json backend/package-lock.json* ./
+COPY backend/tsconfig.json ./
+RUN npm ci
+
+COPY backend/src ./src
+RUN npm run build
+
+# Image de production
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV production
+ENV PORT 3001
+
+# Créer un utilisateur non-root
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 backend
+
+# Copier les dépendances et le code compilé
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package.json ./
+
+# Créer les répertoires de logs
+RUN mkdir -p /app/logs
+RUN chown -R backend:nodejs /app
+
+USER backend
+
+EXPOSE 3001
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3001/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+
+CMD ["node", "dist/server.js"]
