@@ -5,18 +5,31 @@ import jwt from 'jsonwebtoken'
 import { getDb } from '../config/db'
 import { ObjectId } from 'mongodb'
 import { AuthRequest } from '../middleware/auth'
+import { sendEmail } from '../config/email'
+import crypto from 'crypto'
 
 const authSchema = z.object({
   name: z.string().min(1).optional(),
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(6).optional(),
   role: z.enum(['admin', 'observer', 'creator']).optional(),
+})
+
+const inviteUserSchema = z.object({
+  email: z.string().email(),
+  role: z.enum(['admin', 'observer', 'creator']),
 })
 
 export const register = async (req: Request, res: Response) => {
   const parsed = authSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ message: 'Invalid payload' })
   const { name, email, password, role } = parsed.data
+  
+  // Vérifier que le mot de passe est fourni pour l'inscription
+  if (!password) {
+    return res.status(400).json({ message: 'Password is required for registration' })
+  }
+  
   try {
     const db = await getDb()
     const users = db.collection('users')
@@ -49,7 +62,8 @@ export const login = async (req: Request, res: Response) => {
     const users = db.collection('users')
     const user = await users.findOne({ email })
     if (!user) return res.status(401).json({ message: 'Invalid credentials' })
-    const valid = await bcrypt.compare(password, user.password_hash)
+    if (!user.password_hash) return res.status(401).json({ message: 'Invalid credentials' })
+    const valid = await bcrypt.compare(password as string, user.password_hash as string)
     if (!valid) return res.status(401).json({ message: 'Invalid credentials' })
     const token = jwt.sign({ 
       id: user._id.toString(), 
@@ -106,9 +120,9 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
 }
 
 export const createUser = async (req: AuthRequest, res: Response) => {
-  const parsed = authSchema.safeParse(req.body)
+  const parsed = inviteUserSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ message: 'Invalid payload' })
-  const { name, email, password, role } = parsed.data
+  const { email, role } = parsed.data
   
   try {
     const db = await getDb()
@@ -116,20 +130,101 @@ export const createUser = async (req: AuthRequest, res: Response) => {
     const existing = await users.findOne({ email })
     if (existing) return res.status(409).json({ message: 'Email already used' })
     
-    const passwordHash = await bcrypt.hash(password, 10)
+    // Générer un token d'invitation unique
+    const invitationToken = crypto.randomBytes(32).toString('hex')
+    const invitationExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 jours
+    
     const insert = await users.insertOne({
-      name: name ?? 'User',
+      name: '', // Sera complété par l'utilisateur
       email,
-      password_hash: passwordHash,
-      role: role ?? 'creator',
-      is_active: true,
+      password_hash: '', // Sera défini par l'utilisateur
+      role,
+      is_active: false, // Inactif jusqu'à complétion du profil
+      invitation_token: invitationToken,
+      invitation_expires: invitationExpires,
       created_at: new Date(),
       updated_at: new Date(),
     })
     
+    // Envoyer l'email d'invitation
+    try {
+      const { EmailTemplates } = await import('../services/emailTemplates')
+      const appUrl = process.env.APP_URL || 'http://localhost:3000'
+      const emailTemplate = EmailTemplates.userInvitation(email, role, invitationToken, appUrl)
+      
+      await sendEmail(email, emailTemplate.subject, emailTemplate.html)
+    } catch (emailError) {
+      console.error('Erreur envoi email:', emailError)
+      // Ne pas faire échouer la création si l'email échoue
+    }
+    
     return res.status(201).json({ 
       id: insert.insertedId.toString(),
-      message: 'User created successfully' 
+      message: 'User invitation sent successfully' 
+    })
+  } catch (e) {
+    return res.status(500).json({ message: 'Server error' })
+  }
+}
+
+export const completeProfile = async (req: Request, res: Response) => {
+  const completeProfileSchema = z.object({
+    token: z.string(),
+    name: z.string().min(1),
+    password: z.string().min(6),
+  })
+  
+  const parsed = completeProfileSchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ message: 'Invalid payload' })
+  const { token, name, password } = parsed.data
+  
+  try {
+    const db = await getDb()
+    const users = db.collection('users')
+    
+    // Trouver l'utilisateur avec le token d'invitation
+    const user = await users.findOne({ 
+      invitation_token: token,
+      invitation_expires: { $gt: new Date() }
+    })
+    
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired invitation token' })
+    }
+    
+    // Vérifier si le profil n'est pas déjà complété
+    if (user.is_active && user.password_hash) {
+      return res.status(400).json({ message: 'Profile already completed' })
+    }
+    
+    // Hasher le mot de passe
+    const passwordHash = await bcrypt.hash(password, 10)
+    
+    // Mettre à jour l'utilisateur
+    await users.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          name,
+          password_hash: passwordHash,
+          is_active: true,
+          updated_at: new Date(),
+        },
+        $unset: {
+          invitation_token: 1,
+          invitation_expires: 1,
+        }
+      }
+    )
+    
+    return res.status(200).json({ 
+      message: 'Profile completed successfully',
+      user: {
+        id: user._id.toString(),
+        name,
+        email: user.email,
+        role: user.role
+      }
     })
   } catch (e) {
     return res.status(500).json({ message: 'Server error' })

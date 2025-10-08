@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.saveAnalysis = exports.listAnalyses = exports.shareForm = exports.getStats = exports.submitResponse = exports.listResponses = exports.deleteForm = exports.updateForm = exports.getForm = exports.createForm = exports.listForms = void 0;
+exports.fixOrphanForms = exports.saveAnalysis = exports.listAnalyses = exports.shareForm = exports.getStats = exports.submitResponse = exports.listResponses = exports.deleteForm = exports.updateForm = exports.getForm = exports.createForm = exports.listForms = void 0;
 const zod_1 = require("zod");
 const db_1 = require("../config/db");
 const mongodb_1 = require("mongodb");

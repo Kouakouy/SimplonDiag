@@ -139,15 +139,33 @@ export function UserManagement() {
   }
 
   const handleCreateUser = async () => {
+    // Validation minimale pour la création d'utilisateur
+    if (!formData.email.trim()) {
+      showError('Erreur', 'L\'email est obligatoire')
+      return
+    }
+    
+    if (!formData.role) {
+      showError('Erreur', 'Le rôle est obligatoire')
+      return
+    }
+    
     try {
       const token = localStorage.getItem('auth_token')
+      
+      // Préparer les données pour l'invitation (seulement email et rôle)
+      const invitationData = {
+        email: formData.email.trim(),
+        role: formData.role
+      }
+      
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/auth/users`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(invitationData),
       })
       
       if (response.ok) {
@@ -155,14 +173,14 @@ export function UserManagement() {
         await loadUsers() // Recharger la liste
         setShowCreateForm(false)
         resetForm()
-        success('Succès', 'Utilisateur créé avec succès')
+        success('Succès', 'Invitation envoyée avec succès ! L\'utilisateur recevra un email pour compléter son profil.')
       } else {
         const errorData = await response.json()
-        showError('Erreur', errorData.message || 'Erreur lors de la création de l\'utilisateur')
+        showError('Erreur', errorData.message || 'Erreur lors de l\'envoi de l\'invitation')
       }
     } catch (error: any) {
-      console.error('Erreur lors de la création de l\'utilisateur:', error)
-      showError('Erreur', 'Erreur lors de la création de l\'utilisateur')
+      console.error('Erreur lors de l\'envoi de l\'invitation:', error)
+      showError('Erreur', 'Erreur lors de l\'envoi de l\'invitation')
     }
   }
 
@@ -299,7 +317,7 @@ export function UserManagement() {
           className="bg-[#E40046] hover:bg-[#E40046]/80 text-white w-full sm:w-auto"
         >
           <Plus className="w-4 h-4 mr-2" />
-          Nouvel utilisateur
+          Inviter un utilisateur
         </Button>
       </div>
 
@@ -308,23 +326,30 @@ export function UserManagement() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base sm:text-lg">
-              {editingUser ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur'}
+              {editingUser ? 'Modifier l\'utilisateur' : 'Inviter un nouvel utilisateur'}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 pt-0">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="name" className="text-sm">Nom complet</Label>
+                <Label htmlFor="name" className="text-sm">
+                  Nom complet {editingUser ? '' : '(optionnel)'}
+                </Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Nom de l'utilisateur"
+                  placeholder={editingUser ? "Nom de l'utilisateur" : "L'utilisateur le complétera"}
                   className="mt-1"
                 />
+                {!editingUser && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    L'utilisateur complétera cette information via l'email d'invitation
+                  </p>
+                )}
               </div>
               <div>
-                <Label htmlFor="email" className="text-sm">Email</Label>
+                <Label htmlFor="email" className="text-sm">Email *</Label>
                 <Input
                   id="email"
                   type="email"
@@ -332,10 +357,11 @@ export function UserManagement() {
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="email@simplon.com"
                   className="mt-1"
+                  required
                 />
               </div>
               <div>
-                <Label htmlFor="role" className="text-sm">Rôle</Label>
+                <Label htmlFor="role" className="text-sm">Rôle *</Label>
                 <Select value={formData.role} onValueChange={(value: string) => setFormData({ ...formData, role: value as UserRole })}>
                   <SelectTrigger className="mt-1">
                     <SelectValue />
@@ -349,29 +375,39 @@ export function UserManagement() {
               </div>
               <div>
                 <Label htmlFor="password" className="text-sm">
-                  {editingUser ? 'Nouveau mot de passe (optionnel)' : 'Mot de passe'}
+                  {editingUser ? 'Nouveau mot de passe (optionnel)' : 'Mot de passe (optionnel)'}
                 </Label>
                 <Input
                   id="password"
                   type="password"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  placeholder="Mot de passe"
+                  placeholder={editingUser ? "Nouveau mot de passe" : "L'utilisateur le définira"}
                   className="mt-1"
                 />
-                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
-                  <p className="text-xs text-blue-700 font-medium mb-1">Exigences du mot de passe :</p>
-                  <ul className="text-xs text-blue-600 space-y-0.5">
-                    <li className="flex items-center gap-1">
-                      <span className="w-1 h-1 bg-blue-500 rounded-full"></span>
-                      Minimum 6 caractères
-                    </li>
-                    <li className="flex items-center gap-1">
-                      <span className="w-1 h-1 bg-blue-500 rounded-full"></span>
-                      Lettres et chiffres recommandés
-                    </li>
-                  </ul>
-                </div>
+                {!editingUser && (
+                  <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
+                    <p className="text-xs text-green-700 font-medium mb-1">Mode invitation activé :</p>
+                    <p className="text-xs text-green-600">
+                      L'utilisateur recevra un email avec un lien pour définir son mot de passe et compléter son profil.
+                    </p>
+                  </div>
+                )}
+                {editingUser && (
+                  <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                    <p className="text-xs text-blue-700 font-medium mb-1">Exigences du mot de passe :</p>
+                    <ul className="text-xs text-blue-600 space-y-0.5">
+                      <li className="flex items-center gap-1">
+                        <span className="w-1 h-1 bg-blue-500 rounded-full"></span>
+                        Minimum 6 caractères
+                      </li>
+                      <li className="flex items-center gap-1">
+                        <span className="w-1 h-1 bg-blue-500 rounded-full"></span>
+                        Lettres et chiffres recommandés
+                      </li>
+                    </ul>
+                  </div>
+                )}
               </div>
             </div>
             
@@ -380,7 +416,7 @@ export function UserManagement() {
                 onClick={editingUser ? () => handleUpdateUser(editingUser.id) : handleCreateUser}
                 className="bg-[#E40046] hover:bg-[#E40046]/80 text-white w-full sm:w-auto"
               >
-                {editingUser ? 'Mettre à jour' : 'Créer'}
+                {editingUser ? 'Mettre à jour' : 'Envoyer l\'invitation'}
               </Button>
               <Button 
                 variant="outline" 

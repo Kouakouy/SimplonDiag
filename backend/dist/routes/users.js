@@ -7,6 +7,7 @@ const authRouter = (0, express_1.Router)();
 // Routes publiques
 authRouter.post('/register', authController_1.register);
 authRouter.post('/login', authController_1.login);
+authRouter.post('/complete-profile', authController_1.completeProfile);
 // Routes protégées
 authRouter.get('/me', auth_1.requireAuth, authController_1.getCurrentUser);
 // Routes pour la gestion des utilisateurs (admin seulement)
