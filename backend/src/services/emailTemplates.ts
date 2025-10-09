@@ -140,6 +140,74 @@ export const EmailTemplates = {
       </div>
     `,
   }),
+  accountCreated: (name: string, email: string, role: string, appUrl: string) => ({
+    subject: 'Bienvenue sur Simplon Form - Votre compte a été créé',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #E40046, #C70039); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+          <h1 style="color: white; margin: 0; font-size: 28px;">Bienvenue sur Simplon Form</h1>
+          <p style="color: white; margin: 10px 0 0 0; opacity: 0.9;">Plateforme de gestion de formulaires</p>
+        </div>
+        
+        <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <h2 style="color: #333; margin-bottom: 20px;">Votre compte a été créé avec succès</h2>
+          
+          <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+            Bonjour ${name},<br><br>
+            Félicitations ! Votre compte Simplon Form a été créé avec succès. Vous pouvez maintenant accéder à la plateforme et commencer à créer vos formulaires.
+          </p>
+          
+          <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #E40046;">
+            <h3 style="color: #E40046; margin: 0 0 10px 0;">Votre rôle : ${role === 'admin' ? 'Administrateur' : role === 'observer' ? 'Observateur' : 'Créateur'}</h3>
+            <p style="color: #666; margin: 0; font-size: 14px;">
+              ${role === 'admin' ? 'Accès complet à toutes les fonctionnalités de la plateforme' : 
+                role === 'observer' ? 'Accès en lecture seule aux formulaires et statistiques' : 
+                'Création et gestion de vos propres formulaires'}
+            </p>
+          </div>
+          
+          <p style="color: #666; line-height: 1.6; margin-bottom: 30px;">
+            Pour commencer à utiliser la plateforme, connectez-vous avec vos identifiants :
+          </p>
+          
+          <div style="background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745;">
+            <h3 style="color: #28a745; margin: 0 0 10px 0;">Vos informations de connexion</h3>
+            <p style="color: #666; margin: 0; font-size: 14px;">
+              <strong>Email :</strong> ${email}<br>
+              <strong>Mot de passe :</strong> Celui que vous avez défini lors de l'inscription
+            </p>
+          </div>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${appUrl}/auth/login" 
+               style="background: linear-gradient(135deg, #E40046, #C70039); 
+                      color: white; 
+                      padding: 15px 30px; 
+                      text-decoration: none; 
+                      border-radius: 8px; 
+                      font-weight: bold; 
+                      display: inline-block;
+                      box-shadow: 0 4px 6px rgba(228, 0, 70, 0.3);">
+              Se connecter maintenant
+            </a>
+          </div>
+          
+          <div style="background: #fff3cd; padding: 15px; border-radius: 6px; margin: 20px 0; border: 1px solid #ffeaa7;">
+            <p style="color: #856404; margin: 0; font-size: 14px;">
+              <strong>Conseil :</strong> Gardez vos identifiants de connexion en sécurité et ne les partagez jamais avec d'autres personnes.
+            </p>
+          </div>
+          
+          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+          
+          <p style="color: #999; font-size: 12px; text-align: center; margin: 0;">
+            Si vous avez des questions ou besoin d'aide, n'hésitez pas à contacter votre administrateur.<br>
+            <a href="${appUrl}" style="color: #E40046;">${appUrl}</a>
+          </p>
+        </div>
+      </div>
+    `,
+  }),
 }
 
 

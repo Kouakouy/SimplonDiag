@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -10,7 +10,7 @@ import { apiRequest } from "@/lib/api"
 import Image from "next/image"
 import { User, Lock, Eye, EyeOff, CheckCircle, AlertCircle } from "lucide-react"
 
-export default function CompleteProfilePage() {
+function CompleteProfileContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const token = searchParams.get('token')
@@ -301,5 +301,44 @@ export default function CompleteProfilePage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen relative flex items-center justify-center bg-white">
+      <div className="absolute inset-0 bg-gradient-to-br from-[#E40046]/5 to-[#C70039]/5"></div>
+      
+      {/* Logo Simplon */}
+      <div className="absolute top-6 left-6 z-20">
+        <Image
+          src="/images/logo2.png"
+          alt="Simplon Logo"
+          width={120}
+          height={40}
+          className="h-8 w-auto"
+        />
+      </div>
+      
+      <Card className="w-full max-w-md mx-4 relative z-10 shadow-xl border-0 bg-white/95 backdrop-blur-sm">
+        <CardContent className="p-8 text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-[#E40046] to-[#C70039] rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Chargement...</h2>
+          <p className="text-gray-600">
+            Préparation de votre profil
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+export default function CompleteProfilePage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <CompleteProfileContent />
+    </Suspense>
   )
 }

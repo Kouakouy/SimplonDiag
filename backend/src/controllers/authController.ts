@@ -6,6 +6,7 @@ import { getDb } from '../config/db'
 import { ObjectId } from 'mongodb'
 import { AuthRequest } from '../middleware/auth'
 import { sendEmail } from '../config/email'
+import { EmailTemplates } from '../services/emailTemplates'
 import crypto from 'crypto'
 
 const authSchema = z.object({
@@ -47,6 +48,27 @@ export const register = async (req: Request, res: Response) => {
     })
     const userId = insert.insertedId.toString()
     const token = jwt.sign({ id: userId, email, role: role ?? 'creator' }, process.env.JWT_SECRET as string, { expiresIn: '7d' })
+    
+    // Envoyer l'email de bienvenue
+    try {
+      console.log('📧 Préparation de l\'envoi d\'email de bienvenue...')
+      console.log('   Email destinataire:', email)
+      console.log('   Nom:', name ?? 'User')
+      console.log('   Rôle:', role ?? 'creator')
+      
+      const appUrl = process.env.APP_URL || 'http://localhost:3000'
+      console.log('   URL de l\'app:', appUrl)
+      
+      const emailTemplate = EmailTemplates.accountCreated(name ?? 'User', email, role ?? 'creator', appUrl)
+      console.log('   Template généré:', emailTemplate.subject)
+      
+      await sendEmail(email, emailTemplate.subject, emailTemplate.html)
+      console.log('✅ Email de bienvenue envoyé avec succès')
+    } catch (emailError) {
+      console.error('❌ Erreur envoi email de bienvenue:', emailError)
+      // Ne pas faire échouer l'inscription si l'email échoue
+    }
+    
     return res.status(201).json({ token })
   } catch (e) {
     return res.status(500).json({ message: 'Server error' })
@@ -159,6 +181,26 @@ export const createUser = async (req: AuthRequest, res: Response) => {
         updated_at: new Date(),
       })
       
+      // Envoyer l'email de bienvenue
+      try {
+        console.log('📧 Préparation de l\'envoi d\'email de bienvenue...')
+        console.log('   Email destinataire:', email)
+        console.log('   Nom:', name as string)
+        console.log('   Rôle:', role)
+        
+        const appUrl = process.env.APP_URL || 'http://localhost:3000'
+        console.log('   URL de l\'app:', appUrl)
+        
+        const emailTemplate = EmailTemplates.accountCreated(name as string, email, role as string, appUrl)
+        console.log('   Template généré:', emailTemplate.subject)
+        
+        await sendEmail(email, emailTemplate.subject, emailTemplate.html)
+        console.log('✅ Email de bienvenue envoyé avec succès')
+      } catch (emailError) {
+        console.error('❌ Erreur envoi email de bienvenue:', emailError)
+        // Ne pas faire échouer la création si l'email échoue
+      }
+      
       return res.status(201).json({ 
         id: insert.insertedId.toString(),
         message: 'User created successfully' 
@@ -187,7 +229,6 @@ export const createUser = async (req: AuthRequest, res: Response) => {
         console.log('   Rôle:', role)
         console.log('   Token:', invitationToken.substring(0, 10) + '...')
         
-        const { EmailTemplates } = await import('../services/emailTemplates')
         const appUrl = process.env.APP_URL || 'http://localhost:3000'
         console.log('   URL de l\'app:', appUrl)
         
@@ -248,7 +289,6 @@ export const forgotPassword = async (req: Request, res: Response) => {
     
     // Envoyer l'email de réinitialisation
     try {
-      const { EmailTemplates } = await import('../services/emailTemplates')
       const appUrl = process.env.APP_URL || 'http://localhost:3000'
       
       const emailTemplate = EmailTemplates.passwordReset(email, resetToken, appUrl)
