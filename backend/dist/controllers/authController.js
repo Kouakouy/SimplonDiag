@@ -160,45 +160,82 @@ const getAllUsers = async (req, res) => {
 };
 exports.getAllUsers = getAllUsers;
 const createUser = async (req, res) => {
-    const parsed = inviteUserSchema.safeParse(req.body);
-    if (!parsed.success)
+    // Accepter soit le schéma d'invitation soit le schéma complet
+    const inviteData = inviteUserSchema.safeParse(req.body);
+    const fullData = authSchema.safeParse(req.body);
+    if (!inviteData.success && !fullData.success) {
         return res.status(400).json({ message: 'Invalid payload' });
-    const { email, role } = parsed.data;
+    }
+    const parsedData = inviteData.success ? inviteData.data : fullData.data;
+    if (!parsedData) {
+        return res.status(400).json({ message: 'Invalid payload' });
+    }
+    const { email, role } = parsedData;
+    const name = 'name' in parsedData ? parsedData.name : undefined;
+    const password = 'password' in parsedData ? parsedData.password : undefined;
     try {
         const db = await (0, db_1.getDb)();
         const users = db.collection('users');
         const existing = await users.findOne({ email });
         if (existing)
             return res.status(409).json({ message: 'Email already used' });
-        // Générer un token d'invitation unique
-        const invitationToken = crypto_1.default.randomBytes(32).toString('hex');
-        const invitationExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 jours
-        const insert = await users.insertOne({
-            name: '', // Sera complété par l'utilisateur
-            email,
-            password_hash: '', // Sera défini par l'utilisateur
-            role,
-            is_active: false, // Inactif jusqu'à complétion du profil
-            invitation_token: invitationToken,
-            invitation_expires: invitationExpires,
-            created_at: new Date(),
-            updated_at: new Date(),
-        });
-        // Envoyer l'email d'invitation
-        try {
-            const { EmailTemplates } = await Promise.resolve().then(() => __importStar(require('../services/emailTemplates')));
-            const appUrl = process.env.APP_URL || 'http://localhost:3000';
-            const emailTemplate = EmailTemplates.userInvitation(email, role, invitationToken, appUrl);
-            await (0, email_1.sendEmail)(email, emailTemplate.subject, emailTemplate.html);
+        // Déterminer le mode de création
+        const isDirectCreation = name && password;
+        if (isDirectCreation) {
+            // Mode création directe
+            const passwordHash = await bcryptjs_1.default.hash(password, 10);
+            const insert = await users.insertOne({
+                name: name,
+                email,
+                password_hash: passwordHash,
+                role,
+                is_active: true,
+                created_at: new Date(),
+                updated_at: new Date(),
+            });
+            return res.status(201).json({
+                id: insert.insertedId.toString(),
+                message: 'User created successfully'
+            });
         }
-        catch (emailError) {
-            console.error('Erreur envoi email:', emailError);
-            // Ne pas faire échouer la création si l'email échoue
+        else {
+            // Mode invitation
+            const invitationToken = crypto_1.default.randomBytes(32).toString('hex');
+            const invitationExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 jours
+            const insert = await users.insertOne({
+                name: '', // Sera complété par l'utilisateur
+                email,
+                password_hash: '', // Sera défini par l'utilisateur
+                role,
+                is_active: false, // Inactif jusqu'à complétion du profil
+                invitation_token: invitationToken,
+                invitation_expires: invitationExpires,
+                created_at: new Date(),
+                updated_at: new Date(),
+            });
+            // Envoyer l'email d'invitation
+            try {
+                console.log('📧 Préparation de l\'envoi d\'email d\'invitation...');
+                console.log('   Email destinataire:', email);
+                console.log('   Rôle:', role);
+                console.log('   Token:', invitationToken.substring(0, 10) + '...');
+                const { EmailTemplates } = await Promise.resolve().then(() => __importStar(require('../services/emailTemplates')));
+                const appUrl = process.env.APP_URL || 'http://localhost:3000';
+                console.log('   URL de l\'app:', appUrl);
+                const emailTemplate = EmailTemplates.userInvitation(email, role, invitationToken, appUrl);
+                console.log('   Template généré:', emailTemplate.subject);
+                await (0, email_1.sendEmail)(email, emailTemplate.subject, emailTemplate.html);
+                console.log('✅ Email d\'invitation envoyé avec succès');
+            }
+            catch (emailError) {
+                console.error('❌ Erreur envoi email:', emailError);
+                // Ne pas faire échouer la création si l'email échoue
+            }
+            return res.status(201).json({
+                id: insert.insertedId.toString(),
+                message: 'User invitation sent successfully'
+            });
         }
-        return res.status(201).json({
-            id: insert.insertedId.toString(),
-            message: 'User invitation sent successfully'
-        });
     }
     catch (e) {
         return res.status(500).json({ message: 'Server error' });

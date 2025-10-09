@@ -153,10 +153,29 @@ export function UserManagement() {
     try {
       const token = localStorage.getItem('auth_token')
       
-      // Préparer les données pour l'invitation (seulement email et rôle)
-      const invitationData = {
-        email: formData.email.trim(),
-        role: formData.role
+      // Déterminer le mode de création
+      const hasName = formData.name.trim().length > 0
+      const hasPassword = formData.password.length > 0
+      
+      let userData
+      let successMessage
+      
+      if (hasName && hasPassword) {
+        // Mode création directe avec tous les champs
+        userData = {
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          role: formData.role,
+          password: formData.password
+        }
+        successMessage = 'Utilisateur créé avec succès'
+      } else {
+        // Mode invitation (seulement email et rôle)
+        userData = {
+          email: formData.email.trim(),
+          role: formData.role
+        }
+        successMessage = 'Utilisateur créé avec succès ! Un email d\'invitation a été envoyé pour compléter le profil.'
       }
       
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/auth/users`, {
@@ -165,7 +184,7 @@ export function UserManagement() {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(invitationData),
+        body: JSON.stringify(userData),
       })
       
       if (response.ok) {
@@ -173,14 +192,14 @@ export function UserManagement() {
         await loadUsers() // Recharger la liste
         setShowCreateForm(false)
         resetForm()
-        success('Succès', 'Invitation envoyée avec succès ! L\'utilisateur recevra un email pour compléter son profil.')
+        success('Succès', successMessage)
       } else {
         const errorData = await response.json()
-        showError('Erreur', errorData.message || 'Erreur lors de l\'envoi de l\'invitation')
+        showError('Erreur', errorData.message || 'Erreur lors de la création de l\'utilisateur')
       }
     } catch (error: any) {
-      console.error('Erreur lors de l\'envoi de l\'invitation:', error)
-      showError('Erreur', 'Erreur lors de l\'envoi de l\'invitation')
+      console.error('Erreur lors de la création de l\'utilisateur:', error)
+      showError('Erreur', 'Erreur lors de la création de l\'utilisateur')
     }
   }
 
@@ -317,7 +336,7 @@ export function UserManagement() {
           className="bg-[#E40046] hover:bg-[#E40046]/80 text-white w-full sm:w-auto"
         >
           <Plus className="w-4 h-4 mr-2" />
-          Inviter un utilisateur
+          Nouvel utilisateur
         </Button>
       </div>
 
@@ -326,7 +345,7 @@ export function UserManagement() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base sm:text-lg">
-              {editingUser ? 'Modifier l\'utilisateur' : 'Inviter un nouvel utilisateur'}
+              {editingUser ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur'}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 pt-0">
@@ -344,7 +363,7 @@ export function UserManagement() {
                 />
                 {!editingUser && (
                   <p className="text-xs text-gray-500 mt-1">
-                    L'utilisateur complétera cette information via l'email d'invitation
+                    Si laissé vide, l'utilisateur complétera cette information via l'email d'invitation
                   </p>
                 )}
               </div>
@@ -386,10 +405,10 @@ export function UserManagement() {
                   className="mt-1"
                 />
                 {!editingUser && (
-                  <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
-                    <p className="text-xs text-green-700 font-medium mb-1">Mode invitation activé :</p>
-                    <p className="text-xs text-green-600">
-                      L'utilisateur recevra un email avec un lien pour définir son mot de passe et compléter son profil.
+                  <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                    <p className="text-xs text-blue-700 font-medium mb-1">Mode flexible :</p>
+                    <p className="text-xs text-blue-600">
+                      Si tous les champs sont remplis → création directe. Si seuls email/rôle → envoi d'un email d'invitation.
                     </p>
                   </div>
                 )}
@@ -416,7 +435,7 @@ export function UserManagement() {
                 onClick={editingUser ? () => handleUpdateUser(editingUser.id) : handleCreateUser}
                 className="bg-[#E40046] hover:bg-[#E40046]/80 text-white w-full sm:w-auto"
               >
-                {editingUser ? 'Mettre à jour' : 'Envoyer l\'invitation'}
+                {editingUser ? 'Mettre à jour' : 'Enregistrer'}
               </Button>
               <Button 
                 variant="outline" 
