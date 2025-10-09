@@ -211,6 +211,107 @@ export const createUser = async (req: AuthRequest, res: Response) => {
   }
 }
 
+export const forgotPassword = async (req: Request, res: Response) => {
+  const forgotPasswordSchema = z.object({
+    email: z.string().email(),
+  })
+  
+  const parsed = forgotPasswordSchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ message: 'Invalid payload' })
+  const { email } = parsed.data
+  
+  try {
+    const db = await getDb()
+    const users = db.collection('users')
+    const user = await users.findOne({ email })
+    
+    // Toujours retourner un succès pour éviter l'énumération d'emails
+    if (!user) {
+      return res.status(200).json({ message: 'If an account exists with this email, a reset link has been sent.' })
+    }
+    
+    // Générer un token de réinitialisation
+    const resetToken = crypto.randomBytes(32).toString('hex')
+    const resetExpires = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 heures
+    
+    // Sauvegarder le token dans la base de données
+    await users.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          reset_token: resetToken,
+          reset_expires: resetExpires,
+          updated_at: new Date(),
+        }
+      }
+    )
+    
+    // Envoyer l'email de réinitialisation
+    try {
+      const { EmailTemplates } = await import('../services/emailTemplates')
+      const appUrl = process.env.APP_URL || 'http://localhost:3000'
+      
+      const emailTemplate = EmailTemplates.passwordReset(email, resetToken, appUrl)
+      await sendEmail(email, emailTemplate.subject, emailTemplate.html)
+    } catch (emailError) {
+      console.error('Erreur envoi email:', emailError)
+      // Ne pas faire échouer la demande si l'email échoue
+    }
+    
+    return res.status(200).json({ message: 'If an account exists with this email, a reset link has been sent.' })
+  } catch (e) {
+    return res.status(500).json({ message: 'Server error' })
+  }
+}
+
+export const resetPassword = async (req: Request, res: Response) => {
+  const resetPasswordSchema = z.object({
+    token: z.string(),
+    password: z.string().min(6),
+  })
+  
+  const parsed = resetPasswordSchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ message: 'Invalid payload' })
+  const { token, password } = parsed.data
+  
+  try {
+    const db = await getDb()
+    const users = db.collection('users')
+    
+    // Trouver l'utilisateur avec le token de réinitialisation
+    const user = await users.findOne({ 
+      reset_token: token,
+      reset_expires: { $gt: new Date() }
+    })
+    
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired reset token' })
+    }
+    
+    // Hasher le nouveau mot de passe
+    const passwordHash = await bcrypt.hash(password, 10)
+    
+    // Mettre à jour l'utilisateur
+    await users.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          password_hash: passwordHash,
+          updated_at: new Date(),
+        },
+        $unset: {
+          reset_token: 1,
+          reset_expires: 1,
+        }
+      }
+    )
+    
+    return res.status(200).json({ message: 'Password reset successfully' })
+  } catch (e) {
+    return res.status(500).json({ message: 'Server error' })
+  }
+}
+
 export const completeProfile = async (req: Request, res: Response) => {
   const completeProfileSchema = z.object({
     token: z.string(),
@@ -321,8 +422,14 @@ export const deleteUser = async (req: AuthRequest, res: Response) => {
     const db = await getDb()
     const users = db.collection('users')
     
-    // Empêcher l'auto-suppression
-    if (req.user?.id === id) {
+    // Trouver l'utilisateur à supprimer
+    const userToDelete = await users.findOne({ _id: new ObjectId(id) })
+    if (!userToDelete) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+    
+    // Empêcher l'auto-suppression en comparant les emails
+    if (req.user?.email === userToDelete.email) {
       return res.status(400).json({ message: 'Cannot delete your own account' })
     }
     

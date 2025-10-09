@@ -8,6 +8,8 @@ const authRouter = (0, express_1.Router)();
 authRouter.post('/register', authController_1.register);
 authRouter.post('/login', authController_1.login);
 authRouter.post('/complete-profile', authController_1.completeProfile);
+authRouter.post('/forgot-password', authController_1.forgotPassword);
+authRouter.post('/reset-password', authController_1.resetPassword);
 // Routes protégées
 authRouter.get('/me', auth_1.requireAuth, authController_1.getCurrentUser);
 // Routes pour la gestion des utilisateurs (admin seulement)

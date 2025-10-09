@@ -1,49 +1,17 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteUser = exports.updateUser = exports.completeProfile = exports.createUser = exports.getAllUsers = exports.getCurrentUser = exports.login = exports.register = void 0;
+exports.deleteUser = exports.updateUser = exports.completeProfile = exports.resetPassword = exports.forgotPassword = exports.createUser = exports.getAllUsers = exports.getCurrentUser = exports.login = exports.register = void 0;
 const zod_1 = require("zod");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const db_1 = require("../config/db");
 const mongodb_1 = require("mongodb");
+const auth_1 = require("../middleware/auth");
 const email_1 = require("../config/email");
-const crypto_1 = __importDefault(require("crypto"));
+const crypto_1 = require("crypto");
 const authSchema = zod_1.z.object({
     name: zod_1.z.string().min(1).optional(),
     email: zod_1.z.string().email(),
@@ -93,6 +61,10 @@ const login = async (req, res) => {
     if (!parsed.success)
         return res.status(400).json({ message: 'Invalid payload' });
     const { email, password } = parsed.data;
+    // Vérifier que le mot de passe est fourni pour la connexion
+    if (!password) {
+        return res.status(400).json({ message: 'Password is required for login' });
+    }
     try {
         const db = await (0, db_1.getDb)();
         const users = db.collection('users');
@@ -200,7 +172,7 @@ const createUser = async (req, res) => {
         }
         else {
             // Mode invitation
-            const invitationToken = crypto_1.default.randomBytes(32).toString('hex');
+            const invitationToken = crypto_1.randomBytes(32).toString('hex');
             const invitationExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 jours
             const insert = await users.insertOne({
                 name: '', // Sera complété par l'utilisateur
@@ -219,7 +191,7 @@ const createUser = async (req, res) => {
                 console.log('   Email destinataire:', email);
                 console.log('   Rôle:', role);
                 console.log('   Token:', invitationToken.substring(0, 10) + '...');
-                const { EmailTemplates } = await Promise.resolve().then(() => __importStar(require('../services/emailTemplates')));
+                const { EmailTemplates } = await import('../services/emailTemplates');
                 const appUrl = process.env.APP_URL || 'http://localhost:3000';
                 console.log('   URL de l\'app:', appUrl);
                 const emailTemplate = EmailTemplates.userInvitation(email, role, invitationToken, appUrl);
@@ -242,6 +214,91 @@ const createUser = async (req, res) => {
     }
 };
 exports.createUser = createUser;
+const forgotPassword = async (req, res) => {
+    const forgotPasswordSchema = zod_1.z.object({
+        email: zod_1.z.string().email(),
+    });
+    const parsed = forgotPasswordSchema.safeParse(req.body);
+    if (!parsed.success)
+        return res.status(400).json({ message: 'Invalid payload' });
+    const { email } = parsed.data;
+    try {
+        const db = await (0, db_1.getDb)();
+        const users = db.collection('users');
+        const user = await users.findOne({ email });
+        // Toujours retourner un succès pour éviter l'énumération d'emails
+        if (!user) {
+            return res.status(200).json({ message: 'If an account exists with this email, a reset link has been sent.' });
+        }
+        // Générer un token de réinitialisation
+        const resetToken = crypto_1.randomBytes(32).toString('hex');
+        const resetExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 heures
+        // Sauvegarder le token dans la base de données
+        await users.updateOne({ _id: user._id }, {
+            $set: {
+                reset_token: resetToken,
+                reset_expires: resetExpires,
+                updated_at: new Date(),
+            }
+        });
+        // Envoyer l'email de réinitialisation
+        try {
+            const { EmailTemplates } = await import('../services/emailTemplates');
+            const appUrl = process.env.APP_URL || 'http://localhost:3000';
+            const emailTemplate = EmailTemplates.passwordReset(email, resetToken, appUrl);
+            await (0, email_1.sendEmail)(email, emailTemplate.subject, emailTemplate.html);
+        }
+        catch (emailError) {
+            console.error('Erreur envoi email:', emailError);
+            // Ne pas faire échouer la demande si l'email échoue
+        }
+        return res.status(200).json({ message: 'If an account exists with this email, a reset link has been sent.' });
+    }
+    catch (e) {
+        return res.status(500).json({ message: 'Server error' });
+    }
+};
+exports.forgotPassword = forgotPassword;
+const resetPassword = async (req, res) => {
+    const resetPasswordSchema = zod_1.z.object({
+        token: zod_1.z.string(),
+        password: zod_1.z.string().min(6),
+    });
+    const parsed = resetPasswordSchema.safeParse(req.body);
+    if (!parsed.success)
+        return res.status(400).json({ message: 'Invalid payload' });
+    const { token, password } = parsed.data;
+    try {
+        const db = await (0, db_1.getDb)();
+        const users = db.collection('users');
+        // Trouver l'utilisateur avec le token de réinitialisation
+        const user = await users.findOne({
+            reset_token: token,
+            reset_expires: { $gt: new Date() }
+        });
+        if (!user) {
+            return res.status(400).json({ message: 'Invalid or expired reset token' });
+        }
+        // Hasher le nouveau mot de passe
+        const passwordHash = await bcryptjs_1.default.hash(password, 10);
+        // Mettre à jour l'utilisateur
+        await users.updateOne({ _id: user._id }, {
+            $set: {
+                password_hash: passwordHash,
+                updated_at: new Date(),
+            },
+            $unset: {
+                reset_token: 1,
+                reset_expires: 1,
+            }
+        });
+        return res.status(200).json({ message: 'Password reset successfully' });
+    }
+    catch (e) {
+        return res.status(500).json({ message: 'Server error' });
+    }
+};
+exports.resetPassword = resetPassword;
 const completeProfile = async (req, res) => {
     const completeProfileSchema = zod_1.z.object({
         token: zod_1.z.string(),
@@ -338,8 +395,13 @@ const deleteUser = async (req, res) => {
     try {
         const db = await (0, db_1.getDb)();
         const users = db.collection('users');
-        // Empêcher l'auto-suppression
-        if (req.user?.id === id) {
+        // Trouver l'utilisateur à supprimer
+        const userToDelete = await users.findOne({ _id: new mongodb_1.ObjectId(id) });
+        if (!userToDelete) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        // Empêcher l'auto-suppression en comparant les emails
+        if (req.user?.email === userToDelete.email) {
             return res.status(400).json({ message: 'Cannot delete your own account' });
         }
         const result = await users.deleteOne({ _id: new mongodb_1.ObjectId(id) });

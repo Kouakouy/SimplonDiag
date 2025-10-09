@@ -107,21 +107,13 @@ export default function LoginPage() {
     <div className="min-h-screen relative flex items-center justify-center bg-white">
       {/* Images de fond dupliquées avec opacité réduite */}
       <Image
-        src="/images/BackgroundFade.png"
+        src="/images/BackgroundFade.jpg"
         alt="Background"
-        width={800}
-        height={600}
-        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 object-cover opacity-20"
+        fill
+        className="absolute inset-0 w-full h-full object-cover opacity-20"
         priority
       />
-      <Image
-        src="/images/BackgroundFade.png"
-        alt="Background Duplicate"
-        width={700}
-        height={525}
-        className="absolute top-1/2 left-1/2 transform -translate-x-1/3 -translate-y-1/3 object-cover opacity-15"
-        priority
-      />
+    
       
       {/* Main Content - Layout en 2 colonnes */}
       <div className="relative z-10 w-full max-w-7xl mx-auto px-8 py-10">

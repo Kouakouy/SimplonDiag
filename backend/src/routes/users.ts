@@ -7,7 +7,9 @@ import {
   createUser, 
   updateUser, 
   deleteUser,
-  completeProfile
+  completeProfile,
+  forgotPassword,
+  resetPassword
 } from '../controllers/authController'
 import { requireAuth, requireRole } from '../middleware/auth'
 
@@ -17,6 +19,8 @@ const authRouter = Router()
 authRouter.post('/register', register)
 authRouter.post('/login', login)
 authRouter.post('/complete-profile', completeProfile)
+authRouter.post('/forgot-password', forgotPassword)
+authRouter.post('/reset-password', resetPassword)
 
 // Routes protégées
 authRouter.get('/me', requireAuth, getCurrentUser)

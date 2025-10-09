@@ -72,7 +72,7 @@ function UserCard({ user, currentUser, openEditForm, handleDeleteUser }: UserCar
         >
           <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
         </Button>
-        {user.id !== currentUser?.id && (
+        {user.email !== currentUser?.email && (
           <Button 
             variant="ghost" 
             size="sm"
