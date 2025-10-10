@@ -111,7 +111,7 @@ export function UserManagement() {
     if (canAccess('canManageUsers') && !hasLoaded) {
       loadUsers()
     }
-  }, [canAccess, hasLoaded]) // Ajouter hasLoaded dans les dépendances
+  }, [canAccess, hasLoaded])
 
   const loadUsers = async () => {
     try {
