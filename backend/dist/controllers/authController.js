@@ -9,9 +9,9 @@ const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const db_1 = require("../config/db");
 const mongodb_1 = require("mongodb");
-const auth_1 = require("../middleware/auth");
 const email_1 = require("../config/email");
-const crypto_1 = require("crypto");
+const emailTemplates_1 = require("../services/emailTemplates");
+const crypto_1 = __importDefault(require("crypto"));
 const authSchema = zod_1.z.object({
     name: zod_1.z.string().min(1).optional(),
     email: zod_1.z.string().email(),
@@ -49,6 +49,23 @@ const register = async (req, res) => {
         });
         const userId = insert.insertedId.toString();
         const token = jsonwebtoken_1.default.sign({ id: userId, email, role: role ?? 'creator' }, process.env.JWT_SECRET, { expiresIn: '7d' });
+        // Envoyer l'email de bienvenue
+        try {
+            console.log('📧 Préparation de l\'envoi d\'email de bienvenue...');
+            console.log('   Email destinataire:', email);
+            console.log('   Nom:', name ?? 'User');
+            console.log('   Rôle:', role ?? 'creator');
+            const appUrl = process.env.APP_URL || 'http://localhost:3000';
+            console.log('   URL de l\'app:', appUrl);
+            const emailTemplate = emailTemplates_1.EmailTemplates.accountCreated(name ?? 'User', email, role ?? 'creator', appUrl);
+            console.log('   Template généré:', emailTemplate.subject);
+            await (0, email_1.sendEmail)(email, emailTemplate.subject, emailTemplate.html);
+            console.log('✅ Email de bienvenue envoyé avec succès');
+        }
+        catch (emailError) {
+            console.error('❌ Erreur envoi email de bienvenue:', emailError);
+            // Ne pas faire échouer l'inscription si l'email échoue
+        }
         return res.status(201).json({ token });
     }
     catch (e) {
@@ -61,10 +78,6 @@ const login = async (req, res) => {
     if (!parsed.success)
         return res.status(400).json({ message: 'Invalid payload' });
     const { email, password } = parsed.data;
-    // Vérifier que le mot de passe est fourni pour la connexion
-    if (!password) {
-        return res.status(400).json({ message: 'Password is required for login' });
-    }
     try {
         const db = await (0, db_1.getDb)();
         const users = db.collection('users');
@@ -165,6 +178,23 @@ const createUser = async (req, res) => {
                 created_at: new Date(),
                 updated_at: new Date(),
             });
+            // Envoyer l'email de bienvenue
+            try {
+                console.log('📧 Préparation de l\'envoi d\'email de bienvenue...');
+                console.log('   Email destinataire:', email);
+                console.log('   Nom:', name);
+                console.log('   Rôle:', role);
+                const appUrl = process.env.APP_URL || 'http://localhost:3000';
+                console.log('   URL de l\'app:', appUrl);
+                const emailTemplate = emailTemplates_1.EmailTemplates.accountCreated(name, email, role, appUrl);
+                console.log('   Template généré:', emailTemplate.subject);
+                await (0, email_1.sendEmail)(email, emailTemplate.subject, emailTemplate.html);
+                console.log('✅ Email de bienvenue envoyé avec succès');
+            }
+            catch (emailError) {
+                console.error('❌ Erreur envoi email de bienvenue:', emailError);
+                // Ne pas faire échouer la création si l'email échoue
+            }
             return res.status(201).json({
                 id: insert.insertedId.toString(),
                 message: 'User created successfully'
@@ -172,7 +202,7 @@ const createUser = async (req, res) => {
         }
         else {
             // Mode invitation
-            const invitationToken = crypto_1.randomBytes(32).toString('hex');
+            const invitationToken = crypto_1.default.randomBytes(32).toString('hex');
             const invitationExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 jours
             const insert = await users.insertOne({
                 name: '', // Sera complété par l'utilisateur
@@ -191,10 +221,9 @@ const createUser = async (req, res) => {
                 console.log('   Email destinataire:', email);
                 console.log('   Rôle:', role);
                 console.log('   Token:', invitationToken.substring(0, 10) + '...');
-                const { EmailTemplates } = await import('../services/emailTemplates');
                 const appUrl = process.env.APP_URL || 'http://localhost:3000';
                 console.log('   URL de l\'app:', appUrl);
-                const emailTemplate = EmailTemplates.userInvitation(email, role, invitationToken, appUrl);
+                const emailTemplate = emailTemplates_1.EmailTemplates.userInvitation(email, role, invitationToken, appUrl);
                 console.log('   Template généré:', emailTemplate.subject);
                 await (0, email_1.sendEmail)(email, emailTemplate.subject, emailTemplate.html);
                 console.log('✅ Email d\'invitation envoyé avec succès');
@@ -231,7 +260,7 @@ const forgotPassword = async (req, res) => {
             return res.status(200).json({ message: 'If an account exists with this email, a reset link has been sent.' });
         }
         // Générer un token de réinitialisation
-        const resetToken = crypto_1.randomBytes(32).toString('hex');
+        const resetToken = crypto_1.default.randomBytes(32).toString('hex');
         const resetExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 heures
         // Sauvegarder le token dans la base de données
         await users.updateOne({ _id: user._id }, {
@@ -243,9 +272,8 @@ const forgotPassword = async (req, res) => {
         });
         // Envoyer l'email de réinitialisation
         try {
-            const { EmailTemplates } = await import('../services/emailTemplates');
             const appUrl = process.env.APP_URL || 'http://localhost:3000';
-            const emailTemplate = EmailTemplates.passwordReset(email, resetToken, appUrl);
+            const emailTemplate = emailTemplates_1.EmailTemplates.passwordReset(email, resetToken, appUrl);
             await (0, email_1.sendEmail)(email, emailTemplate.subject, emailTemplate.html);
         }
         catch (emailError) {
