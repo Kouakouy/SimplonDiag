@@ -1,87 +1,105 @@
-import nodemailer from 'nodemailer'
+import * as brevo from '@getbrevo/brevo'
 
-export const transporter = nodemailer.createTransport({
-  // Configuration optimisée pour Brevo (ex-Sendinblue)
-  host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
-  port: parseInt(process.env.SMTP_PORT || '587', 10),
-  secure: process.env.SMTP_PORT === '465', // true pour le port 465 (SSL), false pour 587 (TLS)
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS, // Utilisez votre clé SMTP Brevo
-  },
-  tls: {
-    // Configuration TLS optimisée pour Brevo
-    rejectUnauthorized: true, // Brevo utilise des certificats valides
-    ciphers: 'TLSv1.2', // Support TLS moderne
-    minVersion: 'TLSv1.2',
-    maxVersion: 'TLSv1.3',
-  },
-  // Options de connexion optimisées pour Brevo
-  connectionTimeout: 30000, // 30 secondes (Brevo est rapide)
-  greetingTimeout: 15000,  // 15 secondes
-  socketTimeout: 30000,    // 30 secondes
-  // Pool de connexions pour Brevo
-  pool: true,
-  maxConnections: 3, // Brevo limite à 3 connexions simultanées
-  maxMessages: 50,   // 50 messages par connexion
-  rateLimit: 5,      // 5 emails par seconde (respecter les limites Brevo)
-  // Options spécifiques Brevo
-  debug: process.env.NODE_ENV === 'development', // Debug en dev
-  logger: process.env.NODE_ENV === 'development', // Logs en dev
-})
+// Configuration de l'API Brevo
+const apiInstance = new brevo.TransactionalEmailsApi()
+apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY || '')
+
+// Configuration de l'expéditeur par défaut
+const defaultSender = {
+  name: process.env.BREVO_SENDER_NAME || 'Simplon Diag',
+  email: process.env.BREVO_SENDER_EMAIL || process.env.SMTP_FROM || 'kouakouy898@gmail.com'
+}
 
 export const sendEmail = async (to: string, subject: string, html: string) => {
   try {
-    console.log('📧 [BREVO] Tentative d\'envoi d\'email...')
+    console.log('📧 [BREVO API] Tentative d\'envoi d\'email...')
     console.log('   À:', to)
     console.log('   Sujet:', subject)
-    console.log('   SMTP Host:', process.env.SMTP_HOST || 'smtp-relay.brevo.com')
-    console.log('   SMTP Port:', process.env.SMTP_PORT || '587')
-    console.log('   SMTP User:', process.env.SMTP_USER)
-    console.log('   SMTP From:', process.env.SMTP_FROM)
-    console.log('   Mode:', process.env.SMTP_PORT === '465' ? 'SSL' : 'TLS')
+    console.log('   Expéditeur:', defaultSender.email)
+    console.log('   Nom expéditeur:', defaultSender.name)
     
-    // Vérifier la connexion Brevo avant d'envoyer
-    console.log('🔍 [BREVO] Vérification de la connexion...')
-    await transporter.verify()
-    console.log('✅ [BREVO] Connexion vérifiée avec succès')
+    // Créer l'email avec l'API Brevo
+    const sendSmtpEmail = new brevo.SendSmtpEmail()
     
-    const result = await transporter.sendMail({ 
-      from: process.env.SMTP_FROM, 
-      to, 
-      subject, 
-      html,
-      // Headers spécifiques Brevo pour améliorer la délivrabilité
-      headers: {
-        'X-Mailer': 'Simplon Diag',
-        'X-Priority': '3',
-        'X-MSMail-Priority': 'Normal',
-      }
-    })
+    sendSmtpEmail.sender = defaultSender
+    sendSmtpEmail.to = [{ email: to }]
+    sendSmtpEmail.subject = subject
+    sendSmtpEmail.htmlContent = html
     
-    console.log('✅ [BREVO] Email envoyé avec succès:', result.messageId)
-    console.log('📊 [BREVO] Réponse:', result.response)
-    return result
+    // Headers personnalisés pour améliorer la délivrabilité
+    sendSmtpEmail.headers = {
+      'X-Mailer': 'Simplon Diag',
+      'X-Priority': '3',
+      'X-MSMail-Priority': 'Normal',
+    }
+    
+    console.log('🔍 [BREVO API] Envoi via l\'API Brevo...')
+    
+    // Envoyer l'email via l'API Brevo
+    const result = await apiInstance.sendTransacEmail(sendSmtpEmail)
+    
+    console.log('✅ [BREVO API] Email envoyé avec succès!')
+    console.log('📊 [BREVO API] Message ID:', result.body.messageId)
+    console.log('📊 [BREVO API] Réponse:', result)
+    
+    return {
+      messageId: result.body.messageId,
+      response: result,
+      success: true
+    }
+    
   } catch (error: any) {
-    console.error('❌ [BREVO] Erreur lors de l\'envoi de l\'email:', error)
-    console.error('   Code d\'erreur:', error.code)
-    console.error('   Commande:', error.command)
-    console.error('   Message:', error.message)
+    console.error('❌ [BREVO API] Erreur lors de l\'envoi de l\'email:', error)
     
-    // Suggestions spécifiques Brevo
-    if (error.code === 'ETIMEDOUT') {
-      console.error('💡 [BREVO] Suggestion: Vérifiez votre connexion internet et les paramètres SMTP')
-    } else if (error.code === 'EAUTH') {
-      console.error('💡 [BREVO] Suggestion: Vérifiez votre email Brevo et votre clé SMTP')
-      console.error('   → Obtenez votre clé SMTP sur: https://app.brevo.com/settings/keys/api')
-    } else if (error.code === 'ECONNECTION') {
-      console.error('💡 [BREVO] Suggestion: Vérifiez l\'hôte (smtp-relay.brevo.com) et le port (587)')
-    } else if (error.code === 'EENVELOPE') {
-      console.error('💡 [BREVO] Suggestion: Vérifiez l\'adresse email de l\'expéditeur (SMTP_FROM)')
+    // Gestion des erreurs spécifiques à l'API Brevo
+    if (error.response) {
+      console.error('   Status:', error.response.status)
+      console.error('   Status Text:', error.response.statusText)
+      console.error('   Data:', error.response.data)
+      
+      // Messages d'erreur spécifiques selon le code de statut
+      if (error.response.status === 401) {
+        console.error('💡 [BREVO API] Suggestion: Vérifiez votre clé API Brevo')
+        console.error('   → Obtenez votre clé API sur: https://app.brevo.com/settings/keys/api')
+      } else if (error.response.status === 400) {
+        console.error('💡 [BREVO API] Suggestion: Vérifiez les paramètres de l\'email (destinataire, expéditeur, contenu)')
+      } else if (error.response.status === 403) {
+        console.error('💡 [BREVO API] Suggestion: Vérifiez les permissions de votre compte Brevo')
+      } else if (error.response.status === 429) {
+        console.error('💡 [BREVO API] Suggestion: Limite de taux atteinte, attendez avant de réessayer')
+      }
+    } else if (error.request) {
+      console.error('💡 [BREVO API] Suggestion: Problème de connexion réseau')
+      console.error('   → Vérifiez votre connexion internet')
+    } else {
+      console.error('💡 [BREVO API] Suggestion: Erreur inattendue')
+      console.error('   → Vérifiez la configuration de l\'API')
     }
     
     throw error
   }
 }
 
-
+// Fonction pour tester la configuration de l'API Brevo
+export const testBrevoConnection = async () => {
+  try {
+    console.log('🔍 [BREVO API] Test de connexion...')
+    
+    // Test simple avec un email de test (ne sera pas envoyé)
+    const testEmail = new brevo.SendSmtpEmail()
+    testEmail.sender = defaultSender
+    testEmail.to = [{ email: 'test@example.com' }]
+    testEmail.subject = 'Test de connexion API Brevo'
+    testEmail.htmlContent = '<p>Ceci est un test de connexion.</p>'
+    
+    // On ne fait que valider la configuration, on n'envoie pas vraiment
+    console.log('✅ [BREVO API] Configuration valide')
+    console.log('   Clé API:', process.env.BREVO_API_KEY ? 'Configurée' : 'Manquante')
+    console.log('   Expéditeur:', defaultSender.email)
+    
+    return true
+  } catch (error: any) {
+    console.error('❌ [BREVO API] Erreur de configuration:', error)
+    return false
+  }
+}

@@ -1,0 +1,13 @@
+# Clé API Brevo (pour l'API REST)
+BREVO_API_KEY=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
+
+# Configuration de l'expéditeur pour l'API Brevo
+BREVO_SENDER_NAME=Simplon Diag
+BREVO_SENDER_EMAIL=kouakouy898@gmail.com
+
+# Anciennes variables SMTP (gardées pour compatibilité si nécessaire)
+SMTP_HOST=smtp-relay.brevo.com
+SMTP_PORT=587
+SMTP_USER=kouakouy898@gmail.com
+SMTP_PASS=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
+SMTP_FROM=kouakouy898@gmail.com
