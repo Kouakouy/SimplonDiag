@@ -83,7 +83,7 @@ export const EmailTemplates = {
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #E40046, #C70039); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-          <h1 style="color: white; margin: 0; font-size: 28px;">Bienvenue sur Simplon Form</h1>
+          <h1 style="color: white; margin: 0; font-size: 28px;">Bienvenue sur Simplon Diag</h1>
           <p style="color: white; margin: 10px 0 0 0; opacity: 0.9;">Plateforme de gestion de formulaires</p>
         </div>
         
