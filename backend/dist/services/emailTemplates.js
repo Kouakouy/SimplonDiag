@@ -86,7 +86,7 @@ exports.EmailTemplates = {
         html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #E40046, #C70039); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-          <h1 style="color: white; margin: 0; font-size: 28px;">Bienvenue sur Simplon Form</h1>
+          <h1 style="color: white; margin: 0; font-size: 28px;">Bienvenue sur Simplon Diag</h1>
           <p style="color: white; margin: 10px 0 0 0; opacity: 0.9;">Plateforme de gestion de formulaires</p>
         </div>
         
@@ -95,7 +95,7 @@ exports.EmailTemplates = {
           
           <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
             Bonjour,<br><br>
-            Vous avez été invité à rejoindre la plateforme Simplon Form en tant que <strong>${role === 'admin' ? 'Administrateur' : role === 'observer' ? 'Observateur' : 'Créateur'}</strong>.
+            Vous avez été invité à rejoindre la plateforme Simplon Diag en tant que <strong>${role === 'admin' ? 'Administrateur' : role === 'observer' ? 'Observateur' : 'Créateur'}</strong>.
           </p>
           
           <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #E40046;">
@@ -144,11 +144,11 @@ exports.EmailTemplates = {
     `,
     }),
     accountCreated: (name, email, role, appUrl) => ({
-        subject: 'Bienvenue sur Simplon Form - Votre compte a été créé',
+        subject: 'Bienvenue sur Simplon Diag - Votre compte a été créé',
         html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #E40046, #C70039); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-          <h1 style="color: white; margin: 0; font-size: 28px;">Bienvenue sur Simplon Form</h1>
+          <h1 style="color: white; margin: 0; font-size: 28px;">Bienvenue sur Simplon Diag</h1>
           <p style="color: white; margin: 10px 0 0 0; opacity: 0.9;">Plateforme de gestion de formulaires</p>
         </div>
         
@@ -157,7 +157,7 @@ exports.EmailTemplates = {
           
           <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
             Bonjour ${name},<br><br>
-            Félicitations ! Votre compte Simplon Form a été créé avec succès. Vous pouvez maintenant accéder à la plateforme et commencer à créer vos formulaires.
+            Félicitations ! Votre compte Simplon Diag a été créé avec succès. Vous pouvez maintenant accéder à la plateforme et commencer à créer vos formulaires.
           </p>
           
           <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #E40046;">
