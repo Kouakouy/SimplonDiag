@@ -39,11 +39,10 @@ export const sendEmail = async (to: string, subject: string, html: string) => {
     const result = await apiInstance.sendTransacEmail(sendSmtpEmail)
     
     console.log('✅ [BREVO API] Email envoyé avec succès!')
-    console.log('📊 [BREVO API] Message ID:', result.body.messageId)
-    console.log('📊 [BREVO API] Réponse:', result)
+    console.log('📊 [BREVO API] Réponse complète:', result)
     
     return {
-      messageId: result.body.messageId,
+      messageId: 'brevo-' + Date.now(), // Générer un ID temporaire
       response: result,
       success: true
     }
