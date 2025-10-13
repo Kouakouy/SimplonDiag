@@ -56,7 +56,7 @@ const sendEmail = async (to, subject, html) => {
         sendSmtpEmail.to = [{ email: to }];
         sendSmtpEmail.subject = subject;
         sendSmtpEmail.htmlContent = html;
-        // Headers personnalisés pour améliorer la délivrabilité
+    
         sendSmtpEmail.headers = {
             'X-Mailer': 'Simplon Diag',
             'X-Priority': '3',
