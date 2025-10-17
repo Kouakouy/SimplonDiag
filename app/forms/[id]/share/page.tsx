@@ -89,24 +89,36 @@ export default function ShareFormPage() {
   }
 
   const sendShareEmail = async () => {
-    if (emailRecipients.length === 0) return
+    const typedEmail = emailInput.trim()
+    const recipients = Array.from(new Set([
+      ...emailRecipients,
+      ...(typedEmail ? [typedEmail] : [])
+    ]))
+
+    if (recipients.length === 0) return
     
     setIsSendingEmail(true)
     try {
-      await apiRequest({ 
-        url: `/forms/${formId}/share`, 
-        method: 'POST', 
-        body: { 
-          to: emailRecipients,
-          subject: emailSubject || `Formulaire: ${form?.title}`,
-          message: emailMessage || `Bonjour,\n\nJe vous invite à répondre à ce formulaire : ${form?.title}\n\nLien : ${shareUrl}\n\nCordialement`
-        } 
-      })
-      alert('Email(s) envoyé(s) avec succès.')
+      // Utiliser le template backend: n'envoyer que 'to'
+      await Promise.all(
+        recipients.map((to) =>
+          apiRequest({
+            url: `/forms/${formId}/share`,
+            method: 'POST',
+            body: { 
+              to,
+              subject: emailSubject || `Formulaire: ${form?.title}`,
+              message: emailMessage || `Bonjour,\n\nJe vous invite à répondre à ce formulaire : ${form?.title}\n\nLien : ${shareUrl}\n\nCordialement`
+            },
+          })
+        )
+      )
+      alert(`Email(s) envoyé(s) avec succès (${recipients.length}).`)
       setShowEmailModal(false)
       setEmailRecipients([])
       setEmailSubject("")
       setEmailMessage("")
+      setEmailInput("")
     } catch (e: any) {
       alert(`Erreur: ${e.message || 'envoi impossible'}`)
     } finally {
@@ -436,12 +448,14 @@ Cordialement"
                   </Button>
                   <Button 
                     onClick={sendShareEmail} 
-                    disabled={emailRecipients.length === 0 || isSendingEmail}
+                    disabled={(emailRecipients.length === 0 && emailInput.trim().length === 0) || isSendingEmail}
                     className="bg-[#E40046] hover:bg-[#E40046]/80 text-white"
                   >
                     {isSendingEmail ? (
                       <>
-                        <l-hourglass size="16" bg-opacity="0.1" speed="1.75" color="white" className="mr-2"></l-hourglass>
+                        <span className="mr-2">
+                          <l-hourglass size="16" bg-opacity="0.1" speed="1.75" color="white"></l-hourglass>
+                        </span>
                         Envoi en cours...
                       </>
                     ) : (

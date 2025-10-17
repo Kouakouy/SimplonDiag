@@ -272,21 +272,77 @@ export const getStats = async (req: AuthRequest, res: Response) => {
 
 export const shareForm = async (req: AuthRequest, res: Response) => {
   const { id } = req.params
-  const shareSchema = z.object({ to: z.string().email() })
+  const shareSchema = z.object({
+    to: z.string().email(),
+    subject: z.string().min(1).optional(),
+    message: z.string().min(1).optional(),
+  })
   const parsed = shareSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ message: 'Invalid payload' })
-  const { to } = parsed.data
+  const { to, subject: customSubject, message: customMessage } = parsed.data
   try {
     const db = await getDb()
     const form = await db.collection('forms').findOne({ _id: new ObjectId(id) })
     if (!form) return res.status(404).json({ message: 'Not found' })
     const title = form.title as string
-    const link = `${process.env.APP_URL || 'http://localhost:3000'}/f/${form.public_slug || id}`
-    await sendEmail(
-      to,
-      `Partager formulaire - ${title}`,
-      `<h2>${title}</h2><p>Accédez au formulaire: <a href="${link}">${link}</a></p>`
-    )
+    const appUrl = process.env.APP_URL || 'http://localhost:3000'
+    const link = `${appUrl}/f/${form.public_slug || id}`
+    const logoUrl = `${appUrl}/images/logo2.png`
+
+    // Sujet par défaut conforme à la demande
+    const subject = customSubject ?? `Formulaire: ${title}`
+
+    // Message texte par défaut conforme à la demande (servira aussi de base HTML)
+    const defaultText = `Bonjour,\n\nJe vous invite à répondre à ce formulaire : ${title}\n\nLien : ${link}\n\nCordialement`
+    const textToRender = customMessage ?? defaultText
+
+    // Template HTML avec branding (logo, bouton, styles)
+    const html = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${subject}</title>
+  <style>
+    body { margin:0; padding:0; background:#f5f7fb; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; color:#333; }
+    .container { max-width:640px; margin:0 auto; padding:24px; }
+    .card { background:#ffffff; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.06); overflow:hidden; }
+    .header { background:linear-gradient(135deg,#E40046 0%,#C7003A 100%); color:#fff; padding:20px 24px; display:flex; align-items:center; gap:12px; }
+    .logo { background:#fff; border-radius:8px; width:120px; height:40px; display:flex; align-items:center; justify-content:center; }
+    .logo img { max-width:100%; max-height:100%; object-fit:contain; }
+    .title { font-weight:700; font-size:16px; margin:0; }
+    .content { padding:24px; line-height:1.6; font-size:15px; }
+    .btn { display:inline-block; background:#E40046; color:#fff !important; text-decoration:none; padding:12px 18px; border-radius:8px; font-weight:600; }
+    .muted { color:#6b7280; font-size:12px; margin-top:16px; }
+    .footer { text-align:center; color:#9ca3af; font-size:12px; padding:16px; }
+  </style>
+  <!--[if mso]><style type="text/css">.btn{padding:0 !important;} .btn a{background:#E40046;color:#fff !important;padding:12px 18px;display:inline-block;border-radius:8px;text-decoration:none;}</style><![endif]-->
+  </head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <div class="logo"><img src="${logoUrl}" alt="Simplon" /></div>
+        <h1 class="title">Invitation à répondre à un formulaire</h1>
+      </div>
+      <div class="content">
+        <p>${textToRender.replace(/\n/g, '<br/>')}</p>
+        <p style="margin:24px 0 8px 0;">
+          <a href="${link}" class="btn" target="_blank" rel="noopener noreferrer">Ouvrir le formulaire</a>
+        </p>
+        <p class="muted">Si le bouton ne fonctionne pas, copiez-collez ce lien dans votre navigateur:<br/>
+          <a href="${link}">${link}</a>
+        </p>
+      </div>
+      <div class="footer">
+        © ${new Date().getFullYear()} Simplon • Tous droits réservés
+      </div>
+    </div>
+  </div>
+</body>
+</html>`
+
+    await sendEmail(to, subject, html)
     return res.json({ ok: true })
   } catch {
     return res.status(500).json({ message: 'Server error' })

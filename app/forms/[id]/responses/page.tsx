@@ -274,7 +274,8 @@ function ResponsesPageContent() {
         key: 'respondent_name',
         title: nameQuestion.title,
         type: 'name',
-        width: '150px',
+        questionId: nameQuestion.id,
+        width: '220px',
         required: false
       })
     }
@@ -284,7 +285,8 @@ function ResponsesPageContent() {
         key: 'respondent_email',
         title: emailQuestion.title,
         type: 'email',
-        width: '200px',
+        questionId: emailQuestion.id,
+        width: '100px',
         required: false
       })
     }
@@ -294,7 +296,7 @@ function ResponsesPageContent() {
       key: 'submitted_at',
       title: 'Date de soumission',
       type: 'date',
-      width: '150px',
+      width: '180px',
       required: true
     })
     
@@ -319,7 +321,7 @@ function ResponsesPageContent() {
           title: q.title.length > 25 ? q.title.substring(0, 25) + '...' : q.title,
           type: 'question',
           questionId: q.id,
-          width: '120px',
+          width: '420px',
           required: false
         })
       }
@@ -346,9 +348,9 @@ function ResponsesPageContent() {
       case 'response_id':
         return `#${responses.indexOf(response) + 1}`
       case 'name':
-        return response.respondentName || 'Non renseigné'
+        return response.respondentName || response.answers[column.questionId] || 'Non renseigné'
       case 'email':
-        return response.respondentEmail || 'Non renseigné'
+        return response.respondentEmail || response.answers[column.questionId] || 'Non renseigné'
       case 'date':
         return response.submittedAt.toLocaleDateString("fr-FR")
       case 'question':
@@ -1961,8 +1963,8 @@ function ResponsesPageContent() {
                             {filteredResponses.map((response) => (
                               <tr key={response.id} className="border-b hover:bg-gray-50">
                                 {getDisplayColumns().map((column) => (
-                                  <td key={column.key} className="p-4">
-                                    <div className="flex items-center gap-2">
+                                  <td key={column.key} className="p-4 align-top">
+                                    <div className="flex items-start gap-2">
                                       {column.type === 'response_id' && (
                                         <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-xs font-mono text-blue-600">
                                           #
@@ -1980,13 +1982,26 @@ function ResponsesPageContent() {
                                       {column.type === 'question' && (
                                         <FileText className="w-4 h-4 text-gray-400" />
                                       )}
-                                      <span className={`${
-                                        column.type === 'name' ? 'font-medium' : 
-                                        column.type === 'response_id' ? 'font-mono text-sm text-blue-600' :
-                                        'text-gray-600'
-                                      }`}>
-                                        {getCellValue(response, column)}
-                                      </span>
+                                      {(() => {
+                                        const value = getCellValue(response, column) as any
+                                        const isLongText = column.type === 'question' && typeof value === 'string' && value.length > 120
+                                        if (isLongText) {
+                                          return (
+                                            <div className="flex-1 max-h-32 overflow-y-auto whitespace-pre-wrap break-words text-gray-700 bg-white border border-gray-200 rounded p-2">
+                                              {value}
+                                            </div>
+                                          )
+                                        }
+                                        return (
+                                          <span className={`${
+                                            column.type === 'name' ? 'font-medium' : 
+                                            column.type === 'response_id' ? 'font-mono text-sm text-blue-600' :
+                                            'text-gray-600'
+                                          }`}>
+                                            {value}
+                                          </span>
+                                        )
+                                      })()}
                                     </div>
                                   </td>
                                 ))}

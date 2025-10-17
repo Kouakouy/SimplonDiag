@@ -10,6 +10,7 @@ import { apiRequest } from "@/lib/api"
 import { FileText, Plus, Search, CheckCircle, Copy, Trash2, Share, Eye, BarChart3, Edit, Trash, Grid3X3, List } from "lucide-react"
 import { hourglass } from 'ldrs'
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/contexts/AuthContext"
 
 
@@ -19,6 +20,7 @@ if (typeof window !== 'undefined') {
 }
 
 export default function FormsPage() {
+  const router = useRouter()
   const { user } = useAuth()
   const [searchTerm, setSearchTerm] = useState("")
   const [forms, setForms] = useState<any[]>([])
@@ -274,7 +276,7 @@ export default function FormsPage() {
                 const shareUrl = getShareUrl(form)
                 
                 return (
-                  <Card key={form._id || form.id} className={`hover:shadow-lg transition-all duration-200 overflow-hidden group ${
+                  <Card key={form._id || form.id} onClick={() => router.push(`/forms/${form._id || form.id}/responses`)} className={`hover:shadow-lg transition-all duration-200 overflow-hidden group cursor-pointer ${
                     viewMode === 'list' ? 'hover:scale-[1.01]' : 'hover:scale-[1.02]'
                   }`}>
                     {viewMode === 'grid' ? (
@@ -363,13 +365,13 @@ export default function FormsPage() {
                                 size="sm" 
                                 className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-blue-600 hover:bg-blue-50" 
                                 title="Aperçu"
-                                onClick={() => window.open(`/forms/${form._id || form.id}`)}
+                                onClick={(e) => { e.stopPropagation(); window.open(`/forms/${form._id || form.id}`) }}
                               >
                                 <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
                               </Button>
                             )}
                             <Link href={`/forms/${form._id || form.id}/responses`}>
-                              <Button variant="ghost" size="sm" className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-green-600 hover:bg-green-50" title="Résultats">
+                              <Button onClick={(e) => e.stopPropagation()} variant="default" size="sm" className="h-7 w-7 sm:h-8 sm:w-8 p-0 bg-[#E40046] text-white hover:bg-[#E40046]/80" title="Résultats">
                                 <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" />
                               </Button>
                             </Link>
@@ -378,7 +380,7 @@ export default function FormsPage() {
                                 variant="ghost"
                                 size="sm"
                                 className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-red-600 hover:bg-red-50"
-                                onClick={() => handleDelete(form._id || form.id)}
+                                onClick={(e) => { e.stopPropagation(); handleDelete(form._id || form.id) }}
                                 title="Supprimer"
                               >
                                 <Trash className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -404,13 +406,13 @@ export default function FormsPage() {
                                 size="sm" 
                                 className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50" 
                                 title="Aperçu"
-                                onClick={() => window.open(`/forms/${form._id || form.id}`)}
+                                onClick={(e) => { e.stopPropagation(); window.open(`/forms/${form._id || form.id}`) }}
                               >
                                 <Eye className="w-4 h-4" />
                               </Button>
                             )}
                             <Link href={`/forms/${form._id || form.id}/responses`}>
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-green-600 hover:bg-green-50" title="Résultats">
+                              <Button onClick={(e) => e.stopPropagation()} variant="default" size="sm" className="h-8 w-8 p-0 bg-[#E40046] text-white hover:bg-[#E40046]/80" title="Résultats">
                                 <BarChart3 className="w-4 h-4" />
                               </Button>
                             </Link>
@@ -419,7 +421,7 @@ export default function FormsPage() {
                                 variant="ghost"
                                 size="sm"
                                 className="h-8 w-8 p-0 text-red-600 hover:bg-red-50"
-                                onClick={() => handleDelete(form._id || form.id)}
+                                onClick={(e) => { e.stopPropagation(); handleDelete(form._id || form.id) }}
                                 title="Supprimer"
                               >
                                 <Trash className="w-4 h-4" />
@@ -503,13 +505,13 @@ export default function FormsPage() {
                           {!isObserver && (
                             <div className="flex gap-2">
                               <Link href={`/forms/${form._id || form.id}/edit`} className="flex-1">
-                                <Button variant="outline" size="sm" className="w-full text-xs">
+                                <Button onClick={(e) => e.stopPropagation()} variant="outline" size="sm" className="w-full text-xs">
                                   <Edit className="w-3 h-3 mr-1" />
                                   Éditer
                                 </Button>
                               </Link>
                               <Link href={`/forms/${form._id || form.id}/share`} className="flex-1">
-                                <Button variant="outline" size="sm" className="w-full text-xs">
+                                <Button onClick={(e) => e.stopPropagation()} variant="outline" size="sm" className="w-full text-xs">
                                   <Share className="w-3 h-3 mr-1" />
                                   Partager
                                 </Button>
