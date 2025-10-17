@@ -141,6 +141,13 @@ function CompleteProfileContent() {
 
   return (
     <div className="min-h-screen relative flex items-center justify-center bg-white">
+      <Image
+        src="/images/BackgroundFade.jpg"
+        alt="Background"
+        fill
+        className="absolute inset-0 w-full h-full object-cover opacity-20"
+        priority
+      />
       <div className="absolute inset-0 bg-gradient-to-br from-[#E40046]/5 to-[#C70039]/5"></div>
       
       {/* Logo Simplon */}
