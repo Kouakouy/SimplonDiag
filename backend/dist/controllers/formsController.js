@@ -320,7 +320,7 @@ const shareForm = async (req, res) => {
   <div class="container">
     <div class="card">
       <div class="header">
-        <div class="logo"><img src="${logoUrl}" alt="Simplon" /></div>
+        <div class="logo"><img src="${logoUrl}" alt="Simplondiag" /></div>
         <h1 class="title">Invitation à répondre à un formulaire</h1>
       </div>
       <div class="content">
