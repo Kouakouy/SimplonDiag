@@ -47,7 +47,7 @@ export function DeepSeekStatus() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Brain className="w-5 h-5" />
-          Statut DeepSeek
+          Statut IA
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -99,11 +99,6 @@ export function DeepSeekStatus() {
             'Vérifier la connexion'
           )}
         </Button>
-
-        <div className="text-xs text-gray-500">
-          <p>L'analyse IA nécessite une clé API DeepSeek valide.</p>
-          <p>Configurez NEXT_PUBLIC_DEEPSEEK_API_KEY dans votre environnement.</p>
-        </div>
       </CardContent>
     </Card>
   )

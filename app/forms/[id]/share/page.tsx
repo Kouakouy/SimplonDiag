@@ -461,7 +461,7 @@ Cordialement"
                     ) : (
                       <>
                         <Send className="w-4 h-4 mr-2" />
-                        Envoyer ({emailRecipients.length} destinataire{emailRecipients.length > 1 ? 's' : ''})
+                        Envoyer
                       </>
                     )}
                   </Button>
