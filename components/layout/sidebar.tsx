@@ -3,6 +3,7 @@
 // Composant sidebar réutilisable
 import { FileText, Home, LogOut, Settings, Users as UsersIcon, Shield, Eye, PenTool, Menu, X } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/lib/contexts/AuthContext"
@@ -89,9 +90,14 @@ export function Sidebar() {
       )}>
         {/* Header avec bouton X pour mobile */}
         <div className="p-6 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <FileText className="w-6 h-6" />
-            <h1 className="text-xl font-semibold">Simplon Diag</h1>
+          <div className="relative">
+            <Image 
+              src="/images/logo3.png" 
+              alt="Simplon Diag Logo" 
+              width={150}
+              height={48}
+              className="object-contain drop-shadow-lg"
+            />
           </div>
           <button
             onClick={() => setIsOpen(false)}
