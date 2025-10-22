@@ -217,7 +217,17 @@ export function FormPreview({ form, onClose }: FormPreviewProps) {
               {/* Questions */}
               {form.questions && form.questions.length > 0 ? (
                 <div className="space-y-4">
-                  {form.questions.map((question, index) => renderQuestion(question, index))}
+                  {form.questions
+                    ?.sort((a, b) => {
+                      const posA = a.position || 999999
+                      const posB = b.position || 999999
+                      // En cas d'égalité, trier par ID pour avoir un ordre stable
+                      if (posA === posB) {
+                        return a.id.localeCompare(b.id)
+                      }
+                      return posA - posB
+                    })
+                    .map((question, index) => renderQuestion(question, index))}
                 </div>
               ) : (
                 <div className="text-center py-12 text-gray-500">

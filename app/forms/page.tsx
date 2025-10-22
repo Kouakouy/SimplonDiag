@@ -70,7 +70,7 @@ export default function FormsPage() {
               }
             }
           } catch (error) {
-            console.log(`Pas de réponses pour le formulaire ${form._id || form.id}:`, error)
+           
             return {
               formId: form._id || form.id,
               stats: { submissions: 0, views: 0 }
@@ -86,7 +86,7 @@ export default function FormsPage() {
         
         setFormStats(statsMap)
       } catch (e: any) {
-        console.error('Erreur lors du chargement des formulaires:', e)
+        
         setError(e.message || "Erreur de chargement")
         setForms([])
         setFormStats({})
@@ -145,7 +145,7 @@ export default function FormsPage() {
       // Masquer le message après 2 secondes
       setTimeout(() => setCopiedLink(null), 2000)
     } catch (err) {
-      console.error('Erreur lors de la copie:', err)
+     
     }
   }
 

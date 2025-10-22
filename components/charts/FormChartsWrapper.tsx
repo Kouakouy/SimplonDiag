@@ -35,7 +35,7 @@ export function FormCharts(props: FormChartsWrapperProps) {
       setFormChartsComponent(() => module.FormCharts)
       setIsLoading(false)
     }).catch(error => {
-      console.error('Erreur lors du chargement de FormCharts:', error)
+      
       setIsLoading(false)
     })
   }, [])

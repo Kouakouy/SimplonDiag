@@ -57,7 +57,7 @@ export class AnalysisService {
             processingTime
           }
     } catch (error) {
-      console.error('Erreur lors de l\'analyse:', error)
+     
       
       // Gestion spécifique des erreurs d'IA
       let errorMessage = 'Erreur inconnue lors de l\'analyse'

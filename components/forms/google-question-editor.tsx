@@ -12,7 +12,8 @@ import {
   MoreVertical, 
   Image as ImageIcon,
   Plus,
-  X
+  X,
+  ArrowUpDown
 } from "lucide-react"
 
 interface GoogleQuestionEditorProps {
@@ -20,6 +21,7 @@ interface GoogleQuestionEditorProps {
   onUpdate: (question: Question) => void
   onDelete: () => void
   onDuplicate: () => void
+  totalQuestions?: number
 }
 
 const QUESTION_TYPES = [
@@ -39,7 +41,8 @@ export function GoogleQuestionEditor({
   question, 
   onUpdate, 
   onDelete, 
-  onDuplicate 
+  onDuplicate,
+  totalQuestions = 1
 }: GoogleQuestionEditorProps) {
   const [options, setOptions] = useState(question.options || ["Option n° 1"])
   const [focused, setFocused] = useState(false)
@@ -126,6 +129,39 @@ export function GoogleQuestionEditor({
                   </option>
                 ))}
               </select>
+            </div>
+
+            {/* Position dans le formulaire */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <ArrowUpDown className="w-4 h-4 text-gray-500" />
+                <span className="text-sm text-gray-600">Position:</span>
+              </div>
+              <Input
+                type="number"
+                min="1"
+                max={totalQuestions}
+                value={question.position || ''}
+                onChange={(e) => {
+                  const value = e.target.value
+                  if (value === '') {
+                    updateQuestion({ position: undefined })
+                    return
+                  }
+                  const newPosition = parseInt(value)
+                  if (!isNaN(newPosition) && newPosition >= 1 && newPosition <= totalQuestions) {
+                    updateQuestion({ position: newPosition })
+                  }
+                }}
+                placeholder="Auto"
+                className="w-24 h-8 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#E40046] focus:border-transparent"
+              />
+              <span className="text-sm text-gray-500">sur {totalQuestions}</span>
+              {question.position && (
+                <span className="text-xs text-gray-400">
+                  {question.position > totalQuestions ? 'Hors limite' : `Page ${Math.ceil(question.position / 5)}`}
+                </span>
+              )}
             </div>
 
             {/* Description optionnelle */}

@@ -97,7 +97,6 @@ function CompleteProfileContent() {
       }, 2000)
       
     } catch (e: any) {
-      console.error('Erreur complétion profil:', e)
       if (e.message?.includes('Invalid or expired')) {
         setError('Lien d\'invitation invalide ou expiré. Contactez votre administrateur.')
       } else if (e.message?.includes('already completed')) {

@@ -59,8 +59,7 @@ export default function ShareFormPage() {
         setForm(adapted)
         setShareSettings((s) => ({ ...s }))
       } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error(e)
+       
       } finally {
         setLoading(false)
       }
@@ -161,7 +160,7 @@ export default function ShareFormPage() {
       await navigator.clipboard.writeText(text)
       // TODO: Afficher une notification de succès
     } catch (err) {
-      console.error('Erreur lors de la copie:', err)
+     
     }
   }
 

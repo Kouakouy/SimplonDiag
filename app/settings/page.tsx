@@ -161,7 +161,7 @@ export default function SettingsPage() {
         success('Succès', 'Mot de passe modifié avec succès')
       }
     } catch (error: any) {
-      console.error('Erreur lors de la sauvegarde:', error)
+    
       error('Erreur', error.message || 'Erreur lors de la sauvegarde des paramètres')
     } finally {
       setSaving(false)

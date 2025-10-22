@@ -31,10 +31,10 @@ export default function FormStatsPage() {
   // Fonction de chargement des données
   const loadData = useCallback(async () => {
     try {
-      console.log('Chargement des données pour le formulaire:', formId)
+     
       
       const f = await apiRequest<any>({ url: `/forms/${formId}` })
-      console.log('Formulaire chargé:', f)
+      
       
       const adaptedForm: Form = {
         id: f._id || f.id || formId,
@@ -53,9 +53,9 @@ export default function FormStatsPage() {
       }
       setForm(adaptedForm)
 
-      console.log('Chargement des réponses...')
+    
       const resp = await apiRequest<any[]>({ url: `/forms/${formId}/responses` })
-      console.log('Réponses chargées:', resp)
+     
       
       const adaptedResponses: FormResponse[] = (resp || []).map((r: any) => ({
         id: r._id || r.id,
@@ -66,12 +66,12 @@ export default function FormStatsPage() {
         submittedAt: r.submitted_at ? new Date(r.submitted_at) : new Date(),
       }))
       
-      console.log('Réponses adaptées:', adaptedResponses)
+      
       setResponses(adaptedResponses)
       
       toast.success(`Données chargées: ${adaptedResponses.length} réponses`)
     } catch (e) {
-      console.error('Erreur lors du chargement:', e)
+      
       toast.error("Erreur lors du chargement des données")
     } finally {
       setLoading(false)
@@ -113,7 +113,7 @@ export default function FormStatsPage() {
           url: window.location.href
         })
       } catch (err) {
-        console.log('Erreur lors du partage:', err)
+        
       }
     } else {
       navigator.clipboard.writeText(window.location.href)

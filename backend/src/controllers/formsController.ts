@@ -13,6 +13,7 @@ const questionSchema = z.object({
   title: z.string(),
   description: z.string().optional(),
   required: z.boolean(),
+  position: z.number().int().optional(), // Position de la question dans le formulaire
   options: z.array(z.string()).optional(),
   placeholder: z.string().optional(),
   validationRules: z.any().optional(),

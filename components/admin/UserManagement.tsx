@@ -129,10 +129,10 @@ export function UserManagement() {
         setUsers(usersData)
         setHasLoaded(true) // Marquer comme chargé
       } else {
-        console.error('Erreur lors du chargement des utilisateurs')
+        
       }
     } catch (error) {
-      console.error('Erreur lors du chargement des utilisateurs:', error)
+      
     } finally {
       setLoading(false)
     }
@@ -198,7 +198,7 @@ export function UserManagement() {
         showError('Erreur', errorData.message || 'Erreur lors de la création de l\'utilisateur')
       }
     } catch (error: any) {
-      console.error('Erreur lors de la création de l\'utilisateur:', error)
+     
       showError('Erreur', 'Erreur lors de la création de l\'utilisateur')
     }
   }
@@ -226,7 +226,7 @@ export function UserManagement() {
         showError('Erreur', errorData.message || 'Erreur lors de la mise à jour de l\'utilisateur')
       }
     } catch (error: any) {
-      console.error('Erreur lors de la mise à jour de l\'utilisateur:', error)
+      
       showError('Erreur', 'Erreur lors de la mise à jour de l\'utilisateur')
     }
   }
@@ -261,7 +261,7 @@ export function UserManagement() {
         showError('Erreur', errorData.message || 'Erreur lors de la suppression de l\'utilisateur')
       }
     } catch (error: any) {
-      console.error('Erreur lors de la suppression de l\'utilisateur:', error)
+      
       showError('Erreur', 'Erreur lors de la suppression de l\'utilisateur')
     }
   }

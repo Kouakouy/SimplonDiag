@@ -62,8 +62,8 @@ export default function PublicFormPage() {
         }
         setForm(adapted)
       } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error(e)
+        
+       
       } finally {
         setLoading(false)
       }
@@ -88,7 +88,7 @@ export default function PublicFormPage() {
 
     const start = currentPage * pageSize
     const end = start + pageSize
-    const questionsInPage = form?.questions.slice(start, end) || []
+    const questionsInPage = sortedQuestions.slice(start, end) || []
 
     questionsInPage.forEach((question) => {
       if (question.required) {
@@ -112,10 +112,31 @@ export default function PublicFormPage() {
     return Object.keys(newErrors).length === 0
   }
 
-  const totalPages = Math.ceil((form?.questions.length || 0) / pageSize) || 1
+  // Fonction pour trier les questions par position
+  // Les questions avec une position définie sont affichées en premier dans l'ordre de leur position
+  // Les questions sans position sont affichées à la fin dans l'ordre de leur ID
+  const getSortedQuestions = () => {
+    if (!form?.questions) return []
+    return [...form.questions].sort((a, b) => {
+      // Récupérer les positions (999999 pour les questions sans position)
+      const posA = a.position ?? 999999
+      const posB = b.position ?? 999999
+      
+      // Si les positions sont différentes, trier par position
+      if (posA !== posB) {
+        return posA - posB
+      }
+      
+      // En cas d'égalité de position, trier par ID pour avoir un ordre stable
+      return a.id.localeCompare(b.id)
+    })
+  }
+
+  const sortedQuestions = getSortedQuestions()
+  const totalPages = Math.ceil((sortedQuestions.length || 0) / pageSize) || 1
   const startIndex = currentPage * pageSize
   const endIndex = startIndex + pageSize
-  const visibleQuestions = form?.questions.slice(startIndex, endIndex) || []
+  const visibleQuestions = sortedQuestions.slice(startIndex, endIndex) || []
 
   const handleNext = () => {
     if (!validateForm()) return
@@ -146,8 +167,8 @@ export default function PublicFormPage() {
       } })
       setSubmitted(true)
     } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error(e)
+     
+     
       alert('Erreur lors de la soumission')
     } finally {
       setSubmitting(false)
@@ -238,7 +259,7 @@ export default function PublicFormPage() {
         <div className="mb-4 lg:mb-6">
           <div className="flex items-center justify-between text-xs lg:text-sm text-gray-600 mb-2">
             <span>Page {currentPage + 1} / {totalPages}</span>
-            <span>{form.questions.length} questions</span>
+            <span>{sortedQuestions.length} questions</span>
           </div>
           <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
             <div
@@ -279,7 +300,7 @@ export default function PublicFormPage() {
                     >
                       <path d="M12 2C6.48 2 2 6 2 11c0 2.39 1.04 4.55 2.77 6.13-.27.94-1 2.84-1.06 3.02a.75.75 0 0 0 1.03.91c.29-.1 2.4-.84 3.52-1.33A10.1 10.1 0 0 0 12 20c5.52 0 10-4 10-9s-4.48-9-10-9Zm.25 5.25c1.52 0 2.75 1.04 2.75 2.33 0 .88-.53 1.55-1.52 2.06-.78.4-1.23.88-1.23 1.61v.25a.75.75 0 0 1-1.5 0v-.25c0-1.36.8-2.2 1.73-2.67.58-.3.77-.6.77-1 0-.44-.55-.83-1.25-.83s-1.25.39-1.25.83a.75.75 0 0 1-1.5 0c0-1.29 1.23-2.33 2.75-2.33Zm0 7.75a.9.9 0 1 1 0 1.8.9.9 0 0 1 0-1.8Z"/>
                     </svg>
-                    <span>{form.questions.length} questions</span>
+                    <span>{sortedQuestions.length} questions</span>
                   </div>
             </div>
           </CardContent>

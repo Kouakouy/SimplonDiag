@@ -36,7 +36,7 @@ function EditFormPageContent() {
         const f = await apiRequest<any>({ url: `/forms/${formId}` })
         
         // Log pour vérifier les données reçues
-        console.log('Données reçues du serveur:', f)
+       
         
         const adapted: Form = {
           id: f._id || f.id || formId,
@@ -55,11 +55,11 @@ function EditFormPageContent() {
         }
         
         // Log pour vérifier les données adaptées
-        console.log('Données adaptées pour le formulaire:', adapted)
+       
         
         setForm(adapted)
       } catch (e) {
-        console.error('Erreur lors du chargement du formulaire:', e)
+       
         alert('Erreur lors du chargement du formulaire')
       } finally {
         setLoading(false)

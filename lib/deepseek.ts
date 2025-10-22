@@ -120,7 +120,7 @@ export class DeepSeekService {
         throw new Error('Impossible de parser la réponse JSON de DeepSeek')
       }
     } catch (error) {
-      console.error('Erreur lors de l\'analyse DeepSeek:', error)
+      
       
       // Gestion des erreurs réseau
       if (error instanceof TypeError && error.message.includes('fetch')) {
@@ -245,7 +245,7 @@ Réponds en JSON:
       })
       return response.ok
     } catch (error) {
-      console.warn('Vérification de disponibilité DeepSeek échouée:', error)
+      
       return false
     }
   }

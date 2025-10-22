@@ -47,8 +47,8 @@ export default function FormOverviewPage() {
         }
         setForm(adapted)
       } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error(e)
+        
+        
       } finally {
         setLoading(false)
       }
@@ -353,7 +353,22 @@ export default function FormOverviewPage() {
                       </p>
                     </div>
                     
-                    {form.questions.map((q, i) => renderQuestion(q, i))}
+                    {/* Affichage des questions triées par position */}
+                    {form.questions
+                      .sort((a, b) => {
+                        // Récupérer les positions (999999 pour les questions sans position)
+                        const posA = a.position ?? 999999
+                        const posB = b.position ?? 999999
+                        
+                        // Si les positions sont différentes, trier par position
+                        if (posA !== posB) {
+                          return posA - posB
+                        }
+                        
+                        // En cas d'égalité de position, trier par ID pour avoir un ordre stable
+                        return a.id.localeCompare(b.id)
+                      })
+                      .map((q, i) => renderQuestion(q, i))}
                     
                     {/* Bouton de soumission simulé */}
                     <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">

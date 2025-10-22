@@ -55,6 +55,21 @@ function FormQuestionsPageContent() {
     load()
   }, [formId, router])
 
+  // Fonction pour obtenir la prochaine position disponible
+  const getNextPosition = () => {
+    if (!form?.questions || form.questions.length === 0) return 1
+    const maxPosition = Math.max(...form.questions.map(q => q.position || 0))
+    return maxPosition + 1
+  }
+
+  // Fonction pour réorganiser les positions de manière séquentielle
+  const reorderPositions = (questions: Question[]) => {
+    return questions.map((question, index) => ({
+      ...question,
+      position: index + 1
+    }))
+  }
+
   // Ajouter une nouvelle question
   const addQuestion = () => {
     if (!form) return
@@ -64,7 +79,8 @@ function FormQuestionsPageContent() {
       categoryId: "short-text",
       type: "text",
       title: "",
-      required: false
+      required: false,
+      position: getNextPosition()
     }
     
     const updatedForm = {
@@ -82,7 +98,11 @@ function FormQuestionsPageContent() {
     if (!form) return
     
     const questions = [...(form.questions || [])]
+    
+    // Mettre à jour la question sans modifier les autres
+    // Les positions peuvent être identiques, le tri se fera par ID en cas d'égalité
     questions[index] = updatedQuestion
+    
     const updatedForm = {
       ...form,
       questions,
@@ -114,7 +134,8 @@ function FormQuestionsPageContent() {
     const duplicatedQuestion: Question = {
       ...questionToDuplicate,
       id: Date.now().toString(),
-      title: questionToDuplicate.title + " (copie)"
+      title: questionToDuplicate.title + " (copie)",
+      position: getNextPosition()
     }
     
     const questions = [...form.questions]
@@ -127,6 +148,20 @@ function FormQuestionsPageContent() {
     }
     setForm(updatedForm)
     apiRequest({ url: `/forms/${formId}`, method: 'PUT', body: { questions } }).catch(() => {})
+  }
+
+  // Fonction pour trier les questions par position
+  const getSortedQuestions = () => {
+    if (!form?.questions) return []
+    return [...form.questions].sort((a, b) => {
+      const posA = a.position || 999999
+      const posB = b.position || 999999
+      // En cas d'égalité, trier par ID pour avoir un ordre stable
+      if (posA === posB) {
+        return a.id.localeCompare(b.id)
+      }
+      return posA - posB
+    })
   }
 
   // Sauvegarder et terminer
@@ -159,7 +194,7 @@ function FormQuestionsPageContent() {
         banner_image_url: isValidUrl(finalForm.bannerImageUrl) ? finalForm.bannerImageUrl : undefined,
       } })
     } catch (e: any) {
-      console.error('Erreur lors de la sauvegarde:', e)
+      
     }
   }
 
@@ -313,6 +348,26 @@ function FormQuestionsPageContent() {
             <div className="space-y-4 mb-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Questions du formulaire</h3>
+                {form.questions && form.questions.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (!form) return
+                      const reorderedQuestions = reorderPositions(form.questions)
+                      const updatedForm = {
+                        ...form,
+                        questions: reorderedQuestions,
+                        updatedAt: new Date()
+                      }
+                      setForm(updatedForm)
+                      apiRequest({ url: `/forms/${formId}`, method: 'PUT', body: { questions: reorderedQuestions } }).catch(() => {})
+                    }}
+                    className="text-xs"
+                  >
+                    Réorganiser les positions
+                  </Button>
+                )}
               </div>
 
               {form.questions?.length === 0 ? (
@@ -330,15 +385,20 @@ function FormQuestionsPageContent() {
                   </CardContent>
                 </Card>
               ) : (
-                form.questions?.map((question, index) => (
-                  <GoogleQuestionEditor
-                    key={question.id}
-                    question={question}
-                    onUpdate={(updatedQuestion) => updateQuestion(index, updatedQuestion)}
-                    onDelete={() => deleteQuestion(index)}
-                    onDuplicate={() => duplicateQuestion(index)}
-                  />
-                ))
+                getSortedQuestions().map((question, sortedIndex) => {
+                  // Trouver l'index original dans le tableau non trié
+                  const originalIndex = form.questions?.findIndex(q => q.id === question.id) || 0
+                  return (
+                    <GoogleQuestionEditor
+                      key={question.id}
+                      question={question}
+                      totalQuestions={form.questions?.length || 0}
+                      onUpdate={(updatedQuestion) => updateQuestion(originalIndex, updatedQuestion)}
+                      onDelete={() => deleteQuestion(originalIndex)}
+                      onDuplicate={() => duplicateQuestion(originalIndex)}
+                    />
+                  )
+                })
               )}
 
               {/* Bouton d'ajout de question */}

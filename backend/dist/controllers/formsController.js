@@ -16,6 +16,7 @@ const questionSchema = zod_1.z.object({
     title: zod_1.z.string(),
     description: zod_1.z.string().optional(),
     required: zod_1.z.boolean(),
+    position: zod_1.z.number().int().optional(), // Position de la question dans le formulaire
     options: zod_1.z.array(zod_1.z.string()).optional(),
     placeholder: zod_1.z.string().optional(),
     validationRules: zod_1.z.any().optional(),
@@ -320,7 +321,7 @@ const shareForm = async (req, res) => {
   <div class="container">
     <div class="card">
       <div class="header">
-        <div class="logo"><img src="${logoUrl}" alt="Simplondiag" /></div>
+        <div class="logo"><img src="${logoUrl}" alt="Simplon" /></div>
         <h1 class="title">Invitation à répondre à un formulaire</h1>
       </div>
       <div class="content">

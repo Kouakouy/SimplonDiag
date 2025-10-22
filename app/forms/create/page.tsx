@@ -70,11 +70,11 @@ function CreateFormPageContent() {
     let bannerImageUrl = undefined
     if (form.bannerImageUrl && form.bannerImageUrl.startsWith('data:')) {
       try {
-        console.log('Compression de l\'image base64...')
+        
         bannerImageUrl = await compressBase64Image(form.bannerImageUrl)
-        console.log(`Image compressée: ${bannerImageUrl.length} caractères`)
+       
       } catch (error) {
-        console.error('Erreur lors de la compression:', error)
+        
         bannerImageUrl = undefined
       }
     } else {
@@ -94,22 +94,21 @@ function CreateFormPageContent() {
     
     // Vérifier la taille des données
     const dataSize = JSON.stringify(payload).length
-    console.log(`Taille des données: ${dataSize} caractères`)
+   
     
     if (dataSize > 1000000) { // 1MB
       alert('Les données sont trop volumineuses. Veuillez réduire la taille de l\'image.')
       return
     }
     
-    // Log pour debug
-    console.log('Données à envoyer pour création:', payload)
+   
     
     try {
       const resp = await apiRequest<{ id: string }>({ url: "/forms", method: "POST", body: payload })
       const newId = resp.id
       router.push(`/forms/${newId}/questions`)
     } catch (e: any) {
-      console.error('Erreur détaillée lors de la création:', e)
+    
       // Afficher l'erreur détaillée renvoyée par lib/api.ts
       alert(`Erreur lors de la création: ${e.message}`)
     }

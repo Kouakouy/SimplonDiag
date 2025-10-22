@@ -13,7 +13,7 @@ const getLogoBase64 = async (): Promise<string> => {
       reader.readAsDataURL(blob)
     })
   } catch (error) {
-    console.error('Erreur lors du chargement du logo:', error)
+   
     return ''
   }
 }
@@ -178,8 +178,7 @@ function ResponsesPageContent() {
           // ignore si non disponible
         }
       } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error(e)
+       
       } finally {
         setLoading(false)
       }
@@ -667,7 +666,7 @@ function ResponsesPageContent() {
     setIsAnalyzing(true)
     setShowPromptModal(false)
     try {
-      console.log("Début de l'analyse IA...", { formId: form.id, responsesCount: responses.length })
+     
       
       // Utiliser le vrai service d'analyse avec DeepSeek
       const result = await analysisService.analyzeForm(form, responses, {
@@ -678,7 +677,7 @@ function ResponsesPageContent() {
         customPrompt: customPrompt || undefined
       })
 
-      console.log("Résultat de l'analyse:", result)
+     
 
       if (result.success && result.analysis) {
         setAiAnalysis(result.analysis)
@@ -697,7 +696,7 @@ function ResponsesPageContent() {
         throw new Error(result.error || 'Erreur lors de l\'analyse')
       }
     } catch (err) {
-      console.error("Erreur lors de l'analyse IA:", err)
+    
       
       // Messages d'erreur plus conviviaux
       let errorTitle = "Erreur d'analyse"
@@ -754,7 +753,7 @@ function ResponsesPageContent() {
       
       success("Analyse sauvegardée", "L'analyse a été sauvegardée avec succès !")
     } catch (err) {
-      console.error("Erreur lors de la sauvegarde:", err)
+      
       
       // Gestion d'erreurs plus spécifique
       let errorMessage = "Erreur inconnue"

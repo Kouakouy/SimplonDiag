@@ -6,6 +6,7 @@ export interface Question {
   title: string
   description?: string
   required: boolean
+  position?: number // Position dans le formulaire (pour l'ordre d'affichage)
   options?: string[] // Pour les questions à choix multiples
   placeholder?: string
   validationRules?: {
