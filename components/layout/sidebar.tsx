@@ -1,7 +1,7 @@
 "use client"
 
 // Composant sidebar réutilisable
-import { FileText, Home, LogOut, Settings, Users as UsersIcon, Shield, Eye, PenTool, Menu, X } from "lucide-react"
+import { FileText, Home, LogOut, Settings, Users as UsersIcon, Shield, Eye, PenTool, Menu, X, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
@@ -169,6 +169,17 @@ export function Sidebar() {
               {ROLE_LABELS[user.role]}
             </Badge>
           </div>
+          
+          {/* Bouton signaler un problème */}
+          <Link href="/report">
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start text-pink-200 hover:text-white hover:bg-pink-700 mb-2"
+            >
+              <AlertCircle className="w-4 h-4 mr-2" />
+              Signaler un problème
+            </Button>
+          </Link>
           
           {/* Bouton déconnexion */}
           <Button 

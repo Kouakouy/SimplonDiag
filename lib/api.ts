@@ -7,18 +7,26 @@ export interface ApiRequestConfig {
   method?: HttpMethod
   body?: any
   headers?: Record<string, string>
+  isFormData?: boolean
 }
 
-export async function apiRequest<T = any>({ url, method = 'GET', body, headers }: ApiRequestConfig): Promise<T> {
+export async function apiRequest<T = any>({ url, method = 'GET', body, headers, isFormData = false }: ApiRequestConfig): Promise<T> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+  
+  const fetchHeaders: Record<string, string> = {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(headers || {}),
+  }
+  
+  // Ne pas ajouter Content-Type pour FormData, le navigateur le fera automatiquement
+  if (!isFormData) {
+    fetchHeaders['Content-Type'] = 'application/json'
+  }
+  
   const res = await fetch(`${API_BASE_URL}${url}`, {
     method,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(headers || {}),
-    },
-    body: body ? JSON.stringify(body) : undefined,
+    headers: fetchHeaders,
+    body: isFormData ? body : (body ? JSON.stringify(body) : undefined),
     cache: 'no-store',
   })
   if (!res.ok) {
