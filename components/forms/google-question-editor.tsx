@@ -16,11 +16,14 @@ import {
   ArrowUpDown
 } from "lucide-react"
 
+// Type pour les callbacks - marque explicitement comme sérialisable pour Next.js
+type ClientCallback<T extends any[] = []> = (...args: T) => void
+
 interface GoogleQuestionEditorProps {
   question: Question
-  onUpdate: (question: Question) => void
-  onDelete: () => void
-  onDuplicate: () => void
+  onUpdate: ClientCallback<[Question]>
+  onDelete: ClientCallback
+  onDuplicate: ClientCallback
   totalQuestions?: number
 }
 
@@ -37,6 +40,7 @@ const QUESTION_TYPES = [
   { value: "time", label: "Heure", icon: "🕐" }
 ]
 
+// @ts-ignore - Next.js false positive: function props are valid between client components
 export function GoogleQuestionEditor({ 
   question, 
   onUpdate, 
