@@ -135,7 +135,7 @@ function LoginPageContent() {
                 Plateforme de diagnostic de profil<br />
                 pour un programme de formation plus adaptée
               </h1>
-              
+            
               <div className="inline-block bg-[#E40046] text-white px-6 py-2 rounded-full text-sm font-semibold shadow-lg">
                 Powered by Simplon Africa
               </div>
