@@ -15,7 +15,7 @@ export default function FixFormsPage() {
   const [result, setResult] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
 
-  // Vérifier si l'utilisateur est admin
+  // Vérifier si l'utilisateur
   if (user?.role !== 'admin') {
     return (
       <div className="bg-gray-50 min-h-screen">

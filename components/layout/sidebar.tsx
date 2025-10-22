@@ -172,18 +172,16 @@ export function Sidebar() {
             </Badge>
           </div>
           
-          {/* Bouton signaler un problème - Caché pour les administrateurs */}
-          {user?.role !== 'admin' && (
-            <Link href="/report">
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-pink-200 hover:text-white hover:bg-pink-700 mb-2"
-              >
-                <AlertCircle className="w-4 h-4 mr-2" />
-                Signaler un problème
-              </Button>
-            </Link>
-          )}
+          {/* Bouton signaler un problème */}
+          <Link href="/report">
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start text-pink-200 hover:text-white hover:bg-pink-700 mb-2"
+            >
+              <AlertCircle className="w-4 h-4 mr-2" />
+              Signaler un problème
+            </Button>
+          </Link>
           
           {/* Bouton déconnexion */}
           <Button 
