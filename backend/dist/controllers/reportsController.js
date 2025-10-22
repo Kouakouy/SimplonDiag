@@ -46,41 +46,47 @@ const createReport = async (req, res) => {
         // Envoyer un email de notification aux administrateurs
         try {
             const typeLabels = {
-                bug: '🐛 Bug / Erreur',
-                feature: '💡 Suggestion',
-                question: '❓ Question',
-                info: 'ℹ️ Information'
+                bug: 'Bug / Erreur',
+                feature: 'Suggestion',
+                question: 'Question',
+                info: 'Information'
             };
-            await (0, email_1.sendEmail)(process.env.ADMIN_EMAIL || 'admin@simplon.africa', `[Rapport] ${typeLabels[type]} - ${subject}`, `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #E40046;">Nouveau rapport reçu</h2>
-            
-            <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <p><strong>Type:</strong> ${typeLabels[type]}</p>
-              <p><strong>Sujet:</strong> ${subject}</p>
-              ${email ? `<p><strong>Email:</strong> ${email}</p>` : ''}
-              <p><strong>Date:</strong> ${new Date().toLocaleString('fr-FR')}</p>
-            </div>
-            
-            <div style="background-color: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-              <h3>Message:</h3>
-              <p style="white-space: pre-wrap;">${message}</p>
-            </div>
-            
-            ${image ? `
-              <div style="margin-top: 20px;">
-                <p><strong>Capture d'écran jointe:</strong> ${image.name}</p>
-                <img src="${image.data}" style="max-width: 600px; border: 1px solid #ddd; border-radius: 4px; margin-top: 10px;" />
+            // Récupérer tous les administrateurs depuis la base de données
+            const users = db.collection('users');
+            const admins = await users.find({ role: 'admin' }).toArray();
+            // Envoyer un email à chaque administrateur
+            const emailPromises = admins.map(admin => (0, email_1.sendEmail)(admin.email, `[Rapport] ${typeLabels[type]} - ${subject}`, `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #E40046;">Nouveau rapport reçu</h2>
+              
+              <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <p><strong>Type:</strong> ${typeLabels[type]}</p>
+                <p><strong>Sujet:</strong> ${subject}</p>
+                ${email ? `<p><strong>Email:</strong> ${email}</p>` : ''}
+                <p><strong>Date:</strong> ${new Date().toLocaleString('fr-FR')}</p>
               </div>
-            ` : ''}
-            
-            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px;">
-              <p><strong>Informations techniques:</strong></p>
-              <p>User Agent: ${req.headers['user-agent']}</p>
-              <p>IP: ${req.ip}</p>
+              
+              <div style="background-color: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+                <h3>Message:</h3>
+                <p style="white-space: pre-wrap;">${message}</p>
+              </div>
+              
+              ${image ? `
+                <div style="margin-top: 20px;">
+                  <p><strong>Capture d'écran jointe:</strong> ${image.name}</p>
+                  <img src="${image.data}" style="max-width: 600px; border: 1px solid #ddd; border-radius: 4px; margin-top: 10px;" />
+                </div>
+              ` : ''}
+              
+              <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px;">
+                <p><strong>Informations techniques:</strong></p>
+                <p>User Agent: ${req.headers['user-agent']}</p>
+                <p>IP: ${req.ip}</p>
+              </div>
             </div>
-          </div>
-        `);
+          `));
+            // Attendre que tous les emails soient envoyés
+            await Promise.allSettled(emailPromises);
         }
         catch (emailError) {
             console.error('Erreur lors de l\'envoi de l\'email:', emailError);

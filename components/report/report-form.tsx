@@ -11,10 +11,10 @@ import { AlertCircle, CheckCircle2, Upload, X, Bug, Info, HelpCircle, Lightbulb 
 import { apiRequest } from "@/lib/api"
 
 const REPORT_TYPES = [
-  { value: "bug", label: "🐛 Bug / Erreur", icon: Bug, description: "Signaler un problème technique" },
-  { value: "feature", label: "💡 Suggestion", icon: Lightbulb, description: "Proposer une amélioration" },
-  { value: "question", label: "❓ Question", icon: HelpCircle, description: "Poser une question" },
-  { value: "info", label: "ℹ️ Information", icon: Info, description: "Partager une information" },
+  { value: "bug", label: "Bug / Erreur", icon: Bug, description: "Signaler un problème technique" },
+  { value: "feature", label: "Suggestion", icon: Lightbulb, description: "Proposer une amélioration" },
+  { value: "question", label: "Question", icon: HelpCircle, description: "Poser une question" },
+  { value: "info", label: "Information", icon: Info, description: "Partager une information" },
 ]
 
 interface ReportFormProps {
