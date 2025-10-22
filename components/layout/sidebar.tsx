@@ -1,7 +1,7 @@
 "use client"
 
 // Composant sidebar réutilisable
-import { FileText, Home, LogOut, Settings, Users as UsersIcon, Shield, Eye, PenTool, Menu, X, AlertCircle } from "lucide-react"
+import { FileText, Home, LogOut, Settings, Users as UsersIcon, Shield, Eye, PenTool, Menu, X, AlertCircle, Flag } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
@@ -54,6 +54,8 @@ export function Sidebar() {
   const menuItems = [
     { icon: Home, label: "Tableau de bord", href: "/", permission: null, restrictedRoles: ['observer', 'creator'] as string[] },
     { icon: FileText, label: "Mes formulaires", href: "/forms", permission: null, restrictedRoles: [] as string[] },
+    { icon: Flag, label: "Mes signalements", href: "/my-reports", permission: null, restrictedRoles: ['admin'] as string[], allowedRoles: ['creator', 'observer'] as string[] },
+    { icon: AlertCircle, label: "Gestion des rapports", href: "/admin/reports", permission: null, restrictedRoles: ['creator', 'observer'] as string[], allowedRoles: ['admin'] as string[] },
     { icon: Settings, label: "Paramètres", href: "/settings", permission: null, restrictedRoles: ['observer'] as string[] },
     { icon: UsersIcon, label: "Utilisateurs", href: "/settings/users", permission: 'canManageUsers', restrictedRoles: [] as string[] },
   ].filter(item => {
@@ -170,16 +172,18 @@ export function Sidebar() {
             </Badge>
           </div>
           
-          {/* Bouton signaler un problème */}
-          <Link href="/report">
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-pink-200 hover:text-white hover:bg-pink-700 mb-2"
-            >
-              <AlertCircle className="w-4 h-4 mr-2" />
-              Signaler un problème
-            </Button>
-          </Link>
+          {/* Bouton signaler un problème - Caché pour les administrateurs */}
+          {user?.role !== 'admin' && (
+            <Link href="/report">
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-pink-200 hover:text-white hover:bg-pink-700 mb-2"
+              >
+                <AlertCircle className="w-4 h-4 mr-2" />
+                Signaler un problème
+              </Button>
+            </Link>
+          )}
           
           {/* Bouton déconnexion */}
           <Button 
