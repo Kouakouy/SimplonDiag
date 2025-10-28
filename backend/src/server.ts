@@ -11,6 +11,19 @@ import { initializeDemoUsers } from './scripts/initDemoUsers'
 
 const app = express()
 
+// CORS: Autoriser toutes les origines et gérer les preflights avant tout
+const corsOptions = {
+  origin: true, // reflète l'origine de la requête
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  optionsSuccessStatus: 204,
+}
+
+app.use(cors(corsOptions))
+app.options('*', cors(corsOptions))
+
 // Sécurité: Headers HTTP sécurisés
 app.use(helmet({
   contentSecurityPolicy: {
@@ -30,6 +43,7 @@ const limiter = rateLimit({
   message: 'Trop de requêtes depuis cette IP, veuillez réessayer plus tard.',
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => req.method === 'OPTIONS',
 })
 
 // Sécurité: Rate limiting strict pour l'authentification
@@ -38,19 +52,11 @@ const authLimiter = rateLimit({
   max: 5, // 5 tentatives max
   message: 'Trop de tentatives de connexion, veuillez réessayer dans 15 minutes.',
   skipSuccessfulRequests: true,
+  skip: (req) => req.method === 'OPTIONS',
 })
 
 app.use('/api/', limiter)
 app.use('/api/auth/login', authLimiter)
-
-// CORS: Autoriser toutes les origines
-app.use(cors({ 
-  origin: true, // Autorise toutes les origines
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range']
-}))
 
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ limit: '10mb', extended: true }))

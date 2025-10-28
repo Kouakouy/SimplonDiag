@@ -6,6 +6,11 @@ import { AuthRequest } from '../middleware/auth'
 import { sendEmail } from '../config/email'
 import crypto from 'crypto'
 
+const optionItemSchema = z.union([
+  z.string(),
+  z.object({ label: z.string(), value: z.string().optional() })
+])
+
 const questionSchema = z.object({
   id: z.string(),
   categoryId: z.string().optional(),
@@ -14,7 +19,7 @@ const questionSchema = z.object({
   description: z.string().optional(),
   required: z.boolean(),
   position: z.number().int().optional(), // Position de la question dans le formulaire
-  options: z.array(z.string()).optional(),
+  options: z.array(optionItemSchema).optional(),
   placeholder: z.string().optional(),
   validationRules: z.any().optional(),
   conditionalLogic: z.any().optional(),
@@ -74,6 +79,21 @@ export const createForm = async (req: AuthRequest, res: Response) => {
   try {
     const db = await getDb()
     const forms = db.collection('forms')
+    
+    // Normaliser les options pour les questions à choix
+    const normalizedQuestions = (questions ?? []).map(q => {
+      if (['select', 'radio', 'checkbox'].includes(q.type)) {
+        const opts = Array.isArray(q.options) ? q.options : []
+        const normalized = opts
+          .map(opt => {
+            if (typeof opt === 'string') return opt
+            return opt.value ?? opt.label
+          })
+          .filter(v => typeof v === 'string' && v.trim().length > 0)
+        return { ...q, options: normalized }
+      }
+      return q
+    })
     const public_slug = crypto
       .randomBytes(6)
       .toString('base64')
@@ -86,7 +106,7 @@ export const createForm = async (req: AuthRequest, res: Response) => {
       title,
       description: description ?? null,
       is_public: is_public ?? true,
-      questions: questions ?? [],
+      questions: normalizedQuestions,
       max_responses: max_responses ?? null,
       expiration_date: expiration_date ? new Date(expiration_date) : null,
       public_slug,
@@ -144,6 +164,18 @@ export const updateForm = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ message: 'Forbidden' })
     }
     
+    // Normaliser également lors de la mise à jour
+    const normalizedQuestions = questions === undefined ? undefined : (questions ?? []).map(q => {
+      if (['select', 'radio', 'checkbox'].includes(q.type)) {
+        const opts = Array.isArray(q.options) ? q.options : []
+        const normalized = opts
+          .map(opt => typeof opt === 'string' ? opt : (opt.value ?? opt.label))
+          .filter(v => typeof v === 'string' && v.trim().length > 0)
+        return { ...q, options: normalized }
+      }
+      return q
+    })
+    
     await forms.updateOne(
       { _id: new ObjectId(id) },
       {
@@ -151,7 +183,7 @@ export const updateForm = async (req: AuthRequest, res: Response) => {
           ...(title !== undefined ? { title } : {}),
           ...(description !== undefined ? { description } : {}),
           ...(is_public !== undefined ? { is_public } : {}),
-          ...(questions !== undefined ? { questions } : {}),
+          ...(normalizedQuestions !== undefined ? { questions: normalizedQuestions } : {}),
           ...(max_responses !== undefined ? { max_responses } : {}),
           ...(expiration_date !== undefined ? { expiration_date: expiration_date ? new Date(expiration_date) : null } : {}),
           ...(banner_title !== undefined ? { banner_title } : {}),

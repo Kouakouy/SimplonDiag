@@ -9,6 +9,10 @@ const db_1 = require("../config/db");
 const mongodb_1 = require("mongodb");
 const email_1 = require("../config/email");
 const crypto_1 = __importDefault(require("crypto"));
+const optionItemSchema = zod_1.z.union([
+    zod_1.z.string(),
+    zod_1.z.object({ label: zod_1.z.string(), value: zod_1.z.string().optional() })
+]);
 const questionSchema = zod_1.z.object({
     id: zod_1.z.string(),
     categoryId: zod_1.z.string().optional(),
@@ -17,7 +21,7 @@ const questionSchema = zod_1.z.object({
     description: zod_1.z.string().optional(),
     required: zod_1.z.boolean(),
     position: zod_1.z.number().int().optional(), // Position de la question dans le formulaire
-    options: zod_1.z.array(zod_1.z.string()).optional(),
+    options: zod_1.z.array(optionItemSchema).optional(),
     placeholder: zod_1.z.string().optional(),
     validationRules: zod_1.z.any().optional(),
     conditionalLogic: zod_1.z.any().optional(),
@@ -75,6 +79,21 @@ const createForm = async (req, res) => {
     try {
         const db = await (0, db_1.getDb)();
         const forms = db.collection('forms');
+        // Normaliser les options pour les questions à choix
+        const normalizedQuestions = (questions ?? []).map(q => {
+            if (['select', 'radio', 'checkbox'].includes(q.type)) {
+                const opts = Array.isArray(q.options) ? q.options : [];
+                const normalized = opts
+                    .map(opt => {
+                    if (typeof opt === 'string')
+                        return opt;
+                    return opt.value ?? opt.label;
+                })
+                    .filter(v => typeof v === 'string' && v.trim().length > 0);
+                return { ...q, options: normalized };
+            }
+            return q;
+        });
         const public_slug = crypto_1.default
             .randomBytes(6)
             .toString('base64')
@@ -87,7 +106,7 @@ const createForm = async (req, res) => {
             title,
             description: description ?? null,
             is_public: is_public ?? true,
-            questions: questions ?? [],
+            questions: normalizedQuestions,
             max_responses: max_responses ?? null,
             expiration_date: expiration_date ? new Date(expiration_date) : null,
             public_slug,
@@ -145,12 +164,23 @@ const updateForm = async (req, res) => {
         if (req.user?.role === 'creator' && form.created_by !== req.user.id) {
             return res.status(403).json({ message: 'Forbidden' });
         }
+        // Normaliser également lors de la mise à jour
+        const normalizedQuestions = questions === undefined ? undefined : (questions ?? []).map(q => {
+            if (['select', 'radio', 'checkbox'].includes(q.type)) {
+                const opts = Array.isArray(q.options) ? q.options : [];
+                const normalized = opts
+                    .map(opt => typeof opt === 'string' ? opt : (opt.value ?? opt.label))
+                    .filter(v => typeof v === 'string' && v.trim().length > 0);
+                return { ...q, options: normalized };
+            }
+            return q;
+        });
         await forms.updateOne({ _id: new mongodb_1.ObjectId(id) }, {
             $set: {
                 ...(title !== undefined ? { title } : {}),
                 ...(description !== undefined ? { description } : {}),
                 ...(is_public !== undefined ? { is_public } : {}),
-                ...(questions !== undefined ? { questions } : {}),
+                ...(normalizedQuestions !== undefined ? { questions: normalizedQuestions } : {}),
                 ...(max_responses !== undefined ? { max_responses } : {}),
                 ...(expiration_date !== undefined ? { expiration_date: expiration_date ? new Date(expiration_date) : null } : {}),
                 ...(banner_title !== undefined ? { banner_title } : {}),

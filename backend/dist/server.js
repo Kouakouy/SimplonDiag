@@ -13,6 +13,17 @@ const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const routes_1 = require("./setup/routes");
 const initDemoUsers_1 = require("./scripts/initDemoUsers");
 const app = (0, express_1.default)();
+// CORS: Autoriser toutes les origines et gérer les preflights avant tout
+const corsOptions = {
+    origin: true, // reflète l'origine de la requête
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+    optionsSuccessStatus: 204,
+};
+app.use((0, cors_1.default)(corsOptions));
+app.options('*', (0, cors_1.default)(corsOptions));
 // Sécurité: Headers HTTP sécurisés
 app.use((0, helmet_1.default)({
     contentSecurityPolicy: {
@@ -31,6 +42,7 @@ const limiter = (0, express_rate_limit_1.default)({
     message: 'Trop de requêtes depuis cette IP, veuillez réessayer plus tard.',
     standardHeaders: true,
     legacyHeaders: false,
+    skip: (req) => req.method === 'OPTIONS',
 });
 // Sécurité: Rate limiting strict pour l'authentification
 const authLimiter = (0, express_rate_limit_1.default)({
@@ -38,17 +50,10 @@ const authLimiter = (0, express_rate_limit_1.default)({
     max: 5, // 5 tentatives max
     message: 'Trop de tentatives de connexion, veuillez réessayer dans 15 minutes.',
     skipSuccessfulRequests: true,
+    skip: (req) => req.method === 'OPTIONS',
 });
 app.use('/api/', limiter);
 app.use('/api/auth/login', authLimiter);
-// CORS: Autoriser toutes les origines
-app.use((0, cors_1.default)({
-    origin: true, // Autorise toutes les origines
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-    exposedHeaders: ['Content-Range', 'X-Content-Range']
-}));
 app.use(express_1.default.json({ limit: '10mb' }));
 app.use(express_1.default.urlencoded({ limit: '10mb', extended: true }));
 app.use((0, cookie_parser_1.default)());
