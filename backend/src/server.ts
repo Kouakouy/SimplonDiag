@@ -11,6 +11,9 @@ import { initializeDemoUsers } from './scripts/initDemoUsers'
 
 const app = express()
 
+// Faire confiance au proxy (nécessaire sur Render/Heroku pour X-Forwarded-For)
+app.set('trust proxy', 1)
+
 // CORS: Autoriser toutes les origines et gérer les preflights avant tout
 const corsOptions = {
   origin: true, // reflète l'origine de la requête

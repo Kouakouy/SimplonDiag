@@ -13,6 +13,8 @@ const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const routes_1 = require("./setup/routes");
 const initDemoUsers_1 = require("./scripts/initDemoUsers");
 const app = (0, express_1.default)();
+// Faire confiance au proxy (nécessaire sur Render/Heroku pour X-Forwarded-For)
+app.set('trust proxy', 1);
 // CORS: Autoriser toutes les origines et gérer les preflights avant tout
 const corsOptions = {
     origin: true, // reflète l'origine de la requête
