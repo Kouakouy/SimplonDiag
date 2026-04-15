@@ -326,14 +326,14 @@ CMD ["npm", "start"]
 
 .env backend
 PORT=3001
-MONGODB_URI=mongodb+srv://kouakouy898_db_user:q7EQ4jjjMtBQQW9h@cluster0.i0cliky.mongodb.net/simplonform?retryWrites=true&w=majority&appName=Cluster0
-JWT_SECRET=9f8a32b7c6e14d98a04c45f3f9f4b92c8e72d1ff45a7e63e09d2f143b0ae567c
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-password
-SMTP_FROM=noreply@simplonform.com
-APP_URL=http://localhost:3000
+MONGODB_URI=
+JWT_SECRET=
+SMTP_HOST=
+SMTP_PORT=
+SMTP_USER=
+SMTP_PASS=
+SMTP_FROM=
+APP_URL=
 CORS_ORIGIN=http://localhost:3000
 
 
