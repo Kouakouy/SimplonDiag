@@ -118,7 +118,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Essayer de récupérer les informations utilisateur
       try {
         
-        const userResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/auth/me`, {
+        const userResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://back-simplondiag.onrender.com/api'}/auth/me`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
